@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /cart
+Disallow: /orders
+Disallow: /profile
+Disallow: /auth
+Disallow: /checkout
+
+Sitemap: https://luxe-glow.vn/sitemap.xml
