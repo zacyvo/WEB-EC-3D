@@ -347,7 +347,7 @@ export default function ContactPage() {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
             Bạn cần thêm thông tin?
           </Typography>
-          <Stack direction="row" spacing={1.5} justifyContent="center" flexWrap="wrap">
+          <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'center', flexWrap: 'wrap' }}>
             {[
               { label: 'Câu hỏi thường gặp', href: '/faq' },
               { label: 'Hướng dẫn đặt hàng', href: '/order-guide' },

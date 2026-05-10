@@ -108,7 +108,7 @@ function VisualMock({
       <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary', textAlign: 'center' }}>
         {cfg.label}
       </Typography>
-      <Stack direction="row" spacing={0.75} flexWrap="wrap" justifyContent="center">
+      <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', justifyContent: 'center' }}>
         {cfg.tags.map((t) => (
           <Chip
             key={t}
@@ -570,7 +570,7 @@ export default function FaqPage() {
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
             Hơn 500 mẫu đèn in 3D handcraft đang chờ bạn.
           </Typography>
-          <Stack direction="row" spacing={1.5} flexWrap="wrap" style={{justifyContent: "center"}}>
+          <Stack direction="row" spacing={1.5} sx={{ flexWrap: 'wrap', justifyContent: 'center' }}>
             <Button component={Link} href="/products" variant="contained" sx={{ borderRadius: 980, px: 3 }}>
               Xem sản phẩm
             </Button>

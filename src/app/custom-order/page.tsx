@@ -204,7 +204,7 @@ export default function CustomOrderPage() {
                 onChange={(e) => setContent(e.target.value)}
                 error={!!errors.content}
                 helperText={errors.content || `${content.length}/2000 ký tự`}
-                inputProps={{ maxLength: 2000 }}
+                slotProps={{ htmlInput: { maxLength: 2000 } }}
                 sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
               />
             </Box>

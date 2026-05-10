@@ -362,7 +362,7 @@ export default function OrderGuidePage() {
           </Typography>
 
           {/* Quick stats */}
-          <Stack style={{justifyContent: "center"}} direction="row" spacing={3} justifyContent="center" sx={{ mt: 5 }}>
+          <Stack direction="row" spacing={3} sx={{ justifyContent: 'center', mt: 5 }}>
             {[
               { v: '5 phút', l: 'Hoàn tất đặt hàng' },
               { v: '3-7 ngày', l: 'Nhận hàng' },
@@ -388,9 +388,7 @@ export default function OrderGuidePage() {
                 <Grid
                   container
                   spacing={{ xs: 3, md: 6 }}
-                  alignItems="center"
-                  direction={{ xs: 'column', md: isEven ? 'row' : 'row-reverse' }}
-                  sx={{ py: { xs: 4, md: 7 } }}
+                  sx={{ py: { xs: 4, md: 7 }, flexDirection: { xs: 'column', md: isEven ? 'row' : 'row-reverse' }, alignItems: 'center' }}
                 >
                   {/* Text side */}
                   <Grid size={{ xs: 12, md: 6 }}>
