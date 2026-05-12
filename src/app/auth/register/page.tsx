@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import {
   Box, Typography, TextField, Button, InputAdornment, IconButton,
@@ -54,8 +55,8 @@ export default function RegisterPage() {
     <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2, py: 6 }}>
       <Box sx={{ width: '100%', maxWidth: 400 }}>
         <Box sx={{ textAlign: 'center', mb: 5 }}>
-          <Box sx={{ width: 48, height: 48, borderRadius: 3, background: 'linear-gradient(135deg,#007AFF,#0055B3)', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2.5 }}>
-            <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 14 }}>3D</Typography>
+          <Box sx={{ mb: 2.5, display: 'flex', justifyContent: 'center' }}>
+            <Image src="/img/logo_blue_geometric.svg" alt="Luxe Glow" width={48} height={48} priority />
           </Box>
           <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>Đăng ký</Typography>
           <Typography color="text.secondary">Tạo tài khoản Luxe Glow miễn phí</Typography>

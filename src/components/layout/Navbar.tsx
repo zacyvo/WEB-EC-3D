@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   AppBar, Toolbar, Container, Box, IconButton, Badge,
@@ -37,10 +38,8 @@ export function Navbar() {
       <Container maxWidth="lg">
         <Toolbar disableGutters sx={{ height: 64, gap: 2 }}>
           <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Box sx={{ width: 32, height: 32, borderRadius: 2, background: 'linear-gradient(135deg, #007AFF 0%, #0055B3 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 13 }}>3D</Typography>
-            </Box>
-            <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', fontSize: '1.05rem', letterSpacing: '-0.02em' }}>Luxe Glow</Typography>
+            <Image src="/img/logo_blue_geometric.svg" alt="Luxe Glow" width={32} height={32} priority />
+            <Typography variant="h6" sx={{ fontWeight: 700, fontSize: '1.05rem', letterSpacing: '-0.02em', background: 'linear-gradient(135deg, #007AFF 0%, #8B5CF6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Luxe Glow</Typography>
           </Link>
 
           <Box sx={{ display: { xs: 'none', md: 'flex' }, gap: 0.5, flex: 1, ml: 1 }}>

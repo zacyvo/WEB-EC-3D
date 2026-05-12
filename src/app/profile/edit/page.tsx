@@ -93,6 +93,12 @@ export default function EditProfilePage() {
   const [name, setName] = useState('');
   const [nameError, setNameError] = useState('');
 
+  // ── Phone ─────────────────────────────────────────────────────────────────
+  const [phone, setPhone] = useState('');
+  const [phoneError, setPhoneError] = useState('');
+  const [phoneConfirmOpen, setPhoneConfirmOpen] = useState(false);
+  const [pendingPayload, setPendingPayload] = useState<{ name?: string; dob?: string; phone?: string } | null>(null);
+
   // ── Date of birth ─────────────────────────────────────────────────────────
   const [dob, setDob] = useState('');
   const [dobError, setDobError] = useState('');
@@ -146,12 +152,13 @@ export default function EditProfilePage() {
     if (user) {
       setName(user.name ?? '');
       setDob(user.dob ? user.dob.split('T')[0] : '');
+      setPhone(user.phone ?? '');
     }
   }, [user]);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
   const profileMut = useMutation({
-    mutationFn: (data: { name?: string; dob?: string }) =>
+    mutationFn: (data: { name?: string; dob?: string; phone?: string }) =>
       api.patch<ApiResponse<User>>('/users/me', data),
     onSuccess: (res) => {
       if (res.data.data) updateUser(res.data.data);
@@ -227,18 +234,49 @@ export default function EditProfilePage() {
       setDobError('');
     }
 
+    // Phone validation (only when user has no phone yet)
+    const isAddingPhone = !user?.phone && phone.trim();
+    if (isAddingPhone) {
+      const phoneDigits = phone.replace(/\D/g, '');
+      if (phoneDigits.length < 9 || phoneDigits.length > 11) {
+        setPhoneError('Số điện thoại không hợp lệ (9-11 chữ số)');
+        hasError = true;
+      } else {
+        setPhoneError('');
+      }
+    }
+
     if (hasError) return;
 
-    const payload: { name?: string; dob?: string } = {};
+    const payload: { name?: string; dob?: string; phone?: string } = {};
     if (name.trim() !== user?.name) payload.name = name.trim();
     if (dob !== (user?.dob ? user.dob.split('T')[0] : '')) payload.dob = dob || undefined;
+    if (isAddingPhone) payload.phone = phone.trim();
 
     if (Object.keys(payload).length === 0) {
       toast('Không có thay đổi nào để lưu', { icon: 'ℹ️' });
       return;
     }
 
+    // If phone is being set for the first time, show confirmation modal
+    if (payload.phone) {
+      setPendingPayload(payload);
+      setPhoneConfirmOpen(true);
+      return;
+    }
+
     profileMut.mutate(payload);
+  };
+
+  const handleConfirmPhoneSave = () => {
+    if (pendingPayload) profileMut.mutate(pendingPayload);
+    setPhoneConfirmOpen(false);
+    setPendingPayload(null);
+  };
+
+  const handleCancelPhoneSave = () => {
+    setPhoneConfirmOpen(false);
+    setPendingPayload(null);
   };
 
   const handleChangePassword = () => {
@@ -304,22 +342,34 @@ export default function EditProfilePage() {
                 },
               }}
             />
-            <TextField
-              label="Số điện thoại"
-              value={user.phone ?? ''}
-              disabled
-              fullWidth
-              placeholder="Chưa cập nhật"
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <Chip label="Không thể thay đổi" size="small" sx={{ fontSize: '0.68rem', height: 20 }} />
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
+            {user.phone ? (
+              <TextField
+                label="Số điện thoại"
+                value={user.phone}
+                disabled
+                fullWidth
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <Chip label="Không thể thay đổi" size="small" sx={{ fontSize: '0.68rem', height: 20 }} />
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            ) : (
+              <TextField
+                label="Số điện thoại"
+                value={phone}
+                onChange={(e) => { setPhone(e.target.value); if (phoneError) setPhoneError(''); }}
+                fullWidth
+                placeholder="Nhập số điện thoại"
+                error={!!phoneError}
+                helperText={phoneError || 'Số điện thoại chỉ có thể đặt một lần và không thể thay đổi sau này'}
+                slotProps={{ htmlInput: { maxLength: 15 } }}
+              />
+            )}
             <TextField
               label="Họ và tên"
               value={name}
@@ -463,6 +513,35 @@ export default function EditProfilePage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* ── Phone number confirmation dialog ───────────────────────────────── */}
+      <Dialog
+        open={phoneConfirmOpen}
+        onClose={handleCancelPhoneSave}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{ paper: { sx: { borderRadius: 3 } } }}
+      >
+        <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
+          Xác nhận số điện thoại
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2, borderRadius: 2 }}>
+            Số điện thoại <strong>{pendingPayload?.phone}</strong> sẽ <strong>không thể thay đổi</strong> sau khi lưu. Bạn có chắc chắn muốn tiếp tục?
+          </Alert>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2.5 }}>
+          <Button onClick={handleCancelPhoneSave} color="inherit">Hủy</Button>
+          <Button
+            variant="contained"
+            onClick={handleConfirmPhoneSave}
+            disabled={profileMut.isPending}
+            startIcon={profileMut.isPending ? <CircularProgress size={16} color="inherit" /> : null}
+          >
+            Đồng ý
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* ── Delete account dialog (2-step) ─────────────────────────────────── */}
       <Dialog

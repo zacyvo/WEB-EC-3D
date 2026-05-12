@@ -61,7 +61,6 @@ export function Footer() {
             <Link href="/terms-of-service" style={{ textDecoration: 'none' }}>
               <Typography variant="caption" color="text.disabled" sx={{ '&:hover': { color: 'text.secondary' }, transition: 'color 0.15s' }}>Điều khoản dịch vụ</Typography>
             </Link>
-            <Typography variant="caption" color="text.disabled">Thiết kế với ❤️ tại Việt Nam</Typography>
           </Box>
         </Box>
       </Container>

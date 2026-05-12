@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box, Container, Typography, TextField, Button, InputAdornment, IconButton,
@@ -61,8 +62,8 @@ function LoginContent() {
     <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', px: 2, py: 6 }}>
       <Box sx={{ width: '100%', maxWidth: 400 }}>
         <Box sx={{ textAlign: 'center', mb: 5 }}>
-          <Box sx={{ width: 48, height: 48, borderRadius: 3, background: 'linear-gradient(135deg,#007AFF,#0055B3)', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2.5 }}>
-            <Typography sx={{ color: '#fff', fontWeight: 800, fontSize: 14 }}>3D</Typography>
+          <Box sx={{ mb: 2.5, display: 'flex', justifyContent: 'center' }}>
+            <Image src="/img/logo_blue_geometric.svg" alt="Luxe Glow" width={48} height={48} priority />
           </Box>
           <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>Đăng nhập</Typography>
           <Typography color="text.secondary">Chào mừng bạn trở lại Luxe Glow</Typography>
@@ -117,6 +118,17 @@ function LoginContent() {
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
           </svg>
           Tiếp tục với Google
+        </Button>
+
+        <Button
+          fullWidth variant="outlined" size="large"
+          component="a" href={`${process.env.NEXT_PUBLIC_API_URL}/auth/facebook`}
+          sx={{ py: 1.4, gap: 1.5, borderColor: '#1877F2', color: '#1877F2', '&:hover': { borderColor: '#1877F2', bgcolor: 'rgba(24,119,242,0.04)' } }}
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
+            <path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.313 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.884v2.25h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/>
+          </svg>
+          Tiếp tục với Facebook
         </Button>
 
         <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 3 }}>
