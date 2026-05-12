@@ -6,6 +6,7 @@ import { Footer } from '@/components/layout/Footer';
 import { BottomNav } from '@/components/layout/BottomNav';
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://www.luxe-glow.vn'),
   title: {
     default: 'Luxe Glow | Đèn In 3D Handcraft',
     template: '%s | Luxe Glow',
@@ -19,13 +20,13 @@ export const metadata: Metadata = {
     siteName: 'Luxe Glow',
     title: 'Luxe Glow | Đèn In 3D Handcraft',
     description: 'Khám phá bộ sưu tập đèn in 3D độc đáo, handcraft từ chất liệu cao cấp. Thiết kế theo yêu cầu, phong cách tối giản hiện đại.',
-    images: [{ url: '/img/meta-data.jpg', width: 1200, height: 630, alt: 'Luxe Glow – Đèn In 3D Handcraft' }],
+    images: [{ url: 'https://www.luxe-glow.vn/img/meta-data.jpg', width: 1200, height: 630, alt: 'Luxe Glow – Đèn In 3D Handcraft' }],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Luxe Glow | Đèn In 3D Handcraft',
     description: 'Khám phá bộ sưu tập đèn in 3D độc đáo, handcraft từ chất liệu cao cấp.',
-    images: ['/img/meta-data.jpg'],
+    images: ['https://www.luxe-glow.vn/img/meta-data.jpg'],
   },
   robots: { index: true, follow: true },
   icons: {
