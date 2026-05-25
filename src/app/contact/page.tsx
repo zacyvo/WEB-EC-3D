@@ -28,6 +28,7 @@ const CHANNELS = [
     color: '#34C759',
     bg: '#F0FBF2',
     cta: 'Gọi ngay',
+    status: !!STORE.phone
   },
   {
     id: 'zalo',
@@ -39,6 +40,7 @@ const CHANNELS = [
     color: '#007AFF',
     bg: '#EAF3FF',
     cta: 'Nhắn Zalo',
+    status: !!STORE.zalo
   },
   {
     id: 'email',
@@ -50,6 +52,7 @@ const CHANNELS = [
     color: '#636366',
     bg: '#F5F5F7',
     cta: 'Gửi email',
+    status: !!STORE.email
   },
   {
     id: 'facebook',
@@ -61,17 +64,7 @@ const CHANNELS = [
     color: '#1877F2',
     bg: '#EEF4FE',
     cta: 'Xem trang',
-  },
-  {
-    id: 'instagram',
-    label: 'Instagram',
-    value: '@luxeglow.vn',
-    desc: 'Ảnh sản phẩm & behind-the-scenes',
-    href: STORE.instagram,
-    Icon: CameraAltOutlinedIcon,
-    color: '#C13584',
-    bg: '#FBF0F7',
-    cta: 'Xem profile',
+    status: !!STORE.facebook
   },
   {
     id: 'shopee',
@@ -83,17 +76,31 @@ const CHANNELS = [
     color: '#EE4D2D',
     bg: '#FFF2EF',
     cta: 'Vào shop',
+    status: !!STORE.shopee
+  },
+  {
+    id: 'instagram',
+    label: 'Instagram',
+    value: 'comming soon',
+    desc: 'Ảnh sản phẩm & behind-the-scenes',
+    href: STORE.instagram,
+    Icon: CameraAltOutlinedIcon,
+    color: '#C13584',
+    bg: '#FBF0F7',
+    cta: 'Comming soon',
+    status: !!STORE.instagram
   },
   {
     id: 'tiktok',
     label: 'TikTok Shop',
-    value: '@luxeglow',
+    value: 'comming soon',
     desc: 'Video sản phẩm & livestream',
     href: STORE.tiktok,
     Icon: VideoLibraryOutlinedIcon,
     color: '#1C1C1E',
     bg: '#F5F5F7',
-    cta: 'Xem TikTok',
+    cta: 'Comming soon',
+    status: !!STORE.tiktok
   },
 ];
 
@@ -164,8 +171,8 @@ export default function ContactPage() {
 
         {/* ── Channel cards ── */}
         <Grid container spacing={2.5} sx={{ mb: 8 }}>
-          {CHANNELS.map(({ id, label, value, desc, href, Icon, color, bg, cta }) => (
-            <Grid key={id} size={{ xs: 12, sm: 6, md: 4 }}>
+          {CHANNELS.map(({ id, label, value, desc, href, Icon, color, bg, cta, status }) => (
+            <Grid key={id} size={{ xs: 12, sm: 6, md: 4 }} sx={{ display: status ? 'block' : 'none' }}>
               <Paper
                 elevation={0}
                 sx={{
@@ -187,6 +194,7 @@ export default function ContactPage() {
                     <Icon sx={{ color, fontSize: 26 }} />
                   </Box>
                   <Button
+                    disabled={cta.toLowerCase().includes('comming soon')}
                     component={Link}
                     href={href}
                     target={id !== 'phone' && id !== 'email' ? '_blank' : undefined}
