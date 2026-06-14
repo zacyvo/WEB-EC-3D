@@ -17,6 +17,7 @@ import { useState } from 'react';
 const NAV_LINKS = [
   { label: 'Trang chủ', href: '/' },
   { label: 'Sản phẩm', href: '/products' },
+  { label: 'Hướng dẫn', href: '/guide' },
   { label: 'Thiết kế theo yêu cầu', href: '/custom-order' },
   { label: 'Liên hệ', href: '/contact' },
 ];

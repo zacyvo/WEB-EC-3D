@@ -5,6 +5,7 @@ import { HeroSection } from '@/components/layout/HeroSection';
 import { ProductGrid } from '@/components/product/ProductGrid';
 import { CategoryFilter } from '@/components/product/CategoryFilter';
 import { FeaturesSection } from '@/components/layout/FeaturesSection';
+import { GuideBanner } from '@/components/layout/GuideBanner';
 
 export default function HomePage() {
   return (
@@ -23,6 +24,8 @@ export default function HomePage() {
           <ProductGrid />
         </Suspense>
       </Container>
+
+      <GuideBanner />
 
       <FeaturesSection />
     </>
