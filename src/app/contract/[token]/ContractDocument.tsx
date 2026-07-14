@@ -36,8 +36,7 @@ export interface PublicContract {
   bankAccountNumber: string;
   bankName: string;
   bankAccountHolder: string;
-  designDays: number;
-  productionDays: number;
+  deliveryDate?: string;
   deliveryAddress: string;
   userNote: string;
   closeReason: string;
@@ -105,6 +104,12 @@ function dots(value?: string | number | null, fallback = DOTS): string {
   return s || fallback;
 }
 
+function vnDate(value?: string | null): string {
+  if (!value) return 'ngày ………… tháng ………… năm …………';
+  const d = new Date(value);
+  return `ngày ${String(d.getDate()).padStart(2, '0')} tháng ${String(d.getMonth() + 1).padStart(2, '0')} năm ${d.getFullYear()}`;
+}
+
 const S: Record<string, React.CSSProperties> = {
   page: {
     fontFamily: "'Times New Roman', 'Tinos', serif",
@@ -160,7 +165,9 @@ function PartyBlock({ title, party, isCompany }: { title: string; party: Contrac
       <p style={S.indent}>
         Điện thoại: {dots(party?.phone, '……………………')} &nbsp;&nbsp;Email: {dots(party?.email, '……………………')}
       </p>
-      <p style={S.indent}>Mã số thuế / CCCD: {dots(party?.taxCode, '……………………')}</p>
+      <p style={S.indent}>
+        {isCompany ? 'Mã số thuế' : 'Mã số thuế / CCCD'}: {dots(party?.taxCode, '……………………')}
+      </p>
     </div>
   );
 }
@@ -243,7 +250,7 @@ export default function ContractDocument({
         </table>
         <p style={S.p}>
           1.2. Yêu cầu kỹ thuật khác (công nghệ in FDM/SLA/SLS, độ dày lớp in, xử lý bề mặt, độ đặc…):{' '}
-          {dots(data.technicalRequirements)}
+          {dots(data.technicalRequirements, 'KHÔNG')}
         </p>
 
         <p style={S.articleTitle}>Điều 2. Thiết kế và duyệt mẫu</p>
@@ -269,11 +276,17 @@ export default function ContractDocument({
           <i>{numberToVietnameseWords(data.totalAmount)}</i>). Giá trên đã bao gồm thuế GTGT và chi phí
           vận chuyển.
         </p>
-        <p style={S.p}>
-          3.2. Thanh toán chia thành 03 đợt: Đợt 1 – Bên A tạm ứng 50% giá trị hợp đồng (
-          {formatCurrency(Math.round(data.totalAmount * 0.5))}) ngay khi ký hợp đồng; Đợt 2 – thanh toán
-          40% giá trị hợp đồng ({formatCurrency(Math.round(data.totalAmount * 0.4))}) khi nghiệm thu; Đợt
-          3 – thanh toán 10% còn lại sau 05 ngày kể từ ngày nghiệm thu.
+        <p style={S.p}>3.2. Thanh toán chia thành 03 đợt:</p>
+        <p style={S.indent}>
+          – Đợt 1: Bên A tạm ứng 50% giá trị hợp đồng ({formatCurrency(Math.round(data.totalAmount * 0.5))})
+          ngay khi ký hợp đồng;
+        </p>
+        <p style={S.indent}>
+          – Đợt 2: thanh toán 40% giá trị hợp đồng ({formatCurrency(Math.round(data.totalAmount * 0.4))})
+          khi nghiệm thu;
+        </p>
+        <p style={S.indent}>
+          – Đợt 3: thanh toán 10% còn lại sau 05 ngày kể từ ngày nghiệm thu.
         </p>
         <p style={S.p}>
           3.3. Hình thức thanh toán: tiền mặt hoặc chuyển khoản. Số tài khoản: {dots(data.bankAccountNumber, '……………………')}{' '}
@@ -281,11 +294,7 @@ export default function ContractDocument({
         </p>
 
         <p style={S.articleTitle}>Điều 4. Thời gian thực hiện và giao nhận</p>
-        <p style={S.p}>
-          4.1. Thời gian thiết kế: {dots(data.designDays, '…………')} ngày làm việc kể từ ngày ký hợp đồng và
-          nhận tạm ứng. Thời gian sản xuất: {dots(data.productionDays, '…………')} ngày làm việc kể từ ngày
-          Bên A nghiệm thu (duyệt) thiết kế.
-        </p>
+        <p style={S.p}>4.1. Thời gian giao hàng: {vnDate(data.deliveryDate)}.</p>
         <p style={S.p}>
           4.2. Địa điểm giao hàng: {dots(data.deliveryAddress)}. Chi phí vận chuyển do Bên B chịu (đã bao
           gồm trong giá trị hợp đồng).
