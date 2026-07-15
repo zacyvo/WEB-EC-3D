@@ -7,13 +7,13 @@ import Link from 'next/link';
 import {
   Box, Container, Typography, Grid, Card, CardContent,
   TextField, Button, Divider, Stack, Alert, CircularProgress,
-  Autocomplete, Chip,
+  Chip,
 } from '@mui/material';
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery } from '@tanstack/react-query';
@@ -23,6 +23,7 @@ import { formatCurrency } from '@/lib/utils';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import type { ApiResponse, Order, User, Coupon, ValidateCouponsResponse } from '@/types';
+import AddressPicker, { type OldAddressSelection } from '@/components/AddressPicker';
 
 // ─── Local administrative data (public/data/vn-locations.json) ───────────────
 interface Ward { id: string; name: string; }
@@ -52,8 +53,7 @@ export default function CheckoutPage() {
   const [mounted, setMounted] = useState(false);
   const [success, setSuccess] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
-  const [selectedProvinceId, setSelectedProvinceId] = useState<string | null>(null);
-  const [selectedWard, setSelectedWard] = useState<Ward | null>(null);
+  const [oldAddress, setOldAddress] = useState<OldAddressSelection | undefined>(undefined);
 
   // ── Coupon state ──────────────────────────────────────────────────────────
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
@@ -95,14 +95,9 @@ export default function CheckoutPage() {
     staleTime: 60_000,
   });
 
-  // Wards for selected province (instant lookup from loaded JSON)
-  const wardOptions: Ward[] = selectedProvinceId && locationData
-    ? (locationData.provinces.find((p) => p.id === selectedProvinceId)?.wards ?? [])
-    : [];
-
   const defaultAddress = user?.addresses?.find((a) => a.isDefault) ?? user?.addresses?.[0];
 
-  const { register, handleSubmit, control, setValue, formState: { errors, isSubmitting } } =
+  const { register, handleSubmit, setValue, watch, formState: { errors, isSubmitting } } =
     useForm<ShippingForm>({
       resolver: zodResolver(shippingSchema),
       defaultValues: {
@@ -113,22 +108,6 @@ export default function CheckoutPage() {
         street: defaultAddress?.street ?? '',
       },
     });
-
-  // Init province id from default address
-  useEffect(() => {
-    if (defaultAddress?.city && provinces.length > 0 && !selectedProvinceId) {
-      const found = provinces.find((p) => p.name === defaultAddress.city);
-      if (found) setSelectedProvinceId(found.id);
-    }
-  }, [defaultAddress, provinces, selectedProvinceId]);
-
-  // Init ward selection from default address (runs when wardOptions populate)
-  useEffect(() => {
-    if (defaultAddress?.ward && wardOptions.length > 0 && !selectedWard) {
-      const found = wardOptions.find((w) => w.name === defaultAddress.ward);
-      if (found) setSelectedWard(found);
-    }
-  }, [wardOptions, defaultAddress, selectedWard]);
 
   // Toggle coupon selection; reset validate result when selection changes
   function toggleCoupon(code: string) {
@@ -164,6 +143,7 @@ export default function CheckoutPage() {
           ward: data.ward,
           street: data.street,
           note: data.note,
+          ...(oldAddress ? { oldAddress } : {}),
         },
         ...(data.customerNote?.trim() ? { customerNote: data.customerNote.trim() } : {}),
         // Pass the validated applied coupon codes so backend can re-verify + track usage
@@ -183,6 +163,7 @@ export default function CheckoutPage() {
             district: '',
             city: data.city,
             isDefault: true,
+            ...(oldAddress ? { oldAddress } : {}),
           });
           if (addrRes.data.data?.addresses) {
             updateUser({ addresses: addrRes.data.data.addresses });
@@ -264,54 +245,17 @@ export default function CheckoutPage() {
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2.5 }}>Địa chỉ giao hàng</Typography>
                 <Stack spacing={2.5}>
 
-                  {/* Tỉnh / Thành phố */}
-                  <Controller
-                    name="city"
-                    control={control}
-                    render={({ field }) => (
-                      <Autocomplete
-                        options={provinces}
-                        getOptionLabel={(o) => o.name}
-                        value={provinces.find((p) => p.name === field.value) ?? null}
-                        onChange={(_, opt) => {
-                          field.onChange(opt?.name ?? '');
-                          setSelectedProvinceId(opt?.id ?? null);
-                          setValue('ward', '');
-                          setSelectedWard(null);
-                        }}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params} label="Tỉnh/Thành phố *" size="small"
-                            error={!!errors.city} helperText={errors.city?.message}
-                          />
-                        )}
-                      />
-                    )}
-                  />
-
-                  {/* Phường / Xã — grouped by quận/huyện; district auto-filled hidden */}
-                  <Controller
-                    name="ward"
-                    control={control}
-                    render={({ field }) => (
-                      <Autocomplete
-                        options={wardOptions}
-                        getOptionLabel={(o) => o.name}
-                        value={selectedWard}
-                        disabled={!selectedProvinceId}
-                        noOptionsText={!selectedProvinceId ? 'Chọn tỉnh/thành phố trước' : 'Không tìm thấy'}
-                        onChange={(_, opt) => {
-                          field.onChange(opt?.name ?? '');
-                          setSelectedWard(opt);
-                        }}
-                        renderInput={(params) => (
-                          <TextField
-                            {...params} label="Phường/Xã *" size="small"
-                            error={!!errors.ward} helperText={errors.ward?.message}
-                          />
-                        )}
-                      />
-                    )}
+                  {/* Tỉnh/Thành phố + Phường/Xã — hỗ trợ nhập địa chỉ mới hoặc cũ */}
+                  <AddressPicker
+                    newProvinces={provinces}
+                    value={{ city: watch('city'), ward: watch('ward'), oldAddress }}
+                    onChange={(v) => {
+                      setValue('city', v.city, { shouldValidate: true });
+                      setValue('ward', v.ward, { shouldValidate: true });
+                      setOldAddress(v.oldAddress);
+                    }}
+                    cityError={errors.city?.message}
+                    wardError={errors.ward?.message}
                   />
 
                   {/* Số nhà, tên đường */}

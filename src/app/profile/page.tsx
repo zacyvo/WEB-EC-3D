@@ -9,7 +9,7 @@ import {
   Box, Container, Typography, Avatar, Card, CardContent,
   List, ListItemButton, ListItemIcon, ListItemText, Divider,
   Dialog, DialogTitle, DialogContent, DialogActions,
-  TextField, Button, Chip, IconButton, Stack, Autocomplete,
+  TextField, Button, Chip, IconButton, Stack,
   Checkbox, FormControlLabel, CircularProgress,
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -27,6 +27,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import type { Address, ApiResponse, User } from '@/types';
+import AddressPicker, { type OldAddressSelection } from '@/components/AddressPicker';
 
 interface Ward { id: string; name: string; }
 interface Province { id: string; name: string; wards: Ward[]; }
@@ -37,6 +38,7 @@ interface AddressForm {
   ward: string;
   street: string;
   isDefault: boolean;
+  oldAddress?: OldAddressSelection;
 }
 
 const EMPTY_FORM: AddressForm = { city: '', ward: '', street: '', isDefault: false };
@@ -58,8 +60,6 @@ export default function ProfilePage() {
   const [formOpen, setFormOpen] = useState(false);
   const [editIndex, setEditIndex] = useState<number | null>(null);
   const [form, setForm] = useState<AddressForm>(EMPTY_FORM);
-  const [selectedProvince, setSelectedProvince] = useState<Province | null>(null);
-  const [selectedWard, setSelectedWard] = useState<Ward | null>(null);
 
   // ── Location data (lazy: only loads when form dialog opens) ─────────────────
   const { data: locationData } = useQuery<LocationData>({
@@ -74,36 +74,19 @@ export default function ProfilePage() {
   });
 
   const provinces: Province[] = locationData?.provinces ?? [];
-  const wardOptions: Ward[] = selectedProvince
-    ? (provinces.find((p) => p.id === selectedProvince.id)?.wards ?? [])
-    : [];
-
-  // Prefill province/ward Autocomplete when editing and provinces have loaded
-  useEffect(() => {
-    if (!formOpen || provinces.length === 0 || selectedProvince !== null || !form.city) return;
-    const prov = provinces.find((p) => p.name === form.city);
-    if (prov) {
-      setSelectedProvince(prov);
-      if (form.ward) {
-        const ward = prov.wards.find((w) => w.name === form.ward);
-        if (ward) setSelectedWard(ward);
-      }
-    }
-  }, [formOpen, provinces, form.city, form.ward, selectedProvince]);
 
   const openAdd = () => {
     setEditIndex(null);
     setForm({ ...EMPTY_FORM, isDefault: !user?.addresses?.length });
-    setSelectedProvince(null);
-    setSelectedWard(null);
     setFormOpen(true);
   };
 
   const openEdit = (index: number, addr: Address) => {
     setEditIndex(index);
+    // Always start in "new address" mode -- resuming an old-address selection
+    // from stored codes would require re-loading and re-resolving the old
+    // cascade, which isn't needed since the user can just re-pick if desired.
     setForm({ city: addr.city, ward: addr.ward, street: addr.street, isDefault: addr.isDefault });
-    setSelectedProvince(null);
-    setSelectedWard(null);
     setFormOpen(true);
   };
 
@@ -343,32 +326,10 @@ export default function ProfilePage() {
         </DialogTitle>
         <DialogContent>
           <Stack spacing={2.5} sx={{ mt: 0.5 }}>
-            <Autocomplete
-              options={provinces}
-              getOptionLabel={(p) => p.name}
-              value={selectedProvince}
-              onChange={(_, val) => {
-                setSelectedProvince(val);
-                setSelectedWard(null);
-                setForm((f) => ({ ...f, city: val?.name ?? '', ward: '' }));
-              }}
-              renderInput={(params) => <TextField {...params} label="Tỉnh / Thành phố" required />}
-              isOptionEqualToValue={(opt, val) => opt.id === val.id}
-              noOptionsText="Không tìm thấy"
-              loadingText="Đang tải..."
-            />
-            <Autocomplete
-              options={wardOptions}
-              getOptionLabel={(w) => w.name}
-              value={selectedWard}
-              onChange={(_, val) => {
-                setSelectedWard(val);
-                setForm((f) => ({ ...f, ward: val?.name ?? '' }));
-              }}
-              disabled={!selectedProvince}
-              renderInput={(params) => <TextField {...params} label="Phường / Xã" required />}
-              isOptionEqualToValue={(opt, val) => opt.id === val.id}
-              noOptionsText={selectedProvince ? 'Không tìm thấy' : 'Chọn tỉnh/thành trước'}
+            <AddressPicker
+              newProvinces={provinces}
+              value={{ city: form.city, ward: form.ward, oldAddress: form.oldAddress }}
+              onChange={(v) => setForm((f) => ({ ...f, city: v.city, ward: v.ward, oldAddress: v.oldAddress }))}
             />
             <TextField
               label="Số nhà, tên đường"
