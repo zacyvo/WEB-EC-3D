@@ -23,6 +23,11 @@ export interface ContractParty {
   taxCode: string;
 }
 
+export interface PaymentInstallment {
+  percent: number;
+  timing: string;
+}
+
 export interface PublicContract {
   contractNo: string;
   status: 'NEW' | 'REVIEW' | 'DRAFT' | 'FINAL' | 'SUCCESS' | 'CLOSED';
@@ -33,6 +38,7 @@ export interface PublicContract {
   signPlace: string;
   signDate?: string;
   technicalRequirements: string;
+  paymentSchedule: PaymentInstallment[];
   bankAccountNumber: string;
   bankName: string;
   bankAccountHolder: string;
@@ -277,17 +283,17 @@ export default function ContractDocument({
           vận chuyển.
         </p>
         <p style={S.p}>3.2. Thanh toán chia thành 03 đợt:</p>
-        <p style={S.indent}>
-          – Đợt 1: Bên A tạm ứng 50% giá trị hợp đồng ({formatCurrency(Math.round(data.totalAmount * 0.5))})
-          ngay khi ký hợp đồng;
-        </p>
-        <p style={S.indent}>
-          – Đợt 2: thanh toán 40% giá trị hợp đồng ({formatCurrency(Math.round(data.totalAmount * 0.4))})
-          khi nghiệm thu;
-        </p>
-        <p style={S.indent}>
-          – Đợt 3: thanh toán 10% còn lại sau 05 ngày kể từ ngày nghiệm thu.
-        </p>
+        {(data.paymentSchedule ?? []).map((installment, i) => {
+          const isLast = i === (data.paymentSchedule?.length ?? 0) - 1;
+          const amount = Math.round((data.totalAmount * installment.percent) / 100);
+          return (
+            <p style={S.indent} key={i}>
+              – Đợt {i + 1}: Bên A thanh toán {installment.percent}% giá trị hợp đồng (
+              {formatCurrency(amount)}) {dots(installment.timing, '……………')}
+              {isLast ? '.' : ';'}
+            </p>
+          );
+        })}
         <p style={S.p}>
           3.3. Hình thức thanh toán: tiền mặt hoặc chuyển khoản. Số tài khoản: {dots(data.bankAccountNumber, '……………………')}{' '}
           Ngân hàng: {dots(data.bankName, '……………………')} Chủ tài khoản: {dots(data.bankAccountHolder, '……………………')}
