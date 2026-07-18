@@ -46,7 +46,7 @@ export function Footer() {
           <Grid size={{ xs: 12, md: 3 }}>
             <Typography variant="body2" color="text.primary" gutterBottom sx={{ fontWeight: 600 }}>Liên hệ</Typography>
             <Stack spacing={1}>
-              {['📞 0909064680', '✉️ hello@luxeglow.vn', '📍 Bình Tân, TP. HCM'].map((t) => (
+              {['📞 0909064680', '✉️ [support@luxe-glow.vn](mailto:support@luxe-glow.vn)', '📍 Bình Tân, TP. HCM', '🏢 MST: 079197022908'].map((t) => (
                 <Typography key={t} variant="body2" color="text.secondary">{t}</Typography>
               ))}
             </Stack>
