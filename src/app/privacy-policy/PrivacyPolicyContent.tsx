@@ -250,6 +250,21 @@ export default function PrivacyPolicyContent() {
               Điều khoản dịch vụ →
             </Typography>
           </Link>
+          <Link href="/shipping-policy" style={{ color: 'inherit' }}>
+            <Typography variant="body2" color="text.secondary">
+              Chính sách vận chuyển
+            </Typography>
+          </Link>
+          <Link href="/payment-methods" style={{ color: 'inherit' }}>
+            <Typography variant="body2" color="text.secondary">
+              Hình thức thanh toán
+            </Typography>
+          </Link>
+          <Link href="/return-policy" style={{ color: 'inherit' }}>
+            <Typography variant="body2" color="text.secondary">
+              Chính sách bảo hành đổi trả
+            </Typography>
+          </Link>
           <Link href="/contact" style={{ color: 'inherit' }}>
             <Typography variant="body2" color="text.secondary">
               Liên hệ chúng tôi

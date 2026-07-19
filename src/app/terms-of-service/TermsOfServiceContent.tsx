@@ -94,7 +94,7 @@ const SECTIONS = [
     content: [
       {
         subtitle: 'Điều kiện đổi trả',
-        body: 'Chúng tôi chấp nhận đổi/trả trong vòng 7 ngày kể từ ngày nhận hàng trong các trường hợp:',
+        body: 'Chúng tôi chấp nhận đổi/trả trong vòng 30 ngày kể từ ngày nhận hàng trong các trường hợp:',
       },
     ],
     list: [
@@ -303,6 +303,21 @@ export default function TermsOfServiceContent() {
           <Link href="/privacy-policy" style={{ color: 'inherit' }}>
             <Typography variant="body2" color="primary" sx={{ fontWeight: 600 }}>
               Chính sách bảo mật →
+            </Typography>
+          </Link>
+          <Link href="/shipping-policy" style={{ color: 'inherit' }}>
+            <Typography variant="body2" color="text.secondary">
+              Chính sách vận chuyển
+            </Typography>
+          </Link>
+          <Link href="/payment-methods" style={{ color: 'inherit' }}>
+            <Typography variant="body2" color="text.secondary">
+              Hình thức thanh toán
+            </Typography>
+          </Link>
+          <Link href="/return-policy" style={{ color: 'inherit' }}>
+            <Typography variant="body2" color="text.secondary">
+              Chính sách bảo hành đổi trả
             </Typography>
           </Link>
           <Link href="/contact" style={{ color: 'inherit' }}>
