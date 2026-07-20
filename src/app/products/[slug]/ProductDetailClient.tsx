@@ -17,19 +17,22 @@ import type { Product } from '@/types';
 import toast from 'react-hot-toast';
 
 export function ProductDetailClient({ product }: { product: Product }) {
-  const hasColors = product.colors.length > 0;
-  const hasSizes = product.sizes.length > 0;
+  // Products saved before variants existed may lack these fields entirely
+  const colors = product.colors ?? [];
+  const sizes = product.sizes ?? [];
+  const hasColors = colors.length > 0;
+  const hasSizes = sizes.length > 0;
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   // Default-select the first option so a single-variant product needs no extra click
   const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(hasColors ? 0 : null);
-  const [selectedSize, setSelectedSize] = useState<string | null>(hasSizes ? product.sizes[0] : null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(hasSizes ? sizes[0] : null);
   const addItem = useCartStore((s) => s.addItem);
 
-  const selectedColor = selectedColorIdx !== null ? product.colors[selectedColorIdx] : undefined;
+  const selectedColor = selectedColorIdx !== null ? colors[selectedColorIdx] : undefined;
   // Selecting a color swaps the gallery to that color's photos; falls back to the default images
-  const activeImages = selectedColor?.images.length ? selectedColor.images : product.images;
+  const activeImages = selectedColor?.images.length ? selectedColor.images : (product.images ?? []);
 
   const handleSelectColor = (idx: number) => {
     setSelectedColorIdx(idx);
@@ -132,7 +135,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
                 Màu sắc{selectedColor && <Box component="span" sx={{ color: 'text.secondary', fontWeight: 400 }}> · {selectedColor.name}</Box>}
               </Typography>
               <Stack direction="row" spacing={1.25} sx={{ flexWrap: 'wrap', rowGap: 1.25 }}>
-                {product.colors.map((color, idx) => (
+                {colors.map((color, idx) => (
                   <Box
                     key={color.name}
                     onClick={() => handleSelectColor(idx)}
@@ -162,7 +165,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
             <Box sx={{ mb: 3 }}>
               <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>Size</Typography>
               <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
-                {product.sizes.map((size) => (
+                {sizes.map((size) => (
                   <Box
                     key={size}
                     onClick={() => setSelectedSize(size)}
