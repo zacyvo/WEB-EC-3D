@@ -17,13 +17,39 @@ import type { Product } from '@/types';
 import toast from 'react-hot-toast';
 
 export function ProductDetailClient({ product }: { product: Product }) {
+  const hasColors = product.colors.length > 0;
+  const hasSizes = product.sizes.length > 0;
+
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  // Default-select the first option so a single-variant product needs no extra click
+  const [selectedColorIdx, setSelectedColorIdx] = useState<number | null>(hasColors ? 0 : null);
+  const [selectedSize, setSelectedSize] = useState<string | null>(hasSizes ? product.sizes[0] : null);
   const addItem = useCartStore((s) => s.addItem);
+
+  const selectedColor = selectedColorIdx !== null ? product.colors[selectedColorIdx] : undefined;
+  // Selecting a color swaps the gallery to that color's photos; falls back to the default images
+  const activeImages = selectedColor?.images.length ? selectedColor.images : product.images;
+
+  const handleSelectColor = (idx: number) => {
+    setSelectedColorIdx(idx);
+    setSelectedImage(0);
+  };
 
   const handleAddToCart = () => {
     if (product.stock === 0) return;
-    addItem({ productId: product._id, productName: product.name, productImage: product.images[0] || '', quantity, price: product.finalPrice, slug: product.slug });
+    if (hasColors && !selectedColor) { toast.error('Vui lòng chọn màu'); return; }
+    if (hasSizes && !selectedSize) { toast.error('Vui lòng chọn size'); return; }
+    addItem({
+      productId: product._id,
+      productName: product.name,
+      productImage: activeImages[0] || '',
+      quantity,
+      price: product.finalPrice,
+      slug: product.slug,
+      ...(selectedColor ? { color: selectedColor.name } : {}),
+      ...(selectedSize ? { size: selectedSize } : {}),
+    });
     toast.success(`Đã thêm ${quantity} sản phẩm vào giỏ`);
   };
 
@@ -42,30 +68,30 @@ export function ProductDetailClient({ product }: { product: Product }) {
         {/* Images */}
         <Grid size={{ xs: 12, lg: 6 }}>
           <Box sx={{ position: 'relative', aspectRatio: '1/1', borderRadius: 4, overflow: 'hidden', bgcolor: 'grey.50', mb: 2 }}>
-            {product.images[selectedImage] ? (
-              <Image src={product.images[selectedImage]} alt={product.name} fill priority
+            {activeImages[selectedImage] ? (
+              <Image src={activeImages[selectedImage]} alt={product.name} fill priority
                 sizes="(max-width: 1024px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
             ) : (
               <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'grey.300' }}>
                 <InventoryOutlinedIcon sx={{ fontSize: 80 }} />
               </Box>
             )}
-            {product.images.length > 1 && (
+            {activeImages.length > 1 && (
               <>
                 <IconButton size="small" onClick={() => setSelectedImage((p) => Math.max(0, p - 1))} disabled={selectedImage === 0}
                   sx={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', bgcolor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', '&:disabled': { opacity: 0.3 } }}>
                   <ChevronLeftIcon />
                 </IconButton>
-                <IconButton size="small" onClick={() => setSelectedImage((p) => Math.min(product.images.length - 1, p + 1))} disabled={selectedImage === product.images.length - 1}
+                <IconButton size="small" onClick={() => setSelectedImage((p) => Math.min(activeImages.length - 1, p + 1))} disabled={selectedImage === activeImages.length - 1}
                   sx={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', bgcolor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', '&:disabled': { opacity: 0.3 } }}>
                   <ChevronRightIcon />
                 </IconButton>
               </>
             )}
           </Box>
-          {product.images.length > 1 && (
+          {activeImages.length > 1 && (
             <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
-              {product.images.map((img, i) => (
+              {activeImages.map((img, i) => (
                 <Box key={i} onClick={() => setSelectedImage(i)} sx={{ flexShrink: 0, width: 64, height: 64, borderRadius: 2, overflow: 'hidden', border: '2px solid', borderColor: i === selectedImage ? 'primary.main' : 'transparent', opacity: i === selectedImage ? 1 : 0.5, cursor: 'pointer', '&:hover': { opacity: 1 }, transition: 'all 0.15s' }}>
                   <Image src={img} alt="" width={64} height={64} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
                 </Box>
@@ -99,6 +125,61 @@ export function ProductDetailClient({ product }: { product: Product }) {
             />
             {product.eta && !outOfStock && <Typography variant="body2" color="text.secondary">🚚 Giao trong {product.eta}</Typography>}
           </Stack>
+
+          {hasColors && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+                Màu sắc{selectedColor && <Box component="span" sx={{ color: 'text.secondary', fontWeight: 400 }}> · {selectedColor.name}</Box>}
+              </Typography>
+              <Stack direction="row" spacing={1.25} sx={{ flexWrap: 'wrap', rowGap: 1.25 }}>
+                {product.colors.map((color, idx) => (
+                  <Box
+                    key={color.name}
+                    onClick={() => handleSelectColor(idx)}
+                    title={color.name}
+                    sx={{
+                      width: 36, height: 36, borderRadius: '50%', cursor: 'pointer',
+                      bgcolor: color.hexCode || 'grey.200',
+                      border: '2px solid', borderColor: idx === selectedColorIdx ? 'primary.main' : 'divider',
+                      outline: idx === selectedColorIdx ? '2px solid' : 'none',
+                      outlineColor: 'primary.main', outlineOffset: '2px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      transition: 'transform 0.15s', '&:hover': { transform: 'scale(1.08)' },
+                    }}
+                  >
+                    {!color.hexCode && (
+                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 700, color: 'text.secondary' }}>
+                        {color.name.slice(0, 2).toUpperCase()}
+                      </Typography>
+                    )}
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+          )}
+
+          {hasSizes && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>Size</Typography>
+              <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', rowGap: 1 }}>
+                {product.sizes.map((size) => (
+                  <Box
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    sx={{
+                      px: 2, py: 0.75, borderRadius: 2, cursor: 'pointer', fontSize: 14, fontWeight: 600,
+                      border: '1.5px solid', borderColor: size === selectedSize ? 'primary.main' : 'divider',
+                      color: size === selectedSize ? 'primary.main' : 'text.primary',
+                      bgcolor: size === selectedSize ? alpha('#0071E3', 0.06) : 'transparent',
+                      transition: 'all 0.15s',
+                    }}
+                  >
+                    {size}
+                  </Box>
+                ))}
+              </Stack>
+            </Box>
+          )}
 
           {!outOfStock && (
             <Stack direction="row" spacing={2} sx={{ mb: 3, alignItems: 'center'  }}>

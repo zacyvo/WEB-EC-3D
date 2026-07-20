@@ -135,7 +135,12 @@ export default function CheckoutPage() {
 
   const onSubmit = async (data: ShippingForm) => {    try {
       const payload = {
-        items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+        items: items.map((i) => ({
+          productId: i.productId,
+          quantity: i.quantity,
+          ...(i.color ? { color: i.color } : {}),
+          ...(i.size ? { size: i.size } : {}),
+        })),
         shippingInfo: {
           recipientName: data.recipientName,
           phone: data.phone,
@@ -392,7 +397,7 @@ export default function CheckoutPage() {
 
                 <Stack spacing={1.5} sx={{ mb: 2 }}>
                   {items.map((item) => (
-                    <Box key={item.productId} sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+                    <Box key={`${item.productId}-${item.color ?? ''}-${item.size ?? ''}`} sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
                       <Box sx={{ position: 'relative', width: 48, height: 48, borderRadius: 1.5, overflow: 'hidden', bgcolor: 'grey.50', flexShrink: 0 }}>
                         {item.productImage ? (
                           <Image src={item.productImage} alt={item.productName} fill sizes="48px" style={{ objectFit: 'cover' }} />
@@ -406,6 +411,11 @@ export default function CheckoutPage() {
                         <Typography variant="body2" sx={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {item.productName}
                         </Typography>
+                        {(item.color || item.size) && (
+                          <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
+                            {[item.color, item.size].filter(Boolean).join(' · ')}
+                          </Typography>
+                        )}
                         <Typography variant="caption" color="text.secondary">
                           x{item.quantity} · {formatCurrency(item.price)}
                         </Typography>

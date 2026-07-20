@@ -18,8 +18,12 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore((s) => s.addItem);
+  // Products with color/size options need the detail page to pick a variant first —
+  // quick-add only applies when there's nothing to choose.
+  const hasVariants = product.colors.length > 0 || product.sizes.length > 0;
 
   const handleAddToCart = (e: React.MouseEvent) => {
+    if (hasVariants) return; // let the click fall through to the product page link
     e.preventDefault();
     if (product.stock === 0) return;
     addItem({

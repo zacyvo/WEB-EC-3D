@@ -89,6 +89,11 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
                   <Typography component={Link} href={`/products/${item.productSlug}`} variant="body2" sx={{ textDecoration: 'none', color: 'text.primary', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', '&:hover': { color: 'primary.main' }, fontWeight: 500  }}>
                     {item.productName}
                   </Typography>
+                  {(item.color || item.size) && (
+                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
+                      {[item.color, item.size].filter(Boolean).join(' · ')}
+                    </Typography>
+                  )}
                   <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
                     <Typography variant="caption" color="text.disabled">x{item.quantity}</Typography>
                     <Typography variant="body2" color="primary.main" sx={{ fontWeight: 700 }}>{formatCurrency(item.subtotal)}</Typography>

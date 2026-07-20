@@ -28,11 +28,22 @@ export interface Category {
   isActive: boolean;
 }
 
+export interface ProductColor {
+  name: string;
+  hexCode?: string;
+  /** Images shown when this color is selected. Empty = falls back to the product's default images. */
+  images: string[];
+}
+
 export interface Product {
   _id: string;
   name: string;
   slug: string;
   images: string[];
+  /** Selectable color variants. Empty = product has no color options. */
+  colors: ProductColor[];
+  /** Selectable size labels. Empty = product has no size options. */
+  sizes: string[];
   category: Category | string;
   sellingPrice: number;
   discountPercent: number;
@@ -54,6 +65,8 @@ export interface CartItem {
   quantity: number;
   price: number;
   slug: string;
+  color?: string;
+  size?: string;
 }
 
 export interface Cart {
@@ -78,6 +91,8 @@ export interface OrderItem {
   quantity: number;
   unitPrice: number;
   subtotal: number;
+  color?: string;
+  size?: string;
 }
 
 export interface ShippingInfo {

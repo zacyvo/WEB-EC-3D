@@ -52,7 +52,7 @@ export default function CartPage() {
         <Grid size={{ xs: 12, lg: 8 }}>
           <Stack spacing={2}>
             {items.map((item) => (
-              <Card key={item.productId} variant="outlined" sx={{ borderRadius: 3 }}>
+              <Card key={`${item.productId}-${item.color ?? ''}-${item.size ?? ''}`} variant="outlined" sx={{ borderRadius: 3 }}>
                 <CardContent sx={{ p: 2.5, '&:last-child': { pb: 2.5 } }}>
                   <Box sx={{ display: 'flex', gap: 2 }}>
                     <Box sx={{ position: 'relative', width: 80, height: 80, borderRadius: 2, overflow: 'hidden', bgcolor: 'grey.50', flexShrink: 0 }}>
@@ -69,14 +69,19 @@ export default function CartPage() {
                         sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', textDecoration: 'none', color: 'text.primary', '&:hover': { color: 'primary.main' }, fontWeight: 500  }}>
                         {item.productName}
                       </Typography>
+                      {(item.color || item.size) && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.25 }}>
+                          {[item.color, item.size].filter(Boolean).join(' · ')}
+                        </Typography>
+                      )}
                       <Typography variant="body2" color="primary.main" sx={{ mt: 0.5, fontWeight: 700  }}>{formatCurrency(item.price)}</Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid', borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}>
-                          <IconButton size="small" sx={{ borderRadius: 0, px: 1.5 }} onClick={() => updateQuantity(item.productId, item.quantity - 1)}>-</IconButton>
+                          <IconButton size="small" sx={{ borderRadius: 0, px: 1.5 }} onClick={() => updateQuantity(item.productId, item.color, item.size, item.quantity - 1)}>-</IconButton>
                           <Typography sx={{ px: 2, py: 0.5, fontWeight: 600, fontSize: 14 }}>{item.quantity}</Typography>
-                          <IconButton size="small" sx={{ borderRadius: 0, px: 1.5 }} onClick={() => updateQuantity(item.productId, item.quantity + 1)}>+</IconButton>
+                          <IconButton size="small" sx={{ borderRadius: 0, px: 1.5 }} onClick={() => updateQuantity(item.productId, item.color, item.size, item.quantity + 1)}>+</IconButton>
                         </Box>
-                        <IconButton onClick={() => removeItem(item.productId)} sx={{ color: 'text.disabled', '&:hover': { color: 'error.main', bgcolor: alpha('#FF3B30', 0.06) } }}>
+                        <IconButton onClick={() => removeItem(item.productId, item.color, item.size)} sx={{ color: 'text.disabled', '&:hover': { color: 'error.main', bgcolor: alpha('#FF3B30', 0.06) } }}>
                           <DeleteOutlineIcon fontSize="small" />
                         </IconButton>
                       </Box>
