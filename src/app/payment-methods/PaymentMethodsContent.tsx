@@ -83,7 +83,7 @@ const SECTIONS: Section[] = [
     title: '7. Hóa đơn',
     content: [
       {
-        body: 'Hiện tại chúng tôi chưa hỗ trợ xuất hóa đơn giá trị gia tăng (VAT) điện tử. Tính năng này sẽ được cập nhật trong thời gian sớm nhất — vui lòng liên hệ nếu doanh nghiệp của bạn cần chứng từ mua hàng.',
+        body: 'Hiện tại chúng tôi CÓ hỗ trợ xuất hóa đơn giá trị gia tăng (VAT) điện tử. Vui lòng liên hệ nếu doanh nghiệp của bạn cần chứng từ mua hàng.',
       },
     ],
   },

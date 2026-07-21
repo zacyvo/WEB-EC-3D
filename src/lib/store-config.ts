@@ -4,6 +4,8 @@ export const STORE = {
   address: 'Bình Trị Đông, TP. Hồ Chí Minh, Việt Nam',
   phone: '0909064680',
   email: 'support@luxe-glow.vn',
+  website: 'https://www.luxe-glow.vn/',
+  taxId: '079197022908',
   zalo: 'https://zalo.me/0909064680',
   facebook: 'https://www.facebook.com/share/1HraFSNqjd/?mibextid=wwXIfr',
   instagram: '',

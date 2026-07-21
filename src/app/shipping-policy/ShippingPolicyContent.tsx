@@ -73,7 +73,7 @@ const SECTIONS: Section[] = [
         body: 'Phí vận chuyển được tính tự động dựa trên địa chỉ nhận hàng và trọng lượng đơn hàng, hiển thị rõ ràng tại bước xác nhận đơn trước khi bạn đặt hàng — không phát sinh phí ẩn.',
       },
       {
-        body: 'Đơn hàng từ 500.000đ trở lên được miễn phí vận chuyển khi giao trong nội thành TP. Hồ Chí Minh.',
+        body: 'Đơn hàng từ 1.000.000đ trở lên được miễn phí vận chuyển khi giao trong nội thành TP. Hồ Chí Minh.',
       },
     ],
   },
