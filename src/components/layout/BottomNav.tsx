@@ -15,7 +15,7 @@ const NAV_ITEMS = [
   { href: '/custom-order', label: 'Thiết kế', Icon: BrushOutlinedIcon },
   { href: '/products', label: 'Sản phẩm', Icon: GridViewOutlinedIcon },
   { href: '/cart', label: 'Giỏ hàng', Icon: ShoppingBagOutlinedIcon, showBadge: true },
-  { href: '/profile', label: 'Tôi', Icon: PersonOutlineIcon },
+  { href: '/profile', label: 'Hỗ Trợ', Icon: PersonOutlineIcon },
 ];
 
 export function BottomNav() {

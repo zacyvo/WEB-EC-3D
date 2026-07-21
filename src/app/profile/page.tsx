@@ -23,6 +23,13 @@ import StarBorderIcon from '@mui/icons-material/StarBorder';
 import HeadsetMicOutlinedIcon from '@mui/icons-material/HeadsetMicOutlined';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutlined';
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
+import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
+import LightbulbOutlinedIcon from '@mui/icons-material/LightbulbOutlined';
+import LocalShippingOutlinedIcon from '@mui/icons-material/LocalShippingOutlined';
+import CachedOutlinedIcon from '@mui/icons-material/CachedOutlined';
+import CreditCardOutlinedIcon from '@mui/icons-material/CreditCardOutlined';
+import PrivacyTipOutlinedIcon from '@mui/icons-material/PrivacyTipOutlined';
+import GavelOutlinedIcon from '@mui/icons-material/GavelOutlined';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -43,6 +50,21 @@ interface AddressForm {
 
 const EMPTY_FORM: AddressForm = { city: '', ward: '', street: '', isDefault: false };
 
+const SUPPORT_ITEMS = [
+  { label: 'Liên hệ hỗ trợ', href: '/contact', Icon: HeadsetMicOutlinedIcon },
+  { label: 'Câu hỏi thường gặp', href: '/faq', Icon: HelpOutlineIcon },
+  { label: 'Hướng dẫn mua hàng', href: '/order-guide', Icon: MenuBookOutlinedIcon },
+  { label: 'Hướng dẫn sử dụng đèn', href: '/guide', Icon: LightbulbOutlinedIcon },
+];
+
+const POLICY_ITEMS = [
+  { label: 'Chính sách vận chuyển', href: '/shipping-policy', Icon: LocalShippingOutlinedIcon },
+  { label: 'Chính sách đổi trả & bảo hành', href: '/return-policy', Icon: CachedOutlinedIcon },
+  { label: 'Hình thức thanh toán', href: '/payment-methods', Icon: CreditCardOutlinedIcon },
+  { label: 'Chính sách bảo mật', href: '/privacy-policy', Icon: PrivacyTipOutlinedIcon },
+  { label: 'Điều khoản dịch vụ', href: '/terms-of-service', Icon: GavelOutlinedIcon },
+];
+
 export default function ProfilePage() {
   const { user, isAuthenticated, clearAuth, updateUser } = useAuthStore();
   const router = useRouter();
@@ -50,10 +72,8 @@ export default function ProfilePage() {
 
   useEffect(() => { setMounted(true); }, []);
 
-  useEffect(() => {
-    if (!mounted) return;
-    if (!isAuthenticated) router.replace('/auth/login?redirect=/profile');
-  }, [mounted, isAuthenticated, router]);
+  // No forced redirect here: guests must still be able to reach Hỗ trợ/Chính sách
+  // from this tab, since it's the only nav entry point off the home page on mobile.
 
   // ── Address dialog state ────────────────────────────────────────────────────
   const [addrOpen, setAddrOpen] = useState(false);
@@ -147,94 +167,126 @@ export default function ProfilePage() {
 
   const isSubmitting = addMut.isPending || updateMut.isPending;
 
-  if (!mounted || !user) return null;
+  if (!mounted) return null;
+
+  const isGuest = !isAuthenticated || !user;
 
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 4, md: 7 } }}>
-      <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>Hồ sơ của tôi</Typography>
+      <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>{isGuest ? 'Tài khoản' : 'Hồ sơ của tôi'}</Typography>
 
-      {/* ── Avatar & Info ──────────────────────────────────────────────────── */}
-      <Card
-        variant="outlined"
-        sx={{
-          borderRadius: 3,
-          mb: 2,
-          cursor: 'pointer',
-          transition: 'border-color 0.15s, box-shadow 0.15s',
-          '&:hover': { borderColor: 'primary.main', boxShadow: '0 0 0 2px rgba(25,118,210,0.12)' },
-        }}
-        onClick={() => router.push('/profile/edit')}
-      >
-        <CardContent sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 3 }}>
-          <Avatar sx={{ width: 72, height: 72, fontSize: 28 }}>
-            {user.avatar ? (
-              <Image src={user.avatar} alt={user.name} fill style={{ objectFit: 'cover' }} sizes="72px" />
-            ) : (
-              user.name?.charAt(0).toUpperCase()
-            )}
-          </Avatar>
-          <Box sx={{ flex: 1, minWidth: 0 }}>
-            <Typography variant="h6" sx={{ fontWeight: 700 }}>{user.name}</Typography>
-            <Typography variant="body2" color="text.secondary">{user.email}</Typography>
-            {user.phone && <Typography variant="body2" color="text.secondary">{user.phone}</Typography>}
+      {isGuest ? (
+        /* ── Guest CTA ─────────────────────────────────────────────────── */
+        <Card variant="outlined" sx={{ borderRadius: 3, mb: 2, p: 3.5, textAlign: 'center' }}>
+          <Box sx={{ width: 64, height: 64, borderRadius: '50%', bgcolor: 'grey.100', display: 'flex', alignItems: 'center', justifyContent: 'center', mx: 'auto', mb: 2 }}>
+            <PersonOutlineIcon sx={{ fontSize: 32, color: 'grey.400' }} />
           </Box>
-          <ChevronRightIcon sx={{ color: 'text.disabled', flexShrink: 0 }} />
-        </CardContent>
-      </Card>
+          <Typography sx={{ fontWeight: 700, mb: 0.5 }}>Chào bạn!</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2.5 }}>
+            Đăng nhập để xem đơn hàng, lưu địa chỉ và nhận ưu đãi dành riêng cho bạn.
+          </Typography>
+          <Stack direction="row" spacing={1.5} sx={{ justifyContent: 'center' }}>
+            <Button component={Link} href="/auth/register" variant="outlined" sx={{ borderRadius: 980, px: 3 }}>Đăng ký</Button>
+            <Button component={Link} href="/auth/login?redirect=/profile" variant="contained" sx={{ borderRadius: 980, px: 3 }}>Đăng nhập</Button>
+          </Stack>
+        </Card>
+      ) : (
+        <>
+          {/* ── Avatar & Info ──────────────────────────────────────────── */}
+          <Card
+            variant="outlined"
+            sx={{
+              borderRadius: 3,
+              mb: 2,
+              cursor: 'pointer',
+              transition: 'border-color 0.15s, box-shadow 0.15s',
+              '&:hover': { borderColor: 'primary.main', boxShadow: '0 0 0 2px rgba(25,118,210,0.12)' },
+            }}
+            onClick={() => router.push('/profile/edit')}
+          >
+            <CardContent sx={{ p: 3, display: 'flex', alignItems: 'center', gap: 3 }}>
+              <Avatar sx={{ width: 72, height: 72, fontSize: 28 }}>
+                {user.avatar ? (
+                  <Image src={user.avatar} alt={user.name} fill style={{ objectFit: 'cover' }} sizes="72px" />
+                ) : (
+                  user.name?.charAt(0).toUpperCase()
+                )}
+              </Avatar>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography variant="h6" sx={{ fontWeight: 700 }}>{user.name}</Typography>
+                <Typography variant="body2" color="text.secondary">{user.email}</Typography>
+                {user.phone && <Typography variant="body2" color="text.secondary">{user.phone}</Typography>}
+              </Box>
+              <ChevronRightIcon sx={{ color: 'text.disabled', flexShrink: 0 }} />
+            </CardContent>
+          </Card>
 
-      {/* ── Menu ──────────────────────────────────────────────────────────── */}
-      <Card variant="outlined" sx={{ borderRadius: 3, mb: 2 }}>
-        <List disablePadding>
-          <ListItemButton component={Link} href="/orders" sx={{ py: 1.75 }}>
-            <ListItemIcon sx={{ minWidth: 40 }}><ReceiptLongOutlinedIcon sx={{ color: 'primary.main' }} /></ListItemIcon>
-            <ListItemText primary="Đơn hàng của tôi" slotProps={{ primary: { sx: { fontWeight: 500 } } }} />
-            <ChevronRightIcon sx={{ color: 'text.disabled' }} />
-          </ListItemButton>
-          <Divider />
-          <ListItemButton onClick={() => setAddrOpen(true)} sx={{ py: 1.75 }}>
-            <ListItemIcon sx={{ minWidth: 40 }}><LocationOnOutlinedIcon sx={{ color: 'primary.main' }} /></ListItemIcon>
-            <ListItemText
-              primary={<span style={{ fontWeight: 500 }}>Địa chỉ giao hàng</span>}
-              secondary={user.addresses?.length ? `${user.addresses.length} địa chỉ đã lưu` : 'Chưa có địa chỉ'}
-            />
-            <ChevronRightIcon sx={{ color: 'text.disabled' }} />
-          </ListItemButton>
-        </List>
-      </Card>
+          {/* ── Menu ─────────────────────────────────────────────────────── */}
+          <Card variant="outlined" sx={{ borderRadius: 3, mb: 2 }}>
+            <List disablePadding>
+              <ListItemButton component={Link} href="/orders" sx={{ py: 1.75 }}>
+                <ListItemIcon sx={{ minWidth: 40 }}><ReceiptLongOutlinedIcon sx={{ color: 'primary.main' }} /></ListItemIcon>
+                <ListItemText primary="Đơn hàng của tôi" slotProps={{ primary: { sx: { fontWeight: 500 } } }} />
+                <ChevronRightIcon sx={{ color: 'text.disabled' }} />
+              </ListItemButton>
+              <Divider />
+              <ListItemButton onClick={() => setAddrOpen(true)} sx={{ py: 1.75 }}>
+                <ListItemIcon sx={{ minWidth: 40 }}><LocationOnOutlinedIcon sx={{ color: 'primary.main' }} /></ListItemIcon>
+                <ListItemText
+                  primary={<span style={{ fontWeight: 500 }}>Địa chỉ giao hàng</span>}
+                  secondary={user.addresses?.length ? `${user.addresses.length} địa chỉ đã lưu` : 'Chưa có địa chỉ'}
+                />
+                <ChevronRightIcon sx={{ color: 'text.disabled' }} />
+              </ListItemButton>
+            </List>
+          </Card>
+        </>
+      )}
 
       {/* ── Hỗ trợ ──────────────────────────────────────────────────────── */}
       <Card variant="outlined" sx={{ borderRadius: 3, mb: 2 }}>
         <List disablePadding>
-          <ListItemButton component={Link} href="/contact" sx={{ py: 1.75 }}>
-            <ListItemIcon sx={{ minWidth: 40 }}><HeadsetMicOutlinedIcon sx={{ color: 'primary.main' }} /></ListItemIcon>
-            <ListItemText primary="Liên hệ hỗ trợ" slotProps={{ primary: { sx: { fontWeight: 500 } } }} />
-            <ChevronRightIcon sx={{ color: 'text.disabled' }} />
-          </ListItemButton>
-          <Divider />
-          <ListItemButton component={Link} href="/faq" sx={{ py: 1.75 }}>
-            <ListItemIcon sx={{ minWidth: 40 }}><HelpOutlineIcon sx={{ color: 'primary.main' }} /></ListItemIcon>
-            <ListItemText primary="Câu hỏi thường gặp" slotProps={{ primary: { sx: { fontWeight: 500 } } }} />
-            <ChevronRightIcon sx={{ color: 'text.disabled' }} />
-          </ListItemButton>
-          <Divider />
-          <ListItemButton component={Link} href="/order-guide" sx={{ py: 1.75 }}>
-            <ListItemIcon sx={{ minWidth: 40 }}><MenuBookOutlinedIcon sx={{ color: 'primary.main' }} /></ListItemIcon>
-            <ListItemText primary="Hướng dẫn đặt hàng" slotProps={{ primary: { sx: { fontWeight: 500 } } }} />
-            <ChevronRightIcon sx={{ color: 'text.disabled' }} />
-          </ListItemButton>
+          {SUPPORT_ITEMS.map(({ label, href, Icon }, i) => (
+            <Box key={href}>
+              {i > 0 && <Divider />}
+              <ListItemButton component={Link} href={href} sx={{ py: 1.75 }}>
+                <ListItemIcon sx={{ minWidth: 40 }}><Icon sx={{ color: 'primary.main' }} /></ListItemIcon>
+                <ListItemText primary={label} slotProps={{ primary: { sx: { fontWeight: 500 } } }} />
+                <ChevronRightIcon sx={{ color: 'text.disabled' }} />
+              </ListItemButton>
+            </Box>
+          ))}
         </List>
       </Card>
 
-      <Card variant="outlined" sx={{ borderRadius: 3 }}>
-        <ListItemButton onClick={() => { clearAuth(); router.push('/'); }} sx={{ py: 1.75 }}>
-          <ListItemIcon sx={{ minWidth: 40 }}><LogoutIcon sx={{ color: 'error.main' }} /></ListItemIcon>
-          <ListItemText primary="Đăng xuất" slotProps={{ primary: { sx: { fontWeight: 500, color: 'error.main' } } }} />
-        </ListItemButton>
+      {/* ── Chính sách ──────────────────────────────────────────────────── */}
+      <Card variant="outlined" sx={{ borderRadius: 3, mb: 2 }}>
+        <List disablePadding>
+          {POLICY_ITEMS.map(({ label, href, Icon }, i) => (
+            <Box key={href}>
+              {i > 0 && <Divider />}
+              <ListItemButton component={Link} href={href} sx={{ py: 1.75 }}>
+                <ListItemIcon sx={{ minWidth: 40 }}><Icon sx={{ color: 'primary.main' }} /></ListItemIcon>
+                <ListItemText primary={label} slotProps={{ primary: { sx: { fontWeight: 500 } } }} />
+                <ChevronRightIcon sx={{ color: 'text.disabled' }} />
+              </ListItemButton>
+            </Box>
+          ))}
+        </List>
       </Card>
+
+      {!isGuest && (
+        <Card variant="outlined" sx={{ borderRadius: 3 }}>
+          <ListItemButton onClick={() => { clearAuth(); router.push('/'); }} sx={{ py: 1.75 }}>
+            <ListItemIcon sx={{ minWidth: 40 }}><LogoutIcon sx={{ color: 'error.main' }} /></ListItemIcon>
+            <ListItemText primary="Đăng xuất" slotProps={{ primary: { sx: { fontWeight: 500, color: 'error.main' } } }} />
+          </ListItemButton>
+        </Card>
+      )}
 
       {/* ── Address List Dialog ────────────────────────────────────────────── */}
       <Dialog
-        open={addrOpen}
+        open={addrOpen && !isGuest}
         onClose={() => setAddrOpen(false)}
         fullWidth
         maxWidth="xs"
@@ -242,7 +294,7 @@ export default function ProfilePage() {
       >
         <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Địa chỉ giao hàng</DialogTitle>
         <DialogContent sx={{ px: 2 }}>
-          {!user.addresses?.length ? (
+          {!user?.addresses?.length ? (
             <Box sx={{ py: 5, textAlign: 'center' }}>
               <LocationOnOutlinedIcon sx={{ fontSize: 52, color: 'text.disabled', mb: 1.5 }} />
               <Typography color="text.secondary" variant="body2">Bạn chưa có địa chỉ nào</Typography>
