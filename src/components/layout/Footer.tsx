@@ -27,7 +27,7 @@ export function Footer() {
               <Typography variant="h6" color="text.primary" gutterBottom sx={{ fontWeight: 700 }}>Luxe Glow</Typography>
             </Link>
             <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.7, maxWidth: 260 }}>
-              Đèn in 3D handcraft độc đáo, thiết kế theo phong cách tối giản hiện đại.
+              Bạn có ý tưởng, Luxe Glow thực hiện nó — từ đèn trang trí handcraft đến quà tặng và vật dụng in 3D theo yêu cầu.
             </Typography>
           </Grid>
           <Grid size={{ xs: 6, md: 2 }}>

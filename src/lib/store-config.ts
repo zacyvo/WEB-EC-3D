@@ -1,6 +1,6 @@
 export const STORE = {
   name: 'Luxe Glow',
-  tagline: 'Đèn In 3D Handcraft',
+  tagline: 'In 3D Theo Ý Tưởng Của Bạn',
   address: 'Bình Trị Đông, TP. Hồ Chí Minh, Việt Nam',
   phone: '0909064680',
   email: 'support@luxe-glow.vn',

@@ -7,6 +7,7 @@ import { CategoryFilter } from '@/components/product/CategoryFilter';
 import { FeaturesSection } from '@/components/layout/FeaturesSection';
 import { GuideBanner } from '@/components/layout/GuideBanner';
 import { PartnershipBanner } from '@/components/layout/PartnershipBanner';
+import { IdeaToRealitySection } from '@/components/layout/IdeaToRealitySection';
 
 export default function HomePage() {
   return (
@@ -25,6 +26,8 @@ export default function HomePage() {
           <ProductGrid />
         </Suspense>
       </Container>
+
+      <IdeaToRealitySection />
 
       <GuideBanner />
 

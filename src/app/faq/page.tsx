@@ -568,11 +568,14 @@ export default function FaqPage() {
             Sẵn sàng khám phá sản phẩm?
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Hơn 500 mẫu đèn in 3D handcraft đang chờ bạn.
+            Hơn 500 mẫu đèn in 3D handcraft đang chờ bạn — hoặc gửi ý tưởng riêng để chúng tôi in 3D theo yêu cầu.
           </Typography>
           <Stack direction="row" spacing={1.5} sx={{ flexWrap: 'wrap', justifyContent: 'center' }}>
             <Button component={Link} href="/products" variant="contained" sx={{ borderRadius: 980, px: 3 }}>
               Xem sản phẩm
+            </Button>
+            <Button component={Link} href="/custom-order" variant="outlined" sx={{ borderRadius: 980, px: 3 }}>
+              Gửi ý tưởng của bạn
             </Button>
             <Button component={Link} href="/order-guide" variant="outlined" sx={{ borderRadius: 980, px: 3 }}>
               Hướng dẫn đặt hàng

@@ -10,7 +10,7 @@ export default function ProductsClient() {
     <Container maxWidth="lg" sx={{ py: { xs: 5, md: 7 } }}>
       <Box sx={{ mb: 4 }}>
         <Typography variant="h4" gutterBottom sx={{ fontWeight: 700 }}>Tất cả sản phẩm</Typography>
-        <Typography variant="body1" color="text.secondary">Khám phá bộ sưu tập đèn in 3D của chúng tôi</Typography>
+        <Typography variant="body1" color="text.secondary">Khám phá bộ sưu tập đèn in 3D của chúng tôi — hoặc gửi ý tưởng riêng để chúng tôi hiện thực hoá</Typography>
       </Box>
       <Suspense fallback={null}><SearchBar /></Suspense>
       <Suspense fallback={null}><CategoryFilter /></Suspense>

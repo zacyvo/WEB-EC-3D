@@ -31,19 +31,19 @@ export function HeroSection() {
           {/* Badge */}
           <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1, bgcolor: alpha('#007AFF', 0.08), color: 'primary.main', px: 2.5, py: 0.75, borderRadius: 980, mb: 4 }}>
             <AutoAwesomeIcon sx={{ fontSize: 16 }} />
-            <Typography variant="body2" sx={{ fontWeight: 600 }}>Đèn In 3D Handcraft Luxe Glow</Typography>
+            <Typography variant="body2" sx={{ fontWeight: 600 }}>Xưởng in 3D theo ý tưởng của bạn</Typography>
           </Box>
 
           <Typography variant="h1" sx={{ fontSize: { xs: 40, md: 68, lg: 80 }, fontWeight: 700, letterSpacing: '-0.04em', mb: 3, lineHeight: 1.05 }}>
-            Ánh sáng từ{' '}
+            Mọi thứ quanh bạn,{' '}
             <Box component="span" sx={{ background: 'linear-gradient(135deg, #007AFF 0%, #8B5CF6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              công nghệ in 3D
+              đều có thể in 3D
             </Box>
           </Typography>
 
           <Typography variant="body1" color="text.secondary" sx={{ fontSize: { xs: 17, md: 20 }, mb: 5, maxWidth: 560, mx: 'auto', lineHeight: 1.65 }}>
-            Bộ sưu tập đèn in 3D độc đáo, được tạo ra từng chi tiết với công nghệ FDM tiên tiến.
-            Thiết kế tối giản, chất lượng cao cấp.
+            Bạn có ý tưởng, Luxe Glow thực hiện nó. Từ những chiếc đèn nghệ thuật làm nên tên tuổi
+            chúng tôi, đến bất kỳ ý tưởng nào bạn mang tới — công nghệ in 3D FDM biến nó thành sản phẩm thật.
           </Typography>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ justifyContent: 'center' }}>
@@ -55,8 +55,8 @@ export function HeroSection() {
             >
               Khám phá sản phẩm
             </Button>
-            <Button component={Link} href="#features" variant="outlined" size="large" sx={{ px: 4, py: 1.75, fontSize: '1rem' }}>
-              Tìm hiểu thêm
+            <Button component={Link} href="/custom-order" variant="outlined" size="large" sx={{ px: 4, py: 1.75, fontSize: '1rem' }}>
+              Gửi ý tưởng của bạn
             </Button>
           </Stack>
 

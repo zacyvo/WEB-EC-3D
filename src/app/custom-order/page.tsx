@@ -165,10 +165,10 @@ export default function CustomOrderPage() {
         </IconButton>
         <Box>
           <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-            Đặt sản phẩm theo yêu cầu
+            Biến ý tưởng thành hiện thực
           </Typography>
           <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-            Mô tả ý tưởng của bạn, chúng tôi sẽ tư vấn và báo giá
+            Mô tả ý tưởng của bạn — chúng tôi tư vấn, báo giá và in 3D theo đúng những gì bạn hình dung
           </Typography>
         </Box>
       </Box>
