@@ -193,6 +193,12 @@ export default function ContractAccessPage({ params }: { params: { token: string
       setConfirmOpen(false);
       return;
     }
+    const signerName = partyA.representative.trim() || partyA.name.trim();
+    if (signerName.split(/\s+/).filter(Boolean).length < 2) {
+      toast.error('Vui lòng nhập đầy đủ họ và tên (VD: Nguyễn Văn A), không chỉ một từ');
+      setConfirmOpen(false);
+      return;
+    }
     setSubmitting(true);
     try {
       const saved = await saveInfo(true);
@@ -411,6 +417,7 @@ export default function ContractAccessPage({ params }: { params: { token: string
                 label="Tên tổ chức / cá nhân *"
                 value={partyA.name}
                 onChange={(e) => setPartyA((p) => ({ ...p, name: e.target.value }))}
+                helperText="Cá nhân: nhập đầy đủ họ và tên (VD: Nguyễn Văn A) — tên này sẽ in tại mục ký tên hợp đồng"
                 fullWidth
               />
               <TextField
