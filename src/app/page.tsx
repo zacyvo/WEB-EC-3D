@@ -8,6 +8,7 @@ import { FeaturesSection } from '@/components/layout/FeaturesSection';
 import { GuideBanner } from '@/components/layout/GuideBanner';
 import { PartnershipBanner } from '@/components/layout/PartnershipBanner';
 import { IdeaToRealitySection } from '@/components/layout/IdeaToRealitySection';
+import { SocialConnectSection } from '@/components/layout/SocialConnectSection';
 
 export default function HomePage() {
   return (
@@ -34,6 +35,8 @@ export default function HomePage() {
       <FeaturesSection />
 
       <PartnershipBanner />
+
+      <SocialConnectSection />
     </>
   );
 }

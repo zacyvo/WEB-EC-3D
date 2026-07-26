@@ -10,6 +10,7 @@ export const STORE = {
   facebook: 'https://www.facebook.com/share/1HraFSNqjd/?mibextid=wwXIfr',
   instagram: '',
   shopee: 'https://vn.shp.ee/MoBMsiLT',
-  tiktok: 'comming soon',
+  tiktok: 'https://www.tiktok.com/@luxe.glow672?_r=1&_t=ZS-98LqAAMjZDN',
+  threads: 'https://www.threads.com/@luxeglow.vn?igshid=NTc4MTIwNjQ2YQ==',
   googleMapsEmbed: '',
 } as const;

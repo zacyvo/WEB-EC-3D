@@ -6,103 +6,11 @@ import {
   Button, Divider, alpha,
 } from '@mui/material';
 import type { Metadata } from 'next';
-import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
-import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import LocationOnOutlinedIcon from '@mui/icons-material/LocationOnOutlined';
 import AccessTimeOutlinedIcon from '@mui/icons-material/AccessTimeOutlined';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
-import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
-import CameraAltOutlinedIcon from '@mui/icons-material/CameraAltOutlined';
-import VideoLibraryOutlinedIcon from '@mui/icons-material/VideoLibraryOutlined';
-import PeopleOutlineIcon from '@mui/icons-material/PeopleOutlined';
 import { STORE } from '@/lib/store-config';
-
-const CHANNELS = [
-  {
-    id: 'phone',
-    label: 'Gọi điện',
-    value: STORE.phone,
-    desc: 'Hotline hỗ trợ 8:00 – 22:00',
-    href: `tel:${STORE.phone}`,
-    Icon: PhoneOutlinedIcon,
-    color: '#34C759',
-    bg: '#F0FBF2',
-    cta: 'Gọi ngay',
-    status: !!STORE.phone
-  },
-  {
-    id: 'zalo',
-    label: 'Zalo',
-    value: 'Chat qua Zalo',
-    desc: 'Phản hồi trong vòng 5 phút',
-    href: STORE.zalo,
-    Icon: ChatBubbleOutlineIcon,
-    color: '#007AFF',
-    bg: '#EAF3FF',
-    cta: 'Nhắn Zalo',
-    status: !!STORE.zalo
-  },
-  {
-    id: 'email',
-    label: 'Email',
-    value: STORE.email,
-    desc: 'Phản hồi trong vòng 24 giờ',
-    href: `mailto:${STORE.email}`,
-    Icon: EmailOutlinedIcon,
-    color: '#636366',
-    bg: '#F5F5F7',
-    cta: 'Gửi email',
-    status: !!STORE.email
-  },
-  {
-    id: 'facebook',
-    label: 'Facebook',
-    value: 'Luxe Glow',
-    desc: 'Theo dõi tin tức & khuyến mãi',
-    href: STORE.facebook,
-    Icon: PeopleOutlineIcon,
-    color: '#1877F2',
-    bg: '#EEF4FE',
-    cta: 'Xem trang',
-    status: !!STORE.facebook
-  },
-  {
-    id: 'shopee',
-    label: 'Shopee',
-    value: 'shop.luxeglow',
-    desc: 'Mua hàng & nhận nhiều ưu đãi',
-    href: STORE.shopee,
-    Icon: StorefrontOutlinedIcon,
-    color: '#EE4D2D',
-    bg: '#FFF2EF',
-    cta: 'Vào shop',
-    status: !!STORE.shopee
-  },
-  {
-    id: 'instagram',
-    label: 'Instagram',
-    value: 'comming soon',
-    desc: 'Ảnh sản phẩm & behind-the-scenes',
-    href: STORE.instagram,
-    Icon: CameraAltOutlinedIcon,
-    color: '#C13584',
-    bg: '#FBF0F7',
-    cta: 'Comming soon',
-    status: !!STORE.instagram
-  },
-  {
-    id: 'tiktok',
-    label: 'TikTok Shop',
-    value: 'comming soon',
-    desc: 'Video sản phẩm & livestream',
-    href: STORE.tiktok,
-    Icon: VideoLibraryOutlinedIcon,
-    color: '#1C1C1E',
-    bg: '#F5F5F7',
-    cta: 'Comming soon',
-    status: !!STORE.tiktok
-  },
-];
+import { CONTACT_CHANNELS as CHANNELS } from '@/lib/contact-channels';
 
 export default function ContactPage() {
   return (
