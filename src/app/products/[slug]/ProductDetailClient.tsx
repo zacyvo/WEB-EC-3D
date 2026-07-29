@@ -16,12 +16,22 @@ import { formatCurrency } from '@/lib/utils';
 import type { Product } from '@/types';
 import toast from 'react-hot-toast';
 
+const SOCIAL_PLATFORM_LABELS: Record<string, string> = {
+  SHOPEE: 'Shopee',
+  THREADS: 'Threads',
+  FACEBOOK: 'Facebook',
+  TIKTOK: 'TikTok',
+  OTHER: 'Khác',
+};
+
 export function ProductDetailClient({ product }: { product: Product }) {
   // Products saved before variants existed may lack these fields entirely
   const colors = product.colors ?? [];
   const sizes = product.sizes ?? [];
+  const socials = product.socials ?? [];
   const hasColors = colors.length > 0;
   const hasSizes = sizes.length > 0;
+  const hasSocials = socials.length > 0;
 
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -204,6 +214,22 @@ export function ProductDetailClient({ product }: { product: Product }) {
           >
             {outOfStock ? 'Hết hàng' : 'Thêm vào giỏ hàng'}
           </Button>
+
+          {hasSocials && (
+            <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', rowGap: 1 }}>
+              {socials.map((social, idx) => (
+                <Chip
+                  key={idx}
+                  label={SOCIAL_PLATFORM_LABELS[social.name] || social.name}
+                  size="small"
+                  variant="outlined"
+                  clickable={Boolean(social.link)}
+                  component={social.link ? 'a' : 'div'}
+                  {...(social.link ? { href: social.link, target: '_blank', rel: 'noopener noreferrer' } : {})}
+                />
+              ))}
+            </Stack>
+          )}
 
           {product.description && (
             <Box sx={{ mt: 4, pt: 4, borderTop: '1px solid', borderColor: 'divider' }}>

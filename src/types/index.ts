@@ -35,6 +35,14 @@ export interface ProductColor {
   images: string[];
 }
 
+export type SocialPlatform = 'SHOPEE' | 'THREADS' | 'FACEBOOK' | 'TIKTOK' | 'OTHER';
+
+export interface ProductSocial {
+  name: SocialPlatform;
+  id?: string;
+  link?: string;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -44,6 +52,8 @@ export interface Product {
   colors: ProductColor[];
   /** Selectable size labels. Empty = product has no size options. */
   sizes: string[];
+  /** Linked social/marketplace channels for this product. */
+  socials: ProductSocial[];
   category: Category | string;
   sellingPrice: number;
   discountPercent: number;
