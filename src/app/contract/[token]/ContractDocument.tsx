@@ -28,6 +28,33 @@ export interface PaymentInstallment {
   timing: string;
 }
 
+// ── Ký số (PAdES) ──────────────────────────────────────────────────────────
+
+export type PartySignatureStatus = 'PENDING' | 'UPLOADED' | 'VERIFIED' | 'REJECTED';
+export type SignatureMode = 'PKI' | 'SIMPLE';
+
+export interface PartyBSignature {
+  status: PartySignatureStatus;
+  signerCertCN?: string;
+  signingTime?: string;
+  verifiedAt?: string;
+}
+
+export interface PartyASignature {
+  status: PartySignatureStatus;
+  mode?: SignatureMode;
+  signerCertCN?: string;
+  signerCertIssuer?: string;
+  signingTime?: string;
+  verifiedAt?: string;
+  rejectReason?: string;
+  simpleSignature?: {
+    canvasImageUrl: string;
+    confirmedName: string;
+    confirmedAt: string;
+  };
+}
+
 export interface PublicContract {
   contractNo: string;
   status: 'NEW' | 'REVIEW' | 'DRAFT' | 'FINAL' | 'SUCCESS' | 'CLOSED';
@@ -50,6 +77,9 @@ export interface PublicContract {
   finalizedAt?: string;
   successAt?: string;
   closedAt?: string;
+  unsignedPdfUrl?: string;
+  partyBSignature?: PartyBSignature;
+  partyASignature?: PartyASignature;
   createdAt: string;
   updatedAt: string;
 }

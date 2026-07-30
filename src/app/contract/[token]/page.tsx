@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import {
@@ -14,11 +14,16 @@ import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
 import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
+import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
+import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
+import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
+import GestureOutlinedIcon from '@mui/icons-material/GestureOutlined';
 import { formatCurrency } from '@/lib/utils';
 import ContractDocument, {
   type ContractParty,
   type PublicContract,
 } from './ContractDocument';
+import SignatureCanvas from './SignatureCanvas';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -58,6 +63,201 @@ const EMPTY_PARTY: ContractParty = {
 function errMsg(err: unknown, fallback: string): string {
   const msg = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
   return Array.isArray(msg) ? msg[0] : msg || fallback;
+}
+
+async function downloadBlob(
+  url: string,
+  filename: string,
+  headers: Record<string, string> | undefined,
+) {
+  const res = await contractApi.get(url, { headers, responseType: 'blob' });
+  const blobUrl = window.URL.createObjectURL(res.data as Blob);
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  window.URL.revokeObjectURL(blobUrl);
+}
+
+// ── Ký hợp đồng (Bên A) ───────────────────────────────────────────────────────
+
+function DocumentSigningSection({
+  token, contract, authHeaders, onSigned,
+}: {
+  token: string;
+  contract: PublicContract;
+  authHeaders: Record<string, string> | undefined;
+  onSigned: (c: PublicContract) => void;
+}) {
+  const [mode, setMode] = useState<'choose' | 'pki' | 'simple'>('choose');
+  const [uploadingPki, setUploadingPki] = useState(false);
+  const [submittingSimple, setSubmittingSimple] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  const partyA = contract.partyASignature;
+
+  const uploadPki = async (file: File) => {
+    setUploadingPki(true);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await contractApi.post(
+        `/contracts/public/${token}/document/party-a-signed`,
+        form,
+        { headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' } },
+      );
+      onSigned(res.data.data);
+      toast.success('Đã xác thực chữ ký số của bạn');
+    } catch (err) {
+      toast.error(errMsg(err, 'Tải lên file đã ký thất bại'));
+    } finally {
+      setUploadingPki(false);
+    }
+  };
+
+  const submitSimple = async (canvasImageBase64: string, confirmedName: string) => {
+    setSubmittingSimple(true);
+    try {
+      const res = await contractApi.post(
+        `/contracts/public/${token}/document/party-a-simple-signature`,
+        { canvasImageBase64, confirmedName },
+        { headers: authHeaders },
+      );
+      onSigned(res.data.data);
+      toast.success('Đã ghi nhận xác nhận của bạn');
+    } catch (err) {
+      toast.error(errMsg(err, 'Xác nhận chữ ký thất bại'));
+    } finally {
+      setSubmittingSimple(false);
+    }
+  };
+
+  if (partyA?.status === 'VERIFIED') {
+    return (
+      <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, borderRadius: 4, border: '1px solid', borderColor: 'grey.200' }}>
+        <Typography sx={{ fontWeight: 700, mb: 1.5 }}>Chữ ký của bạn (Bên A)</Typography>
+        {partyA.mode === 'SIMPLE' ? (
+          <Stack spacing={1}>
+            <Alert severity="warning" sx={{ borderRadius: 3 }}>
+              Chữ ký điện tử đơn giản — không phải chữ ký số PKI.
+            </Alert>
+            <Typography variant="body2">
+              Xác nhận bởi <b>{partyA.simpleSignature?.confirmedName}</b>
+              {partyA.simpleSignature?.confirmedAt
+                ? ` lúc ${new Date(partyA.simpleSignature.confirmedAt).toLocaleString('vi-VN')}` : ''}
+            </Typography>
+            {partyA.simpleSignature?.canvasImageUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={partyA.simpleSignature.canvasImageUrl}
+                alt="Chữ ký của bạn"
+                style={{ height: 60, border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff' }}
+              />
+            )}
+          </Stack>
+        ) : (
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
+            <VerifiedUserOutlinedIcon color="success" fontSize="small" />
+            <Typography variant="body2">
+              Đã ký bằng chữ ký số — {partyA.signerCertCN || 'đã xác thực'}
+            </Typography>
+          </Stack>
+        )}
+      </Paper>
+    );
+  }
+
+  return (
+    <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, borderRadius: 4, border: '1px solid', borderColor: 'grey.200' }}>
+      <Typography sx={{ fontWeight: 700, mb: 0.5 }}>Ký hợp đồng</Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        Cửa hàng đã ký hợp đồng này bằng chữ ký số. Bạn có thể ký xác nhận bằng chữ ký số của
+        mình (nếu có USB token), hoặc ký xác nhận đơn giản.
+      </Typography>
+
+      {mode === 'choose' && (
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+          <Button
+            variant="outlined"
+            startIcon={<VerifiedUserOutlinedIcon />}
+            onClick={() => setMode('pki')}
+            sx={{ textTransform: 'none', borderRadius: 3, flex: 1 }}
+          >
+            Tôi có chữ ký số (USB token)
+          </Button>
+          <Button
+            variant="outlined"
+            startIcon={<GestureOutlinedIcon />}
+            onClick={() => setMode('simple')}
+            sx={{ textTransform: 'none', borderRadius: 3, flex: 1 }}
+          >
+            Tôi không có — ký đơn giản
+          </Button>
+        </Stack>
+      )}
+
+      {mode === 'pki' && (
+        <Stack spacing={1.5}>
+          <Typography variant="body2" color="text.secondary">
+            1. Tải file PDF bên dưới về máy. 2. Ký bằng phần mềm ký số của bạn (đã cắm USB token).
+            3. Tải file đã ký lên đây.
+          </Typography>
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+            <Button
+              variant="outlined"
+              startIcon={<DownloadOutlinedIcon />}
+              onClick={() => downloadBlob(
+                `/contracts/public/${token}/document/to-sign`,
+                `hop-dong-${contract.contractNo.replace(/\//g, '-')}-can-ky.pdf`,
+                authHeaders,
+              )}
+              sx={{ textTransform: 'none', borderRadius: 3 }}
+            >
+              Tải file cần ký
+            </Button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="application/pdf"
+              hidden
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) uploadPki(file);
+                e.target.value = '';
+              }}
+            />
+            <Button
+              variant="contained"
+              startIcon={<UploadFileOutlinedIcon />}
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPki}
+              sx={{ textTransform: 'none', borderRadius: 3, fontWeight: 600 }}
+            >
+              {uploadingPki ? 'Đang tải lên & xác thực...' : 'Tải lên file đã ký'}
+            </Button>
+          </Stack>
+          <Button size="small" onClick={() => setMode('choose')} sx={{ textTransform: 'none', alignSelf: 'flex-start' }}>
+            ← Quay lại
+          </Button>
+        </Stack>
+      )}
+
+      {mode === 'simple' && (
+        <Stack spacing={1.5}>
+          <SignatureCanvas
+            defaultName={contract.partyA?.representative || contract.partyA?.name}
+            submitting={submittingSimple}
+            onSubmit={submitSimple}
+          />
+          <Button size="small" onClick={() => setMode('choose')} sx={{ textTransform: 'none', alignSelf: 'flex-start' }}>
+            ← Quay lại
+          </Button>
+        </Stack>
+      )}
+    </Paper>
+  );
 }
 
 export default function ContractAccessPage({ params }: { params: { token: string } }) {
@@ -381,6 +581,16 @@ export default function ContractAccessPage({ params }: { params: { token: string
             Hợp đồng này <b>đã bị hủy</b>{contract.closeReason ? ` — lý do: ${contract.closeReason}` : ''}.
             Liên hệ cửa hàng nếu bạn cần hỗ trợ thêm.
           </Alert>
+        )}
+
+        {/* Ký hợp đồng — chỉ khi Bên B đã ký số hợp lệ */}
+        {['FINAL', 'SUCCESS'].includes(contract.status) && contract.partyBSignature?.status === 'VERIFIED' && (
+          <DocumentSigningSection
+            token={token}
+            contract={contract}
+            authHeaders={authHeaders}
+            onSigned={applyContract}
+          />
         )}
 
         {/* Tóm tắt sản phẩm */}
