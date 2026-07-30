@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import {
@@ -171,7 +172,14 @@ function DocumentSigningSection({
 
   return (
     <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, borderRadius: 4, border: '1px solid', borderColor: 'grey.200' }}>
-      <Typography sx={{ fontWeight: 700, mb: 0.5 }}>Ký hợp đồng</Typography>
+      <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', mb: 0.5 }}>
+        <Typography sx={{ fontWeight: 700 }}>Ký hợp đồng</Typography>
+        <Link href="/contract/huong-dan-ky" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+          <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 600 }}>
+            Xem hướng dẫn ký →
+          </Typography>
+        </Link>
+      </Stack>
       <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
         Cửa hàng đã ký hợp đồng này bằng chữ ký số. Bạn có thể ký xác nhận bằng chữ ký số của
         mình (nếu có USB token), hoặc ký xác nhận đơn giản.
