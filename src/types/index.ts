@@ -48,6 +48,8 @@ export interface Product {
   name: string;
   slug: string;
   images: string[];
+  /** Optional product video URL (e.g. synced from Shopee). */
+  video?: string;
   /** Selectable color variants. Empty = product has no color options. */
   colors: ProductColor[];
   /** Selectable size labels. Empty = product has no size options. */

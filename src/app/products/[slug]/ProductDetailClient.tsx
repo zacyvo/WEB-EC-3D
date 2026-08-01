@@ -4,10 +4,14 @@ import Image from 'next/image';
 import { useState } from 'react';
 import {
   Box, Container, Grid, Typography, Button, IconButton,
-  Chip, Breadcrumbs, Divider, Stack, alpha,
+  Chip, Breadcrumbs, Divider, Stack, Tooltip, SvgIcon, alpha,
 } from '@mui/material';
+import type { SvgIconProps } from '@mui/material';
 import Link from 'next/link';
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
+import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
+import FacebookIcon from '@mui/icons-material/Facebook';
+import InsertLinkIcon from '@mui/icons-material/InsertLink';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import InventoryOutlinedIcon from '@mui/icons-material/InventoryOutlined';
@@ -16,12 +20,28 @@ import { formatCurrency } from '@/lib/utils';
 import type { Product } from '@/types';
 import toast from 'react-hot-toast';
 
-const SOCIAL_PLATFORM_LABELS: Record<string, string> = {
-  SHOPEE: 'Shopee',
-  THREADS: 'Threads',
-  FACEBOOK: 'Facebook',
-  TIKTOK: 'TikTok',
-  OTHER: 'Khác',
+function TikTokIcon(props: SvgIconProps) {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24">
+      <path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
+    </SvgIcon>
+  );
+}
+
+function ThreadsIcon(props: SvgIconProps) {
+  return (
+    <SvgIcon {...props} viewBox="0 0 24 24">
+      <path d="M12.186 24h-.007c-3.581-.024-6.334-1.205-8.184-3.509C2.35 18.44 1.5 15.586 1.472 12.01v-.017c.03-3.579.879-6.43 2.525-8.482C5.845 1.205 8.6.024 12.181 0h.014c2.746.02 5.043.725 6.826 2.098 1.677 1.29 2.858 3.13 3.509 5.467l-2.04.569c-1.104-3.96-3.898-5.984-8.304-6.015-2.91.022-5.11.936-6.54 2.717C4.307 6.504 3.616 8.914 3.589 12c.027 3.086.718 5.496 2.057 7.164 1.43 1.781 3.63 2.695 6.54 2.717 2.623-.02 4.358-.631 5.8-2.045 1.647-1.613 1.618-3.593 1.09-4.798-.31-.71-.873-1.3-1.634-1.75-.192 1.352-.622 2.446-1.284 3.272-.886 1.102-2.14 1.704-3.73 1.79-1.202.065-2.361-.218-3.259-.801-1.063-.689-1.685-1.74-1.75-2.964-.065-1.19.408-2.285 1.33-3.082.885-.764 2.13-1.222 3.607-1.325a13.2 13.2 0 0 1 3.02.088c-.122-.74-.375-1.32-.75-1.727-.514-.557-1.284-.84-2.284-.84h-.028c-.807.007-1.874.223-2.56 1.284l-1.83-1.243c.92-1.398 2.404-2.168 4.383-2.176h.038c3.16 0 5.043 1.945 5.235 5.337.11.036.219.075.328.114 1.526.549 2.647 1.394 3.331 2.51.943 1.544 1.03 4.06-1.075 6.145-1.83 1.816-4.05 2.638-7.198 2.66zm1.144-11.5c-.115 0-.232.003-.35.01-1.741.099-2.828.9-2.77 2.04.06 1.185 1.353 1.732 2.597 1.665 1.147-.062 2.559-.542 2.797-3.278a8.9 8.9 0 0 0-2.274-.437" />
+    </SvgIcon>
+  );
+}
+
+const SOCIAL_META: Record<string, { label: string; icon: React.ReactNode; bg: string }> = {
+  SHOPEE: { label: 'Shopee', icon: <ShoppingBagIcon sx={{ fontSize: 19 }} />, bg: '#EE4D2D' },
+  FACEBOOK: { label: 'Facebook', icon: <FacebookIcon sx={{ fontSize: 20 }} />, bg: '#1877F2' },
+  TIKTOK: { label: 'TikTok', icon: <TikTokIcon sx={{ fontSize: 17 }} />, bg: '#010101' },
+  THREADS: { label: 'Threads', icon: <ThreadsIcon sx={{ fontSize: 17 }} />, bg: '#000000' },
+  OTHER: { label: 'Khác', icon: <InsertLinkIcon sx={{ fontSize: 19 }} />, bg: '#8E8E93' },
 };
 
 export function ProductDetailClient({ product }: { product: Product }) {
@@ -109,6 +129,19 @@ export function ProductDetailClient({ product }: { product: Product }) {
                   <Image src={img} alt="" width={64} height={64} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
                 </Box>
               ))}
+            </Box>
+          )}
+
+          {product.video && (
+            <Box sx={{ mt: 2, borderRadius: 4, overflow: 'hidden', bgcolor: 'common.black' }}>
+              <Box
+                component="video"
+                src={product.video}
+                controls
+                playsInline
+                preload="metadata"
+                sx={{ width: '100%', maxHeight: 480, display: 'block' }}
+              />
             </Box>
           )}
         </Grid>
@@ -216,18 +249,29 @@ export function ProductDetailClient({ product }: { product: Product }) {
           </Button>
 
           {hasSocials && (
-            <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', rowGap: 1 }}>
-              {socials.map((social, idx) => (
-                <Chip
-                  key={idx}
-                  label={SOCIAL_PLATFORM_LABELS[social.name] || social.name}
-                  size="small"
-                  variant="outlined"
-                  clickable={Boolean(social.link)}
-                  component={social.link ? 'a' : 'div'}
-                  {...(social.link ? { href: social.link, target: '_blank', rel: 'noopener noreferrer' } : {})}
-                />
-              ))}
+            <Stack direction="row" spacing={1.25} sx={{ mb: 2, flexWrap: 'wrap', rowGap: 1.25 }}>
+              {socials.map((social, idx) => {
+                const meta = SOCIAL_META[social.name] || SOCIAL_META.OTHER;
+                return (
+                  <Tooltip key={idx} title={meta.label} arrow>
+                    <Box
+                      component={social.link ? 'a' : 'div'}
+                      {...(social.link ? { href: social.link, target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      aria-label={meta.label}
+                      sx={{
+                        width: 40, height: 40, borderRadius: '50%', bgcolor: meta.bg, color: '#fff',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        cursor: social.link ? 'pointer' : 'default',
+                        opacity: social.link ? 1 : 0.4,
+                        transition: 'transform 0.15s',
+                        '&:hover': social.link ? { transform: 'scale(1.08)' } : {},
+                      }}
+                    >
+                      {meta.icon}
+                    </Box>
+                  </Tooltip>
+                );
+              })}
             </Stack>
           )}
 
