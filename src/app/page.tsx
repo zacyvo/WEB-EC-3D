@@ -24,7 +24,7 @@ export default function HomePage() {
           <CategoryFilter />
         </Suspense>
         <Suspense fallback={<ProductGridSkeleton />}>
-          <ProductGrid />
+          <ProductGrid variant="preview" />
         </Suspense>
       </Container>
 

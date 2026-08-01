@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
   Box, Container, Grid, Typography, Button, IconButton,
   Chip, Breadcrumbs, Divider, Stack, Tooltip, SvgIcon, alpha,
@@ -9,24 +9,15 @@ import {
 import type { SvgIconProps } from '@mui/material';
 import Link from 'next/link';
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
-import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
-import FacebookIcon from '@mui/icons-material/Facebook';
 import InsertLinkIcon from '@mui/icons-material/InsertLink';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import InventoryOutlinedIcon from '@mui/icons-material/InventoryOutlined';
+import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import { useCartStore } from '@/lib/store/cart.store';
 import { formatCurrency } from '@/lib/utils';
 import type { Product } from '@/types';
 import toast from 'react-hot-toast';
-
-function TikTokIcon(props: SvgIconProps) {
-  return (
-    <SvgIcon {...props} viewBox="0 0 24 24">
-      <path d="M12.53.02C13.84 0 15.14.01 16.44 0c.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z" />
-    </SvgIcon>
-  );
-}
 
 function ThreadsIcon(props: SvgIconProps) {
   return (
@@ -36,13 +27,39 @@ function ThreadsIcon(props: SvgIconProps) {
   );
 }
 
-const SOCIAL_META: Record<string, { label: string; icon: React.ReactNode; bg: string }> = {
-  SHOPEE: { label: 'Shopee', icon: <ShoppingBagIcon sx={{ fontSize: 19 }} />, bg: '#EE4D2D' },
-  FACEBOOK: { label: 'Facebook', icon: <FacebookIcon sx={{ fontSize: 20 }} />, bg: '#1877F2' },
-  TIKTOK: { label: 'TikTok', icon: <TikTokIcon sx={{ fontSize: 17 }} />, bg: '#010101' },
-  THREADS: { label: 'Threads', icon: <ThreadsIcon sx={{ fontSize: 17 }} />, bg: '#000000' },
-  OTHER: { label: 'Khác', icon: <InsertLinkIcon sx={{ fontSize: 19 }} />, bg: '#8E8E93' },
+// Real brand assets from public/img/icon take priority; Threads and Other have no
+// asset in that folder yet, so they fall back to a drawn icon on a solid badge.
+const SOCIAL_META: Record<string, { label: string; content: React.ReactNode; wrapperSx: Record<string, unknown> }> = {
+  SHOPEE: {
+    label: 'Shopee',
+    content: <img src="/img/icon/shopee-icon.svg" alt="Shopee" width={22} height={22} style={{ display: 'block' }} />,
+    wrapperSx: { bgcolor: '#fff', border: '1px solid', borderColor: 'divider' },
+  },
+  FACEBOOK: {
+    label: 'Facebook',
+    content: <img src="/img/icon/facebook-icon.svg" alt="Facebook" width={40} height={40} style={{ display: 'block' }} />,
+    wrapperSx: {},
+  },
+  TIKTOK: {
+    label: 'TikTok',
+    content: <img src="/img/icon/tiktok-icon.svg" alt="TikTok" width={20} height={22} style={{ display: 'block' }} />,
+    wrapperSx: { bgcolor: '#fff', border: '1px solid', borderColor: 'divider' },
+  },
+  THREADS: {
+    label: 'Threads',
+    content: <ThreadsIcon sx={{ fontSize: 17 }} />,
+    wrapperSx: { bgcolor: '#000', color: '#fff' },
+  },
+  OTHER: {
+    label: 'Khác',
+    content: <InsertLinkIcon sx={{ fontSize: 19 }} />,
+    wrapperSx: { bgcolor: '#8E8E93', color: '#fff' },
+  },
 };
+
+type MediaItem =
+  | { kind: 'video' }
+  | { kind: 'image'; src: string; colorIdx?: number };
 
 export function ProductDetailClient({ product }: { product: Product }) {
   // Products saved before variants existed may lack these fields entirely
@@ -61,12 +78,24 @@ export function ProductDetailClient({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
 
   const selectedColor = selectedColorIdx !== null ? colors[selectedColorIdx] : undefined;
-  // Selecting a color swaps the gallery to that color's photos; falls back to the default images
-  const activeImages = selectedColor?.images.length ? selectedColor.images : (product.images ?? []);
+  const thumbRefs = useRef<(HTMLElement | null)[]>([]);
+
+  // Single media list for the gallery: video always first, then every default image,
+  // then every color's own images — nothing is ever swapped out when a variant is picked.
+  const media: MediaItem[] = [
+    ...(product.video ? [{ kind: 'video' as const }] : []),
+    ...(product.images ?? []).map((src) => ({ kind: 'image' as const, src })),
+    ...colors.flatMap((c, ci) => c.images.map((src) => ({ kind: 'image' as const, src, colorIdx: ci }))),
+  ];
+  const current = media[selectedImage];
 
   const handleSelectColor = (idx: number) => {
     setSelectedColorIdx(idx);
-    setSelectedImage(0);
+    const targetIndex = media.findIndex((m) => m.kind === 'image' && m.colorIdx === idx);
+    if (targetIndex !== -1) {
+      setSelectedImage(targetIndex);
+      thumbRefs.current[targetIndex]?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
   };
 
   const handleAddToCart = () => {
@@ -76,7 +105,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
     addItem({
       productId: product._id,
       productName: product.name,
-      productImage: activeImages[0] || '',
+      productImage: (selectedColor?.images[0] || product.images?.[0]) || '',
       quantity,
       price: product.finalPrice,
       slug: product.slug,
@@ -101,47 +130,44 @@ export function ProductDetailClient({ product }: { product: Product }) {
         {/* Images */}
         <Grid size={{ xs: 12, lg: 6 }}>
           <Box sx={{ position: 'relative', aspectRatio: '1/1', borderRadius: 4, overflow: 'hidden', bgcolor: 'grey.50', mb: 2 }}>
-            {activeImages[selectedImage] ? (
-              <Image src={activeImages[selectedImage]} alt={product.name} fill priority
+            {current?.kind === 'video' ? (
+              <Box component="video" src={product.video} controls playsInline preload="metadata"
+                sx={{ width: '100%', height: '100%', objectFit: 'contain', bgcolor: 'common.black', display: 'block' }} />
+            ) : current?.kind === 'image' ? (
+              <Image src={current.src} alt={product.name} fill priority
                 sizes="(max-width: 1024px) 100vw, 50vw" style={{ objectFit: 'cover' }} />
             ) : (
               <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'grey.300' }}>
                 <InventoryOutlinedIcon sx={{ fontSize: 80 }} />
               </Box>
             )}
-            {activeImages.length > 1 && (
+            {media.length > 1 && (
               <>
                 <IconButton size="small" onClick={() => setSelectedImage((p) => Math.max(0, p - 1))} disabled={selectedImage === 0}
                   sx={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', bgcolor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', '&:disabled': { opacity: 0.3 } }}>
                   <ChevronLeftIcon />
                 </IconButton>
-                <IconButton size="small" onClick={() => setSelectedImage((p) => Math.min(activeImages.length - 1, p + 1))} disabled={selectedImage === activeImages.length - 1}
+                <IconButton size="small" onClick={() => setSelectedImage((p) => Math.min(media.length - 1, p + 1))} disabled={selectedImage === media.length - 1}
                   sx={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', bgcolor: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(8px)', '&:disabled': { opacity: 0.3 } }}>
                   <ChevronRightIcon />
                 </IconButton>
               </>
             )}
           </Box>
-          {activeImages.length > 1 && (
+          {media.length > 1 && (
             <Box sx={{ display: 'flex', gap: 1, overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
-              {activeImages.map((img, i) => (
-                <Box key={i} onClick={() => setSelectedImage(i)} sx={{ flexShrink: 0, width: 64, height: 64, borderRadius: 2, overflow: 'hidden', border: '2px solid', borderColor: i === selectedImage ? 'primary.main' : 'transparent', opacity: i === selectedImage ? 1 : 0.5, cursor: 'pointer', '&:hover': { opacity: 1 }, transition: 'all 0.15s' }}>
-                  <Image src={img} alt="" width={64} height={64} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
+              {media.map((item, i) => (
+                <Box key={i} ref={(el: HTMLElement | null) => { thumbRefs.current[i] = el; }} onClick={() => setSelectedImage(i)}
+                  sx={{ flexShrink: 0, width: 64, height: 64, borderRadius: 2, overflow: 'hidden', border: '2px solid', borderColor: i === selectedImage ? 'primary.main' : 'transparent', opacity: i === selectedImage ? 1 : 0.5, cursor: 'pointer', '&:hover': { opacity: 1 }, transition: 'all 0.15s', bgcolor: item.kind === 'video' ? 'common.black' : undefined }}>
+                  {item.kind === 'video' ? (
+                    <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <PlayCircleOutlineIcon sx={{ color: '#fff', fontSize: 28 }} />
+                    </Box>
+                  ) : (
+                    <Image src={item.src} alt="" width={64} height={64} style={{ objectFit: 'cover', width: '100%', height: '100%' }} />
+                  )}
                 </Box>
               ))}
-            </Box>
-          )}
-
-          {product.video && (
-            <Box sx={{ mt: 2, borderRadius: 4, overflow: 'hidden', bgcolor: 'common.black' }}>
-              <Box
-                component="video"
-                src={product.video}
-                controls
-                playsInline
-                preload="metadata"
-                sx={{ width: '100%', maxHeight: 480, display: 'block' }}
-              />
             </Box>
           )}
         </Grid>
@@ -259,15 +285,16 @@ export function ProductDetailClient({ product }: { product: Product }) {
                       {...(social.link ? { href: social.link, target: '_blank', rel: 'noopener noreferrer' } : {})}
                       aria-label={meta.label}
                       sx={{
-                        width: 40, height: 40, borderRadius: '50%', bgcolor: meta.bg, color: '#fff',
+                        width: 40, height: 40, borderRadius: '50%', overflow: 'hidden',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         cursor: social.link ? 'pointer' : 'default',
                         opacity: social.link ? 1 : 0.4,
                         transition: 'transform 0.15s',
                         '&:hover': social.link ? { transform: 'scale(1.08)' } : {},
+                        ...meta.wrapperSx,
                       }}
                     >
-                      {meta.icon}
+                      {meta.content}
                     </Box>
                   </Tooltip>
                 );
