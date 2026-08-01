@@ -1,9 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Providers } from './providers';
-import { Navbar } from '@/components/layout/Navbar';
-import { Footer } from '@/components/layout/Footer';
-import { BottomNav } from '@/components/layout/BottomNav';
+import { SiteChrome } from '@/components/layout/SiteChrome';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.luxe-glow.vn'),
@@ -45,10 +43,7 @@ export default function RootLayout({
     <html lang="vi" suppressHydrationWarning>
       <body className="bg-white text-apple-gray-900 antialiased font-sans">
         <Providers>
-          <Navbar />
-          <main className="min-h-screen pb-20 md:pb-0">{children}</main>
-          <Footer />
-          <BottomNav />
+          <SiteChrome>{children}</SiteChrome>
         </Providers>
       </body>
     </html>
