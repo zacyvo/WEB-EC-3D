@@ -82,6 +82,7 @@ export default function NfcPublicView({ links }: { links: PublicSocialLink[] }) 
           <Box sx={{ display: 'flex', justifyContent: 'center', mt: '-44px' }}>
             <Box
               sx={{
+                zIndex: 1,
                 width: 88, height: 88, borderRadius: '50%',
                 bgcolor: '#fff', boxShadow: '0 10px 28px rgba(0,0,0,0.14)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
