@@ -89,6 +89,7 @@ export default function NfcPublicView({ links }: { links: PublicSocialLink[] }) 
             >
               <Box
                 sx={{
+                  zIndex: 1,
                   width: 72, height: 72, borderRadius: '50%',
                   background: `linear-gradient(135deg, ${alpha(ACCENT_FROM, 0.12)} 0%, ${alpha(ACCENT_TO, 0.12)} 100%)`,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
