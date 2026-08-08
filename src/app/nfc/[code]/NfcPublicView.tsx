@@ -62,12 +62,6 @@ export default function NfcPublicView({ links }: { links: PublicSocialLink[] }) 
                     height={40}
                     style={{ borderRadius: 10, flexShrink: 0 }}
                   />
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography sx={{ fontWeight: 600 }}>{def.label}</Typography>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {link.value}
-                    </Typography>
-                  </Box>
                 </Paper>
               );
             })}

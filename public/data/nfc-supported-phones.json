@@ -1,0 +1,263 @@
+{
+  "updatedAt": "2026-08",
+  "disclaimer": "Danh sách mang tính tham khảo, tổng hợp theo dòng máy phổ biến tại Việt Nam — không phải danh sách đầy đủ tuyệt đối mọi phiên bản/thị trường. Từ khoảng 2018 trở đi, phần lớn điện thoại tầm trung trở lên đều có NFC. Nếu không chắc máy của bạn có NFC hay không, vào Cài đặt > Kết nối (Connections) > NFC và thanh toán không tiếp xúc — nếu có mục này nghĩa là máy hỗ trợ NFC.",
+  "brands": [
+    {
+      "brand": "Samsung",
+      "note": "Galaxy dòng S, Note, Z (Fold/Flip) có NFC ở mọi bản từ 2015 đến nay. Dòng A từ 2016 trở đi hầu hết đều có NFC; một vài bản giá rẻ nhất (A0x/M0x) có thể không có — kiểm tra Cài đặt trước khi mua.",
+      "models": [
+        { "name": "Galaxy S6 / S6 Edge / S6 Edge+", "year": 2015 },
+        { "name": "Galaxy Note 5", "year": 2015 },
+        { "name": "Galaxy S7 / S7 Edge", "year": 2016 },
+        { "name": "Galaxy Note 7", "year": 2016 },
+        { "name": "Galaxy A3 / A5 / A7 (2016)", "year": 2016 },
+        { "name": "Galaxy S8 / S8+", "year": 2017 },
+        { "name": "Galaxy Note 8", "year": 2017 },
+        { "name": "Galaxy A3 / A5 / A7 (2017)", "year": 2017 },
+        { "name": "Galaxy S9 / S9+", "year": 2018 },
+        { "name": "Galaxy Note 9", "year": 2018 },
+        { "name": "Galaxy A7 (2018) / A8 / A8+", "year": 2018 },
+        { "name": "Galaxy S10 / S10+ / S10e", "year": 2019 },
+        { "name": "Galaxy Note 10 / Note 10+", "year": 2019 },
+        { "name": "Galaxy A50 / A70 / A80", "year": 2019 },
+        { "name": "Galaxy Fold", "year": 2019 },
+        { "name": "Galaxy S20 / S20+ / S20 Ultra", "year": 2020 },
+        { "name": "Galaxy Note 20 / Note 20 Ultra", "year": 2020 },
+        { "name": "Galaxy A51 / A71", "year": 2020 },
+        { "name": "Galaxy Z Flip / Z Fold2", "year": 2020 },
+        { "name": "Galaxy S21 / S21+ / S21 Ultra", "year": 2021 },
+        { "name": "Galaxy A52 / A72", "year": 2021 },
+        { "name": "Galaxy Z Fold3 / Z Flip3", "year": 2021 },
+        { "name": "Galaxy S22 / S22+ / S22 Ultra", "year": 2022 },
+        { "name": "Galaxy A53 / A73", "year": 2022 },
+        { "name": "Galaxy Z Fold4 / Z Flip4", "year": 2022 },
+        { "name": "Galaxy S23 / S23+ / S23 Ultra", "year": 2023 },
+        { "name": "Galaxy A54", "year": 2023 },
+        { "name": "Galaxy Z Fold5 / Z Flip5", "year": 2023 },
+        { "name": "Galaxy S24 / S24+ / S24 Ultra", "year": 2024 },
+        { "name": "Galaxy A55 / A35", "year": 2024 },
+        { "name": "Galaxy Z Fold6 / Z Flip6", "year": 2024 },
+        { "name": "Galaxy S25 / S25+ / S25 Ultra / S25 Edge", "year": 2025 },
+        { "name": "Galaxy A56 / A36", "year": 2025 }
+      ]
+    },
+    {
+      "brand": "Apple",
+      "note": "iPhone 6/6s/SE (2016) có chip NFC nhưng chỉ dùng cho Apple Pay, ứng dụng thường không đọc được thẻ/tag NFC. Từ iPhone 7 (cùng iOS 11) có thể đọc NFC qua ứng dụng. Từ iPhone XS/XR (cùng iOS 13) hỗ trợ đọc nền — chỉ cần chạm là tự mở, không cần mở ứng dụng trước — trải nghiệm tốt nhất cho thẻ NFC danh thiếp.",
+      "models": [
+        { "name": "iPhone 6 / 6 Plus", "year": 2014 },
+        { "name": "iPhone 6s / 6s Plus", "year": 2015 },
+        { "name": "iPhone SE (thế hệ 1)", "year": 2016 },
+        { "name": "iPhone 7 / 7 Plus", "year": 2016 },
+        { "name": "iPhone 8 / 8 Plus", "year": 2017 },
+        { "name": "iPhone X", "year": 2017 },
+        { "name": "iPhone XS / XS Max / XR", "year": 2018 },
+        { "name": "iPhone 11 / 11 Pro / 11 Pro Max", "year": 2019 },
+        { "name": "iPhone SE (thế hệ 2)", "year": 2020 },
+        { "name": "iPhone 12 / 12 mini / 12 Pro / 12 Pro Max", "year": 2020 },
+        { "name": "iPhone 13 / 13 mini / 13 Pro / 13 Pro Max", "year": 2021 },
+        { "name": "iPhone SE (thế hệ 3)", "year": 2022 },
+        { "name": "iPhone 14 / 14 Plus / 14 Pro / 14 Pro Max", "year": 2022 },
+        { "name": "iPhone 15 / 15 Plus / 15 Pro / 15 Pro Max", "year": 2023 },
+        { "name": "iPhone 16 / 16 Plus / 16 Pro / 16 Pro Max / 16e", "year": 2024 },
+        { "name": "iPhone 17 / 17 Pro / 17 Pro Max / 17 Air", "year": 2025 }
+      ]
+    },
+    {
+      "brand": "Xiaomi (Mi / Redmi / POCO)",
+      "note": "Xiaomi thường bán song song bản có NFC và bản không có NFC cùng tên máy (đặc biệt dòng Redmi/Redmi Note giá rẻ) — luôn kiểm tra kỹ thông số hoặc Cài đặt trước khi dùng làm đầu đọc thẻ NFC. Dòng Mi/Xiaomi số và Redmi Note \"Pro\" thường có bản NFC phổ biến hơn.",
+      "models": [
+        { "name": "Mi 9 / Mi 9T", "year": 2019 },
+        { "name": "Redmi Note 8 Pro (bản NFC)", "year": 2019 },
+        { "name": "Mi 10 / Mi 10T", "year": 2020 },
+        { "name": "Redmi Note 9 Pro / 9S (bản NFC)", "year": 2020 },
+        { "name": "POCO X3 NFC", "year": 2020 },
+        { "name": "Mi 11 / Mi 11 Lite", "year": 2021 },
+        { "name": "Redmi Note 10 Pro (bản NFC)", "year": 2021 },
+        { "name": "POCO X3 Pro / F3", "year": 2021 },
+        { "name": "Xiaomi 12 / 12 Pro", "year": 2022 },
+        { "name": "Redmi Note 11 Pro (bản NFC)", "year": 2022 },
+        { "name": "POCO X4 Pro / F4", "year": 2022 },
+        { "name": "Xiaomi 13 / 13 Pro", "year": 2023 },
+        { "name": "Redmi Note 12 Pro (bản NFC)", "year": 2023 },
+        { "name": "POCO X5 Pro / F5", "year": 2023 },
+        { "name": "Xiaomi 14 / 14 Pro / 14 Ultra", "year": 2024 },
+        { "name": "Redmi Note 13 Pro (bản NFC)", "year": 2024 },
+        { "name": "POCO X6 Pro / F6", "year": 2024 },
+        { "name": "Xiaomi 15 / 15 Ultra", "year": 2025 },
+        { "name": "Redmi Note 14 Pro (bản NFC)", "year": 2025 }
+      ]
+    },
+    {
+      "brand": "OPPO",
+      "note": "Dòng Find, Reno số đẹp (x9x) và A-series bản cao cấp thường có NFC; một số bản A-series rẻ nhất theo thị trường có thể không có — kiểm tra thông số kỹ thuật trước khi mua.",
+      "models": [
+        { "name": "Find X / Find X2", "year": 2018 },
+        { "name": "Reno2 / Reno3", "year": 2019 },
+        { "name": "Find X2 Pro", "year": 2020 },
+        { "name": "Reno4 / Reno5", "year": 2020 },
+        { "name": "Find X3 Pro", "year": 2021 },
+        { "name": "Reno6", "year": 2021 },
+        { "name": "Find X5 / Find X5 Pro", "year": 2022 },
+        { "name": "Reno8", "year": 2022 },
+        { "name": "Find N2 Flip", "year": 2023 },
+        { "name": "Reno10", "year": 2023 },
+        { "name": "Find X7 / Find X7 Ultra", "year": 2024 },
+        { "name": "Reno12", "year": 2024 },
+        { "name": "Find X8 / Find X8 Pro", "year": 2025 },
+        { "name": "Reno13", "year": 2025 }
+      ]
+    },
+    {
+      "brand": "vivo",
+      "note": "Dòng X, V-số cao và Find (X Fold) thường có NFC; các bản Y-series giá rẻ nên kiểm tra thông số kỹ thuật trước khi mua.",
+      "models": [
+        { "name": "vivo X50 / X60", "year": 2020 },
+        { "name": "vivo V21", "year": 2021 },
+        { "name": "vivo X70 / X80", "year": 2021 },
+        { "name": "vivo V25", "year": 2022 },
+        { "name": "vivo X90", "year": 2022 },
+        { "name": "vivo X Fold", "year": 2022 },
+        { "name": "vivo V27 / V29", "year": 2023 },
+        { "name": "vivo X100", "year": 2023 },
+        { "name": "vivo V30", "year": 2024 },
+        { "name": "vivo X200", "year": 2024 },
+        { "name": "vivo V40", "year": 2025 }
+      ]
+    },
+    {
+      "brand": "realme",
+      "note": "Dòng GT và Number series (realme 9/10/11/12 Pro trở lên) đa số có NFC; dòng C-series giá rẻ thường không có — kiểm tra thông số kỹ thuật.",
+      "models": [
+        { "name": "realme X2 Pro", "year": 2019 },
+        { "name": "realme 7 Pro", "year": 2020 },
+        { "name": "realme GT", "year": 2021 },
+        { "name": "realme 8 Pro", "year": 2021 },
+        { "name": "realme GT2 Pro", "year": 2022 },
+        { "name": "realme 9 Pro+", "year": 2022 },
+        { "name": "realme GT3", "year": 2023 },
+        { "name": "realme 11 Pro+", "year": 2023 },
+        { "name": "realme GT5", "year": 2024 },
+        { "name": "realme 12 Pro+", "year": 2024 },
+        { "name": "realme GT6", "year": 2024 },
+        { "name": "realme 13 Pro+", "year": 2025 }
+      ]
+    },
+    {
+      "brand": "OnePlus",
+      "note": "OnePlus trang bị NFC khá đồng đều trên toàn bộ dải sản phẩm từ 2016 trở đi (bản bán chính hãng/quốc tế), ít phân mảnh NFC/không-NFC hơn Xiaomi hay OPPO.",
+      "models": [
+        { "name": "OnePlus 3T", "year": 2016 },
+        { "name": "OnePlus 5 / 5T", "year": 2017 },
+        { "name": "OnePlus 6 / 6T", "year": 2018 },
+        { "name": "OnePlus 7 / 7T / 7 Pro", "year": 2019 },
+        { "name": "OnePlus 8 / 8T / 8 Pro", "year": 2020 },
+        { "name": "OnePlus 9 / 9 Pro", "year": 2021 },
+        { "name": "OnePlus 10 Pro / 10T", "year": 2022 },
+        { "name": "OnePlus 11", "year": 2023 },
+        { "name": "OnePlus 12", "year": 2024 },
+        { "name": "OnePlus 13", "year": 2025 }
+      ]
+    },
+    {
+      "brand": "Google Pixel",
+      "note": "Toàn bộ dòng Pixel từ máy đầu tiên (2016) đến nay đều có NFC như một tính năng tiêu chuẩn, không phân biệt bản.",
+      "models": [
+        { "name": "Pixel / Pixel XL", "year": 2016 },
+        { "name": "Pixel 2 / Pixel 2 XL", "year": 2017 },
+        { "name": "Pixel 3 / Pixel 3 XL", "year": 2018 },
+        { "name": "Pixel 3a / Pixel 3a XL", "year": 2019 },
+        { "name": "Pixel 4 / Pixel 4 XL", "year": 2019 },
+        { "name": "Pixel 4a / Pixel 5", "year": 2020 },
+        { "name": "Pixel 6 / Pixel 6 Pro", "year": 2021 },
+        { "name": "Pixel 6a", "year": 2022 },
+        { "name": "Pixel 7 / Pixel 7 Pro", "year": 2022 },
+        { "name": "Pixel 7a / Pixel Fold", "year": 2023 },
+        { "name": "Pixel 8 / Pixel 8 Pro", "year": 2023 },
+        { "name": "Pixel 8a / Pixel 9 / Pixel 9 Pro", "year": 2024 },
+        { "name": "Pixel 9a", "year": 2025 }
+      ]
+    },
+    {
+      "brand": "Huawei / Honor",
+      "note": "Phần cứng NFC vẫn hoạt động bình thường trên các máy Huawei ra mắt sau 2019 (lệnh cấm của Mỹ chỉ ảnh hưởng dịch vụ Google, không ảnh hưởng NFC). Honor tách thành thương hiệu riêng từ cuối 2020.",
+      "models": [
+        { "name": "Huawei P9 / P9 Plus", "year": 2016 },
+        { "name": "Huawei Mate 9", "year": 2016 },
+        { "name": "Huawei P10 / Mate 10", "year": 2017 },
+        { "name": "Huawei P20 / Mate 20", "year": 2018 },
+        { "name": "Huawei P30 / Mate 30", "year": 2019 },
+        { "name": "Honor 9X / Honor 20", "year": 2019 },
+        { "name": "Huawei P40 / Mate 40", "year": 2020 },
+        { "name": "Honor 30", "year": 2020 },
+        { "name": "Huawei P50 / Mate 50", "year": 2021 },
+        { "name": "Honor Magic4", "year": 2022 },
+        { "name": "Honor Magic5", "year": 2023 },
+        { "name": "Huawei Mate 60", "year": 2023 },
+        { "name": "Honor Magic6", "year": 2024 },
+        { "name": "Honor Magic7", "year": 2025 }
+      ]
+    },
+    {
+      "brand": "Sony (Xperia)",
+      "note": "Đa số Xperia từ 2015 trở đi có NFC, kể cả dòng tầm trung.",
+      "models": [
+        { "name": "Xperia Z3 / Z3+", "year": 2015 },
+        { "name": "Xperia Z5", "year": 2015 },
+        { "name": "Xperia XZ", "year": 2016 },
+        { "name": "Xperia XZ1 / XZ2", "year": 2017 },
+        { "name": "Xperia XZ3", "year": 2018 },
+        { "name": "Xperia 1", "year": 2019 },
+        { "name": "Xperia 1 II / 5 II", "year": 2020 },
+        { "name": "Xperia 1 III / 5 III", "year": 2021 },
+        { "name": "Xperia 1 IV / 5 IV", "year": 2022 },
+        { "name": "Xperia 1 V / 5 V", "year": 2023 },
+        { "name": "Xperia 1 VI", "year": 2024 }
+      ]
+    },
+    {
+      "brand": "Nokia (HMD Global)",
+      "note": "Dòng Nokia hồi sinh từ 2017 — các bản tầm trung/cao (7 Plus, 8, 9, X/G số cao) thường có NFC; bản giá rẻ (Nokia C-series) thường không có.",
+      "models": [
+        { "name": "Nokia 8", "year": 2017 },
+        { "name": "Nokia 7 Plus / Nokia 8 Sirocco", "year": 2018 },
+        { "name": "Nokia 9 PureView", "year": 2019 },
+        { "name": "Nokia 8.3 5G", "year": 2020 },
+        { "name": "Nokia X20", "year": 2021 },
+        { "name": "Nokia G60 / X30", "year": 2022 }
+      ]
+    },
+    {
+      "brand": "ASUS",
+      "note": "Dòng Zenfone bản cao và ROG Phone (gaming) thường có NFC; một số bản Zenfone giá rẻ không có.",
+      "models": [
+        { "name": "Zenfone 5 / 5Z", "year": 2018 },
+        { "name": "ROG Phone", "year": 2018 },
+        { "name": "Zenfone 6", "year": 2019 },
+        { "name": "ROG Phone II", "year": 2019 },
+        { "name": "Zenfone 7", "year": 2020 },
+        { "name": "ROG Phone 3", "year": 2020 },
+        { "name": "Zenfone 8", "year": 2021 },
+        { "name": "ROG Phone 5", "year": 2021 },
+        { "name": "Zenfone 9", "year": 2022 },
+        { "name": "ROG Phone 6", "year": 2022 },
+        { "name": "Zenfone 10", "year": 2023 },
+        { "name": "ROG Phone 7 / 8", "year": 2023 },
+        { "name": "ROG Phone 9", "year": 2024 }
+      ]
+    },
+    {
+      "brand": "LG",
+      "note": "LG đã ngừng sản xuất điện thoại từ giữa 2021 — chỉ còn máy cũ trên thị trường. Dòng G, V và Velvet đều có NFC.",
+      "models": [
+        { "name": "LG G4", "year": 2015 },
+        { "name": "LG G5 / V10", "year": 2016 },
+        { "name": "LG G6 / V20", "year": 2017 },
+        { "name": "LG G7 / V30", "year": 2018 },
+        { "name": "LG G8 / V40", "year": 2019 },
+        { "name": "LG Velvet / V60", "year": 2020 },
+        { "name": "LG Wing", "year": 2020 }
+      ]
+    }
+  ]
+}

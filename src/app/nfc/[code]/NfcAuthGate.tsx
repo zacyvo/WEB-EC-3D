@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import {
-  Box, Button, Checkbox, Container, FormControlLabel,
+  Box, Button, Checkbox, Container, FormControlLabel, IconButton, InputAdornment,
   Link as MuiLink, Paper, Stack, TextField, Typography,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import toast from 'react-hot-toast';
 import { nfcApi, errMsg } from '@/lib/nfc-api';
 import type { NfcOwnProfile } from './types';
@@ -22,6 +24,8 @@ export default function NfcAuthGate({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,6 +70,14 @@ export default function NfcAuthGate({
                 ? 'Đây là lần đầu thẻ được sử dụng — thiết lập số điện thoại và mật khẩu để quản lý thông tin liên hệ của bạn.'
                 : 'Nhập số điện thoại và mật khẩu đã thiết lập trước đó để quản lý thẻ.'}
             </Typography>
+            <MuiLink
+              href="/nfc/huong-dan"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ display: 'inline-block', mt: 0.75, fontSize: 14, fontWeight: 600 }}
+            >
+              Xem hướng dẫn kích hoạt và sử dụng →
+            </MuiLink>
           </Box>
 
           <Box component="form" onSubmit={handleSubmit} sx={{ width: '100%' }}>
@@ -80,22 +92,54 @@ export default function NfcAuthGate({
               />
               <TextField
                 label="Mật khẩu"
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 fullWidth
                 autoComplete={mode === 'activate' ? 'new-password' : 'current-password'}
                 helperText={mode === 'activate' ? '8-32 ký tự, gồm chữ hoa, chữ thường và số' : undefined}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword((v) => !v)}
+                          edge="end"
+                          size="small"
+                          tabIndex={-1}
+                        >
+                          {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  },
+                }}
               />
               {mode === 'activate' && (
                 <>
                   <TextField
                     label="Nhập lại mật khẩu"
-                    type="password"
+                    type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     fullWidth
                     autoComplete="new-password"
+                    slotProps={{
+                      input: {
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowConfirmPassword((v) => !v)}
+                              edge="end"
+                              size="small"
+                              tabIndex={-1}
+                            >
+                              {showConfirmPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      },
+                    }}
                   />
                   <FormControlLabel
                     sx={{ textAlign: 'left', alignItems: 'flex-start', mr: 0 }}

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import {
-  Alert, Box, Button, IconButton, Paper, Stack, TextField, Typography,
+  Box, Button, IconButton, Link as MuiLink, Paper, Stack, TextField, Typography,
 } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import AddIcon from '@mui/icons-material/Add';
@@ -55,11 +55,6 @@ export default function NfcManage({
     }
   };
 
-  const publicUrl =
-    typeof window !== 'undefined'
-      ? `${window.location.origin}/nfc/${profile.nfcCode}`
-      : `/nfc/${profile.nfcCode}`;
-
   return (
     <Box sx={{ maxWidth: 640, mx: 'auto', px: { xs: 2, sm: 3 }, py: { xs: 4, md: 6 } }}>
       <Stack spacing={3}>
@@ -67,16 +62,19 @@ export default function NfcManage({
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>Quản lý thẻ NFC</Typography>
             <Typography variant="body2" color="text.secondary">SĐT: {profile.phone}</Typography>
+            <MuiLink
+              href="/nfc/huong-dan"
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{ display: 'inline-block', mt: 0.5, fontSize: 13, fontWeight: 600 }}
+            >
+              Xem hướng dẫn sử dụng →
+            </MuiLink>
           </Box>
           <IconButton onClick={onLogout} title="Đăng xuất">
             <LogoutIcon />
           </IconButton>
         </Stack>
-
-        <Alert severity="info" sx={{ borderRadius: 3, wordBreak: 'break-all' }}>
-          Trang công khai của bạn: <b>{publicUrl}</b> — chia sẻ link này hoặc thẻ NFC vật lý để mọi
-          người xem thông tin liên hệ.
-        </Alert>
 
         <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, borderRadius: 4, border: '1px solid', borderColor: 'grey.200' }}>
           <Typography sx={{ fontWeight: 700, mb: 2 }}>Danh sách liên hệ / mạng xã hội</Typography>
