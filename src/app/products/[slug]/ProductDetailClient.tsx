@@ -16,6 +16,7 @@ import InventoryOutlinedIcon from '@mui/icons-material/InventoryOutlined';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import { useCartStore } from '@/lib/store/cart.store';
 import { formatCurrency } from '@/lib/utils';
+import QuantityStepper from '@/components/ui/QuantityStepper';
 import type { Product } from '@/types';
 import toast from 'react-hot-toast';
 
@@ -256,11 +257,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
           {!outOfStock && (
             <Stack direction="row" spacing={2} sx={{ mb: 3, alignItems: 'center'  }}>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>Số lượng</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden' }}>
-                <IconButton size="small" onClick={() => setQuantity((q) => Math.max(1, q - 1))} sx={{ borderRadius: 0 }}>-</IconButton>
-                <Typography sx={{ px: 2.5, py: 0.75, minWidth: 40, textAlign: 'center', fontWeight: 600 }}>{quantity}</Typography>
-                <IconButton size="small" onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))} sx={{ borderRadius: 0 }}>+</IconButton>
-              </Box>
+              <QuantityStepper value={quantity} min={1} max={product.stock} onChange={setQuantity} />
             </Stack>
           )}
 

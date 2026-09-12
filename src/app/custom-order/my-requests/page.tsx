@@ -115,7 +115,7 @@ export default function MyCustomRequestsPage() {
       )}
 
       {/* Detail Dialog */}
-      <Dialog open={!!detail} onClose={() => setDetail(null)} maxWidth="sm" fullWidth slotProps={{ paper: { sx: { borderRadius: 3 } } }}>
+      <Dialog open={!!detail} onClose={() => setDetail(null)} maxWidth="md" fullWidth slotProps={{ paper: { sx: { borderRadius: 3, maxHeight: '85vh' } } }}>
         {detail && (
           <>
             <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', pb: 1 }}>

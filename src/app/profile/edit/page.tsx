@@ -520,12 +520,12 @@ export default function EditProfilePage() {
         onClose={handleCancelPhoneSave}
         maxWidth="xs"
         fullWidth
-        slotProps={{ paper: { sx: { borderRadius: 3 } } }}
+        slotProps={{ paper: { sx: { borderRadius: 3, maxHeight: '85vh' } } }}
       >
         <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>
           Xác nhận số điện thoại
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           <Alert severity="warning" sx={{ mb: 2, borderRadius: 2 }}>
             Số điện thoại <strong>{pendingPayload?.phone}</strong> sẽ <strong>không thể thay đổi</strong> sau khi lưu. Bạn có chắc chắn muốn tiếp tục?
           </Alert>
@@ -547,9 +547,9 @@ export default function EditProfilePage() {
       <Dialog
         open={deleteOpen}
         onClose={closeDeleteDialog}
-        maxWidth="xs"
+        maxWidth="sm"
         fullWidth
-        slotProps={{ paper: { sx: { borderRadius: 3 } } }}
+        slotProps={{ paper: { sx: { borderRadius: 3, maxHeight: '85vh' } } }}
       >
         {/* Step 1 — confirm intent & send code */}
         {deleteStep === 1 && (
@@ -557,7 +557,7 @@ export default function EditProfilePage() {
             <DialogTitle sx={{ fontWeight: 700, color: 'error.main', pb: 1 }}>
               Xác nhận xóa tài khoản
             </DialogTitle>
-            <DialogContent>
+            <DialogContent dividers>
               <Alert severity="warning" sx={{ mb: 2, borderRadius: 2 }}>
                 Hành động này <strong>không thể hoàn tác</strong>. Tài khoản và toàn bộ dữ liệu của bạn sẽ bị xóa vĩnh viễn.
               </Alert>
@@ -589,7 +589,7 @@ export default function EditProfilePage() {
         {deleteStep === 2 && (
           <>
             <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Nhập mã xác nhận</DialogTitle>
-            <DialogContent>
+            <DialogContent dividers>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                 Mã xác nhận đã được gửi đến{' '}
                 <Box component="span" sx={{ fontWeight: 600, color: 'text.primary' }}>{maskEmail(user.email)}</Box>.

@@ -144,7 +144,14 @@ export function MaintenanceScreen() {
         </Box>
       </Container>
 
-      <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth slots={{ transition: Fade }}>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="xs"
+        fullWidth
+        slots={{ transition: Fade }}
+        slotProps={{ paper: { sx: { maxHeight: '85vh' } } }}
+      >
         <IconButton
           onClick={handleClose}
           sx={{ position: 'absolute', right: 8, top: 8, color: 'text.secondary' }}

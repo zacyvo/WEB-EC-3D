@@ -289,11 +289,11 @@ export default function ProfilePage() {
         open={addrOpen && !isGuest}
         onClose={() => setAddrOpen(false)}
         fullWidth
-        maxWidth="xs"
-        slotProps={{ paper: { sx: { borderRadius: 3 } } }}
+        maxWidth="sm"
+        slotProps={{ paper: { sx: { borderRadius: 3, maxHeight: '85vh' } } }}
       >
         <DialogTitle sx={{ fontWeight: 700, pb: 1 }}>Địa chỉ giao hàng</DialogTitle>
-        <DialogContent sx={{ px: 2 }}>
+        <DialogContent dividers sx={{ px: 2 }}>
           {!user?.addresses?.length ? (
             <Box sx={{ py: 5, textAlign: 'center' }}>
               <LocationOnOutlinedIcon sx={{ fontSize: 52, color: 'text.disabled', mb: 1.5 }} />
@@ -370,13 +370,13 @@ export default function ProfilePage() {
         open={formOpen}
         onClose={() => setFormOpen(false)}
         fullWidth
-        maxWidth="xs"
-        slotProps={{ paper: { sx: { borderRadius: 3 } } }}
+        maxWidth="sm"
+        slotProps={{ paper: { sx: { borderRadius: 3, maxHeight: '85vh' } } }}
       >
         <DialogTitle sx={{ fontWeight: 700 }}>
           {editIndex !== null ? 'Cập nhật địa chỉ' : 'Thêm địa chỉ mới'}
         </DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           <Stack spacing={2.5} sx={{ mt: 0.5 }}>
             <AddressPicker
               newProvinces={provinces}

@@ -738,9 +738,15 @@ export default function ContractAccessPage({ params }: { params: { token: string
       </Stack>
 
       {/* Dialog xác nhận gửi */}
-      <Dialog open={confirmOpen} onClose={() => !submitting && setConfirmOpen(false)}>
+      <Dialog
+        open={confirmOpen}
+        onClose={() => !submitting && setConfirmOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        slotProps={{ paper: { sx: { maxHeight: '85vh' } } }}
+      >
         <DialogTitle>Gửi yêu cầu hợp đồng?</DialogTitle>
-        <DialogContent>
+        <DialogContent dividers>
           <DialogContentText>
             Sau khi gửi, bạn sẽ <b>không thể chỉnh sửa</b> thông tin nữa. Cửa hàng sẽ review
             và cập nhật bản nháp / bản chính thức tại chính link này.

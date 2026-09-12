@@ -12,6 +12,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useCartStore } from '@/lib/store/cart.store';
 import { formatCurrency } from '@/lib/utils';
 import { useAuthStore } from '@/lib/store/auth.store';
+import QuantityStepper from '@/components/ui/QuantityStepper';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
@@ -76,11 +77,11 @@ export default function CartPage() {
                       )}
                       <Typography variant="body2" color="primary.main" sx={{ mt: 0.5, fontWeight: 700  }}>{formatCurrency(item.price)}</Typography>
                       <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mt: 1.5 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', border: '1px solid', borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden' }}>
-                          <IconButton size="small" sx={{ borderRadius: 0, px: 1.5 }} onClick={() => updateQuantity(item.productId, item.color, item.size, item.quantity - 1)}>-</IconButton>
-                          <Typography sx={{ px: 2, py: 0.5, fontWeight: 600, fontSize: 14 }}>{item.quantity}</Typography>
-                          <IconButton size="small" sx={{ borderRadius: 0, px: 1.5 }} onClick={() => updateQuantity(item.productId, item.color, item.size, item.quantity + 1)}>+</IconButton>
-                        </Box>
+                        <QuantityStepper
+                          value={item.quantity}
+                          min={1}
+                          onChange={(q) => updateQuantity(item.productId, item.color, item.size, q)}
+                        />
                         <IconButton onClick={() => removeItem(item.productId, item.color, item.size)} sx={{ color: 'text.disabled', '&:hover': { color: 'error.main', bgcolor: alpha('#FF3B30', 0.06) } }}>
                           <DeleteOutlineIcon fontSize="small" />
                         </IconButton>
