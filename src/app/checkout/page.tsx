@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
+import dynamic from 'next/dynamic';
 import {
   Box, Container, Typography, Grid, Card, CardContent,
   TextField, Button, Divider, Stack, Alert, CircularProgress,
@@ -24,6 +25,8 @@ import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import type { ApiResponse, Order, User, Coupon, ValidateCouponsResponse } from '@/types';
 import AddressPicker, { type OldAddressSelection } from '@/components/AddressPicker';
+// Loaded only after a successful order — keeps the QR/animation code out of the checkout bundle.
+const ZaloOaRewardModal = dynamic(() => import('@/components/zalo-oa-reward/ZaloOaRewardModal'), { ssr: false });
 
 // ─── Local administrative data (public/data/vn-locations.json) ───────────────
 interface Ward { id: string; name: string; }
@@ -207,6 +210,8 @@ export default function CheckoutPage() {
           <Button component={Link} href={`/orders/${orderId}`} variant="contained" size="large">Xem đơn hàng</Button>
           <Button component={Link} href="/products" variant="outlined" size="large">Tiếp tục mua hàng</Button>
         </Stack>
+        {/* Zalo OA welcome reward — renders nothing unless the backend says this order is eligible. */}
+        {orderId && <ZaloOaRewardModal orderId={orderId} />}
       </Box>
     );
   }
