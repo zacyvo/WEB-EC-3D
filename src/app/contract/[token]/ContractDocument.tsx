@@ -309,8 +309,8 @@ export default function ContractDocument({
         <p style={S.articleTitle}>Điều 3. Giá trị hợp đồng và thanh toán</p>
         <p style={S.p}>
           3.1. Tổng giá trị hợp đồng: <b>{formatCurrency(data.totalAmount)}</b> (bằng chữ:{' '}
-          <i>{numberToVietnameseWords(data.totalAmount)}</i>). Giá trên đã bao gồm thuế GTGT và chi phí
-          vận chuyển.
+          <i>{numberToVietnameseWords(data.totalAmount)}</i>).{' '}
+          <b>Giá trên đã bao gồm thuế GTGT, chưa bao gồm chi phí vận chuyển.</b>
         </p>
         <p style={S.p}>3.2. Thanh toán chia thành 03 đợt:</p>
         {(data.paymentSchedule ?? []).map((installment, i) => {
@@ -332,8 +332,8 @@ export default function ContractDocument({
         <p style={S.articleTitle}>Điều 4. Thời gian thực hiện và giao nhận</p>
         <p style={S.p}>4.1. Thời gian giao hàng: {vnDate(data.deliveryDate)}.</p>
         <p style={S.p}>
-          4.2. Địa điểm giao hàng: {dots(data.deliveryAddress)}. Chi phí vận chuyển do Bên B chịu (đã bao
-          gồm trong giá trị hợp đồng).
+          4.2. Địa điểm giao hàng: {dots(data.deliveryAddress)}. Chi phí vận chuyển do hai bên thỏa
+          thuận (chưa bao gồm trong giá trị hợp đồng).
         </p>
         <p style={S.p}>
           4.3. Bên A kiểm tra và nghiệm thu số lượng, ngoại quan sản phẩm khi Bên B bàn giao; khiếu nại
