@@ -191,14 +191,14 @@ const CATEGORIES: Category[] = [
       },
       {
         q: 'Tôi có thể thay đổi hoặc hủy đơn hàng sau khi đặt không?',
-        a: 'Bạn có thể hủy đơn trong vòng 2 giờ sau khi đặt, trước khi đơn chuyển sang trạng thái "Đang xử lý". Sau đó vui lòng liên hệ hotline để được hỗ trợ trực tiếp.',
+        a: 'Khi đơn còn ở trạng thái "Chờ xác nhận", bạn có thể tự hủy trong mục Đơn hàng của tôi. Khi đơn đã "Đã xác nhận" hoặc "Đang xử lý", bạn có thể gửi yêu cầu hủy để shop liên hệ xử lý. Đơn đang giao hoặc đã giao không thể hủy.',
       },
       {
         q: 'Tôi quên mật khẩu, phải làm gì?',
         a: (
           <>
             Truy cập trang{' '}
-            <Link href="/auth/login" style={{ color: '#007AFF', fontWeight: 600 }}>
+            <Link href="/auth/login?redirect=/faq" style={{ color: '#007AFF', fontWeight: 600 }}>
               Đăng nhập
             </Link>{' '}
             và chọn <strong>"Quên mật khẩu"</strong>. Hệ thống sẽ gửi liên kết đặt lại mật khẩu về

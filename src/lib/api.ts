@@ -1,4 +1,5 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { currentPath, loginHref } from '@/lib/auth-redirect';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -80,8 +81,8 @@ api.interceptors.response.use(
         processQueue(err, null);
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth/login';
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/auth/')) {
+          window.location.href = loginHref(currentPath());
         }
         return Promise.reject(err);
       } finally {

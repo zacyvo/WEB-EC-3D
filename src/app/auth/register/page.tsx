@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box, Typography, TextField, Button, InputAdornment, IconButton,
   Divider, Stack,
@@ -15,6 +15,7 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import api from '@/lib/api';
 import { useAuthStore } from '@/lib/store/auth.store';
+import { loginHref, safeRedirect } from '@/lib/auth-redirect';
 import toast from 'react-hot-toast';
 
 const registerSchema = z.object({
@@ -32,7 +33,16 @@ const registerSchema = z.object({
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterContent />
+    </Suspense>
+  );
+}
+
+function RegisterContent() {
   const router = useRouter();
+  const redirect = safeRedirect(useSearchParams().get('redirect'));
   const { setAuth } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -44,7 +54,7 @@ export default function RegisterPage() {
       const { user, accessToken, refreshToken } = res.data.data;
       setAuth(user, { accessToken, refreshToken });
       toast.success('Đăng ký thành công! Chào mừng bạn 🎉');
-      router.push('/');
+      router.replace(redirect);
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       toast.error(message || 'Đăng ký thất bại');
@@ -89,7 +99,7 @@ export default function RegisterPage() {
 
         <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 3 }}>
           Đã có tài khoản?{' '}
-          <Link href="/auth/login" style={{ color: '#007AFF', fontWeight: 600, textDecoration: 'none' }}>Đăng nhập</Link>
+          <Link href={loginHref(redirect)} style={{ color: '#007AFF', fontWeight: 600, textDecoration: 'none' }}>Đăng nhập</Link>
         </Typography>
       </Box>
     </Box>

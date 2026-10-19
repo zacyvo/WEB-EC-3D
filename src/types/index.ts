@@ -128,6 +128,11 @@ export interface Order {
   customerNote?: string;
   csNote?: string;
   cancelReason?: string;
+  /** Set once the customer asked the shop to cancel a confirmed/processing order. */
+  cancelRequest?: {
+    requestedAt: string;
+    reason?: string;
+  };
   delivery?: {
     carrierName?: string;
     trackingCode?: string;

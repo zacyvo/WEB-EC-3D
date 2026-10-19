@@ -15,6 +15,7 @@ import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import api from '@/lib/api';
 import { useAuthStore } from '@/lib/store/auth.store';
+import { rememberOAuthRedirect, safeRedirect } from '@/lib/auth-redirect';
 import toast from 'react-hot-toast';
 
 const loginSchema = z.object({
@@ -34,7 +35,7 @@ export default function LoginPage() {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirect = searchParams.get('redirect') || '/';
+  const redirect = safeRedirect(searchParams.get('redirect'));
   const errorParam = searchParams.get('error');
   const { setAuth } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
@@ -51,7 +52,8 @@ function LoginContent() {
       }
       setAuth(user, { accessToken, refreshToken });
       toast.success('Đăng nhập thành công!');
-      router.push(redirect);
+      // replace: "Back" from the page we return to shouldn't land on the login form again.
+      router.replace(redirect);
     } catch (err: unknown) {
       const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       toast.error(message || 'Đăng nhập thất bại');
@@ -109,6 +111,7 @@ function LoginContent() {
         <Button
           fullWidth variant="outlined" size="large"
           component="a" href={`${process.env.NEXT_PUBLIC_API_URL}/auth/google`}
+          onClick={() => rememberOAuthRedirect(redirect)}
           sx={{ py: 1.4, gap: 1.5 }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24">
@@ -123,6 +126,7 @@ function LoginContent() {
         <Button
           fullWidth variant="outlined" size="large"
           component="a" href={`${process.env.NEXT_PUBLIC_API_URL}/auth/facebook`}
+          onClick={() => rememberOAuthRedirect(redirect)}
           sx={{mt:2, py: 1.4, gap: 1.5, borderColor: '#1877F2', color: '#1877F2', '&:hover': { borderColor: '#1877F2', bgcolor: 'rgba(24,119,242,0.04)' } }}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
@@ -133,7 +137,7 @@ function LoginContent() {
 
         <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 3 }}>
           Chưa có tài khoản?{' '}
-          <Link href="/auth/register" style={{ color: '#007AFF', fontWeight: 600, textDecoration: 'none' }}>Đăng ký ngay</Link>
+          <Link href={redirect === '/' ? '/auth/register' : `/auth/register?redirect=${encodeURIComponent(redirect)}`} style={{ color: '#007AFF', fontWeight: 600, textDecoration: 'none' }}>Đăng ký ngay</Link>
         </Typography>
       </Box>
     </Box>

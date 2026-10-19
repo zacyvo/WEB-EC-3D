@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/lib/store/auth.store';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -8,12 +8,38 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   Box, Container, Typography, Card, CardContent, Chip, Skeleton,
-  Divider, Stack,
+  Divider, Stack, Button, Alert, Dialog, DialogTitle, DialogContent,
+  DialogContentText, DialogActions, TextField,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { formatCurrency, formatDate, ORDER_STATUS_MAP } from '@/lib/utils';
-import type { ApiResponse, Order } from '@/types';
+import { loginHref } from '@/lib/auth-redirect';
+import type { ApiResponse, Order, OrderStatus } from '@/types';
+
+/** Customer may cancel by themselves only while the order awaits confirmation. */
+const SELF_CANCEL_STATUSES: OrderStatus[] = ['PENDING'];
+/** After confirmation the customer can only ask the shop to cancel (owner is notified). */
+const REQUEST_CANCEL_STATUSES: OrderStatus[] = ['CONFIRMED', 'PROCESSING'];
+const REASON_MAX_LENGTH = 500;
+
+type CancelMode = 'cancel' | 'request';
+
+const CANCEL_COPY: Record<CancelMode, { title: string; description: string; confirm: string; success: string }> = {
+  cancel: {
+    title: 'Hủy đơn hàng?',
+    description: 'Đơn hàng sẽ bị hủy ngay và không thể khôi phục.',
+    confirm: 'Hủy đơn hàng',
+    success: 'Đã hủy đơn hàng',
+  },
+  request: {
+    title: 'Gửi yêu cầu hủy đơn?',
+    description: 'Đơn hàng đã được shop xác nhận nên không thể hủy trực tiếp. Yêu cầu của bạn sẽ được gửi tới shop để xem xét và liên hệ lại.',
+    confirm: 'Gửi yêu cầu',
+    success: 'Đã gửi yêu cầu hủy đơn. Shop sẽ liên hệ với bạn sớm.',
+  },
+};
 
 export default function OrderDetailPage({ params }: { params: { id: string } }) {
   const { isAuthenticated } = useAuthStore();
@@ -24,8 +50,8 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
 
   useEffect(() => {
     if (!mounted) return;
-    if (!isAuthenticated) router.replace('/auth/login');
-  }, [mounted, isAuthenticated, router]);
+    if (!isAuthenticated) router.replace(loginHref(`/orders/${params.id}`));
+  }, [mounted, isAuthenticated, router, params.id]);
 
   const { data: order, isLoading } = useQuery({
     queryKey: ['order', params.id],
@@ -34,6 +60,31 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       return res.data.data;
     },
     enabled: isAuthenticated,
+  });
+
+  const queryClient = useQueryClient();
+  const [cancelMode, setCancelMode] = useState<CancelMode | null>(null);
+  const [reason, setReason] = useState('');
+
+  const cancelMutation = useMutation({
+    mutationFn: async (mode: CancelMode) => {
+      const path = mode === 'cancel' ? 'cancel' : 'cancel-request';
+      const res = await api.post<ApiResponse<Order>>(`/orders/${params.id}/${path}`, reason.trim() ? { reason: reason.trim() } : {});
+      return res.data.data;
+    },
+    onSuccess: (updated, mode) => {
+      queryClient.setQueryData(['order', params.id], updated);
+      queryClient.invalidateQueries({ queryKey: ['orders'] });
+      toast.success(CANCEL_COPY[mode].success);
+      setCancelMode(null);
+      setReason('');
+    },
+    onError: (err: unknown) => {
+      const message = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+      toast.error(message || 'Không thể thực hiện, vui lòng thử lại');
+      // The order may have moved on (e.g. the shop just confirmed it) — show its real state.
+      queryClient.invalidateQueries({ queryKey: ['order', params.id] });
+    },
   });
 
   if (!mounted) return null;
@@ -58,6 +109,10 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   if (!order) return null;
 
   const statusInfo = ORDER_STATUS_MAP[order.status] || { label: order.status, chipColor: 'default' };
+  const canSelfCancel = SELF_CANCEL_STATUSES.includes(order.status);
+  const canRequestCancel = REQUEST_CANCEL_STATUSES.includes(order.status) && !order.cancelRequest;
+  const cancelRequestPending = REQUEST_CANCEL_STATUSES.includes(order.status) && !!order.cancelRequest;
+  const closeDialog = () => { if (!cancelMutation.isPending) setCancelMode(null); };
 
   return (
     <Container maxWidth="sm" sx={{ py: { xs: 4, md: 7 } }}>
@@ -74,6 +129,13 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           sx={statusInfo.chipSx}
         />
       </Box>
+
+      {cancelRequestPending && (
+        <Alert severity="warning" sx={{ mb: 2, borderRadius: 3 }}>
+          Bạn đã gửi yêu cầu hủy đơn lúc {formatDate(order.cancelRequest!.requestedAt)}. Shop sẽ xem xét và liên hệ với bạn.
+          {order.cancelRequest!.reason && <><br />Lý do: {order.cancelRequest!.reason}</>}
+        </Alert>
+      )}
 
       {/* Items */}
       <Card variant="outlined" sx={{ borderRadius: 3, mb: 2 }}>
@@ -215,6 +277,57 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           </Stack>
         </CardContent>
       </Card>
+
+      {(canSelfCancel || canRequestCancel) && (
+        <Box sx={{ mt: 3 }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            color="error"
+            size="large"
+            onClick={() => setCancelMode(canSelfCancel ? 'cancel' : 'request')}
+            sx={{ borderRadius: 980, fontWeight: 600 }}
+          >
+            {canSelfCancel ? 'Hủy đơn hàng' : 'Yêu cầu hủy đơn'}
+          </Button>
+          {canRequestCancel && (
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
+              Đơn đã được xác nhận — shop sẽ xem xét yêu cầu hủy của bạn
+            </Typography>
+          )}
+        </Box>
+      )}
+
+      <Dialog open={!!cancelMode} onClose={closeDialog} fullWidth maxWidth="xs" slotProps={{ paper: { sx: { borderRadius: 3 } } }}>
+        {cancelMode && (
+          <>
+            <DialogTitle sx={{ fontWeight: 700 }}>{CANCEL_COPY[cancelMode].title}</DialogTitle>
+            <DialogContent>
+              <DialogContentText sx={{ mb: 2 }}>{CANCEL_COPY[cancelMode].description}</DialogContentText>
+              <TextField
+                label="Lý do (không bắt buộc)"
+                value={reason}
+                onChange={(e) => setReason(e.target.value.slice(0, REASON_MAX_LENGTH))}
+                multiline
+                minRows={2}
+                fullWidth
+                helperText={`${reason.length}/${REASON_MAX_LENGTH}`}
+              />
+            </DialogContent>
+            <DialogActions sx={{ px: 3, pb: 2.5 }}>
+              <Button onClick={closeDialog} disabled={cancelMutation.isPending}>Quay lại</Button>
+              <Button
+                variant="contained"
+                color="error"
+                onClick={() => cancelMutation.mutate(cancelMode)}
+                disabled={cancelMutation.isPending}
+              >
+                {cancelMutation.isPending ? 'Đang gửi...' : CANCEL_COPY[cancelMode].confirm}
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Dialog>
     </Container>
   );
 }

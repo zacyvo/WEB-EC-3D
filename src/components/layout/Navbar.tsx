@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import {
   AppBar, Toolbar, Container, Box, IconButton, Badge,
   Typography, Button, Avatar, Menu, MenuItem, Divider, alpha,
@@ -13,7 +13,8 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import { useCartStore } from '@/lib/store/cart.store';
 import { useAuthStore } from '@/lib/store/auth.store';
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
+import { loginHref } from '@/lib/auth-redirect';
 const NAV_LINKS = [
   { label: 'Trang chủ', href: '/' },
   { label: 'Sản phẩm', href: '/products' },
@@ -21,6 +22,16 @@ const NAV_LINKS = [
   { label: 'Thiết kế theo yêu cầu', href: '/custom-order' },
   { label: 'Liên hệ', href: '/contact' },
 ];
+
+function LoginButton({ href }: { href: string }) {
+  return <Button component={Link} href={href} variant="contained" size="small" sx={{ ml: 1, borderRadius: 980 }}>Đăng nhập</Button>;
+}
+
+/** Login returns to the exact current page, query included (useSearchParams needs Suspense). */
+function LoginButtonWithQuery({ pathname }: { pathname: string }) {
+  const query = useSearchParams().toString();
+  return <LoginButton href={loginHref(query ? `${pathname}?${query}` : pathname)} />;
+}
 
 export function Navbar() {
   const pathname = usePathname();
@@ -79,7 +90,9 @@ export function Navbar() {
                 </Menu>
               </>
             ) : (
-              <Button component={Link} href="/auth/login" variant="contained" size="small" sx={{ ml: 1, borderRadius: 980 }}>Đăng nhập</Button>
+              <Suspense fallback={<LoginButton href={loginHref(pathname)} />}>
+                <LoginButtonWithQuery pathname={pathname} />
+              </Suspense>
             )}
           </Box>
         </Toolbar>

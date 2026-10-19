@@ -4,6 +4,7 @@ import { useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth.store';
 import api from '@/lib/api';
+import { consumeOAuthRedirect } from '@/lib/auth-redirect';
 
 function CallbackInner() {
   const searchParams = useSearchParams();
@@ -37,7 +38,7 @@ function CallbackInner() {
           return;
         }
         setAuth(profile, { accessToken, refreshToken });
-        router.replace('/');
+        router.replace(consumeOAuthRedirect());
       })
       .catch(() => {
         router.replace('/auth/login?error=fetch_profile_failed');
