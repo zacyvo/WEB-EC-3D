@@ -24,6 +24,7 @@ import ContractDocument, {
   type ContractParty,
   type PublicContract,
 } from './ContractDocument';
+import JoyloveAdvanceDocument from './JoyloveAdvanceDocument';
 import SignatureCanvas from './SignatureCanvas';
 import PdfDocumentViewer from './PdfDocumentViewer';
 
@@ -783,10 +784,17 @@ export default function ContractAccessPage({ params }: { params: { token: string
           ) : (
           <Box sx={{ overflowX: 'auto', bgcolor: 'grey.100', p: { xs: 1, md: 2 } }}>
             <Box id="contract-print-area" sx={{ boxShadow: 3, mx: 'auto', maxWidth: 794 }}>
-              <ContractDocument
-                data={isNew ? { ...contract, partyA, deliveryAddress } : contract}
-                watermark={watermark}
-              />
+              {contract.template === 'JOYLOVE_ADVANCE' ? (
+                <JoyloveAdvanceDocument
+                  data={isNew ? { ...contract, partyA, deliveryAddress } : contract}
+                  watermark={watermark}
+                />
+              ) : (
+                <ContractDocument
+                  data={isNew ? { ...contract, partyA, deliveryAddress } : contract}
+                  watermark={watermark}
+                />
+              )}
             </Box>
           </Box>
           )}

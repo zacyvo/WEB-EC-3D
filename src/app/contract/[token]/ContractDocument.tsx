@@ -60,6 +60,8 @@ export interface PublicContract {
   status: 'NEW' | 'REVIEW' | 'DRAFT' | 'FINAL' | 'SUCCESS' | 'CLOSED';
   /** IMPORTED: văn bản là file PDF cửa hàng tải lên (không dựng từ template) */
   source?: 'TEMPLATE' | 'IMPORTED';
+  /** Mẫu văn bản — JOYLOVE_ADVANCE render bằng JoyloveAdvanceDocument; không có = DEFAULT */
+  template?: 'DEFAULT' | 'JOYLOVE_ADVANCE';
   title?: string;
   /** Hai bên đã ký ngoài hệ thống (ký tay / bản scan) */
   offlineSigned?: boolean;
