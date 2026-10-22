@@ -25,6 +25,7 @@ import ContractDocument, {
   type PublicContract,
 } from './ContractDocument';
 import SignatureCanvas from './SignatureCanvas';
+import PdfDocumentViewer from './PdfDocumentViewer';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -508,6 +509,20 @@ export default function ContractAccessPage({ params }: { params: { token: string
 
   const statusMeta = STATUS_META[contract.status];
   const isNew = contract.status === 'NEW';
+  const isImported = contract.source === 'IMPORTED';
+  const pdfFileName = `hop-dong-${contract.contractNo.replace(/\//g, '-')}.pdf`;
+  const loadPdf = async () =>
+    (await contractApi.get(`/contracts/public/${token}/document/view`, {
+      headers: authHeaders,
+      responseType: 'blob',
+      timeout: 60000,
+    })).data as Blob;
+  // Đổi khi có chữ ký mới → viewer tải lại bản PDF mới nhất
+  const pdfVersion = [
+    contract.updatedAt,
+    contract.partyBSignature?.status,
+    contract.partyASignature?.status,
+  ].join('|');
   const watermark =
     contract.status === 'CLOSED' ? 'ĐÃ HỦY'
     : ['FINAL', 'SUCCESS'].includes(contract.status) ? undefined
@@ -528,9 +543,14 @@ export default function ContractAccessPage({ params }: { params: { token: string
         {/* Header */}
         <Stack direction="row" spacing={1.5} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
           <DescriptionOutlinedIcon sx={{ color: '#2563EB' }} />
-          <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            Hợp đồng {contract.contractNo}
-          </Typography>
+          <Box>
+            <Typography variant="h5" sx={{ fontWeight: 700 }}>
+              Hợp đồng {contract.contractNo}
+            </Typography>
+            {contract.title && (
+              <Typography variant="body2" color="text.secondary">{contract.title}</Typography>
+            )}
+          </Box>
           <Chip size="small" color={statusMeta.chipColor} label={statusMeta.label} sx={{ fontWeight: 600 }} />
           <Box sx={{ flexGrow: 1 }} />
           <Button
@@ -541,7 +561,19 @@ export default function ContractAccessPage({ params }: { params: { token: string
           >
             Tải lại
           </Button>
-          {!isNew && (
+          {isImported ? (
+            <Button
+              size="small"
+              variant="outlined"
+              startIcon={<DownloadOutlinedIcon />}
+              onClick={() =>
+                downloadBlob(`/contracts/public/${token}/document/view`, pdfFileName, authHeaders)
+                  .catch((err) => toast.error(errMsg(err, 'Tải file thất bại')))}
+              sx={{ textTransform: 'none', borderRadius: 2 }}
+            >
+              Tải PDF
+            </Button>
+          ) : !isNew && (
             <Button
               size="small"
               variant="outlined"
@@ -576,7 +608,7 @@ export default function ContractAccessPage({ params }: { params: { token: string
         {contract.status === 'FINAL' && (
           <Alert severity="success" sx={{ borderRadius: 3 }}>
             Đây là <b>bản hợp đồng chính thức</b>{contract.finalizedAt ? ` (chốt ngày ${new Date(contract.finalizedAt).toLocaleDateString('vi-VN')})` : ''}.
-            Nội dung không thể chỉnh sửa. Bạn có thể In / Lưu PDF để lưu trữ.
+            Nội dung không thể chỉnh sửa. Bạn có thể {isImported ? 'Tải PDF' : 'In / Lưu PDF'} để lưu trữ.
           </Alert>
         )}
         {contract.status === 'SUCCESS' && (
@@ -591,6 +623,12 @@ export default function ContractAccessPage({ params }: { params: { token: string
           </Alert>
         )}
 
+        {isImported && contract.offlineSigned && ['FINAL', 'SUCCESS'].includes(contract.status) && (
+          <Alert severity="success" sx={{ borderRadius: 3 }}>
+            Hợp đồng đã được hai bên ký trực tiếp (bản giấy / bản scan).
+          </Alert>
+        )}
+
         {/* Ký hợp đồng — chỉ khi Bên B đã ký số hợp lệ */}
         {['FINAL', 'SUCCESS'].includes(contract.status) && contract.partyBSignature?.status === 'VERIFIED' && (
           <DocumentSigningSection
@@ -601,7 +639,18 @@ export default function ContractAccessPage({ params }: { params: { token: string
           />
         )}
 
-        {/* Tóm tắt sản phẩm */}
+        {/* Tóm tắt giá trị — HĐ import không có danh sách sản phẩm, chi tiết nằm trong file PDF */}
+        {isImported && contract.items.length === 0 ? (
+          <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, borderRadius: 4, border: '1px solid', borderColor: 'grey.200' }}>
+            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography sx={{ fontWeight: 700 }}>Giá trị hợp đồng</Typography>
+              <Typography sx={{ fontWeight: 800, color: '#2563EB' }}>{formatCurrency(contract.totalAmount)}</Typography>
+            </Stack>
+            <Typography variant="caption" color="text.secondary">
+              Chi tiết sản phẩm, điều khoản xem trong văn bản hợp đồng bên dưới.
+            </Typography>
+          </Paper>
+        ) : (
         <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, borderRadius: 4, border: '1px solid', borderColor: 'grey.200' }}>
           <Typography sx={{ fontWeight: 700, mb: 1.5 }}>Sản phẩm trong hợp đồng</Typography>
           <Stack divider={<Divider flexItem />} spacing={1.2}>
@@ -625,6 +674,7 @@ export default function ContractAccessPage({ params }: { params: { token: string
             </Stack>
           </Stack>
         </Paper>
+        )}
 
         {/* Form Bên A (chỉ khi NEW) */}
         {isNew && (
@@ -726,6 +776,11 @@ export default function ContractAccessPage({ params }: { params: { token: string
               {isNew ? 'Xem trước văn bản hợp đồng (tự cập nhật theo thông tin bạn điền)' : 'Văn bản hợp đồng'}
             </Typography>
           </Box>
+          {isImported ? (
+            <Box sx={{ bgcolor: 'grey.100', p: { xs: 1, md: 2 } }}>
+              <PdfDocumentViewer load={loadPdf} reloadKey={pdfVersion} />
+            </Box>
+          ) : (
           <Box sx={{ overflowX: 'auto', bgcolor: 'grey.100', p: { xs: 1, md: 2 } }}>
             <Box id="contract-print-area" sx={{ boxShadow: 3, mx: 'auto', maxWidth: 794 }}>
               <ContractDocument
@@ -734,6 +789,7 @@ export default function ContractAccessPage({ params }: { params: { token: string
               />
             </Box>
           </Box>
+          )}
         </Paper>
       </Stack>
 

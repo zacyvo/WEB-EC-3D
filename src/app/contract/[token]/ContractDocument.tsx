@@ -58,6 +58,11 @@ export interface PartyASignature {
 export interface PublicContract {
   contractNo: string;
   status: 'NEW' | 'REVIEW' | 'DRAFT' | 'FINAL' | 'SUCCESS' | 'CLOSED';
+  /** IMPORTED: văn bản là file PDF cửa hàng tải lên (không dựng từ template) */
+  source?: 'TEMPLATE' | 'IMPORTED';
+  title?: string;
+  /** Hai bên đã ký ngoài hệ thống (ký tay / bản scan) */
+  offlineSigned?: boolean;
   items: PublicContractItem[];
   totalAmount: number;
   partyA: ContractParty;
