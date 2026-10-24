@@ -20,8 +20,11 @@ import type { ApiResponse, Order, OrderStatus } from '@/types';
 
 /** Customer may cancel by themselves only while the order awaits confirmation. */
 const SELF_CANCEL_STATUSES: OrderStatus[] = ['PENDING'];
-/** After confirmation the customer can only ask the shop to cancel (owner is notified). */
-const REQUEST_CANCEL_STATUSES: OrderStatus[] = ['CONFIRMED', 'PROCESSING'];
+/** While the order is being processed the customer can only ask the shop to cancel (owner is
+ * notified). Any other status can't be cancelled from the storefront. */
+const REQUEST_CANCEL_STATUSES: OrderStatus[] = ['PROCESSING'];
+/** Statuses in which an already-sent request is still open (older requests were allowed on CONFIRMED). */
+const OPEN_REQUEST_STATUSES: OrderStatus[] = ['CONFIRMED', 'PROCESSING'];
 const REASON_MAX_LENGTH = 500;
 
 type CancelMode = 'cancel' | 'request';
@@ -29,13 +32,13 @@ type CancelMode = 'cancel' | 'request';
 const CANCEL_COPY: Record<CancelMode, { title: string; description: string; confirm: string; success: string }> = {
   cancel: {
     title: 'Hủy đơn hàng?',
-    description: 'Đơn hàng sẽ bị hủy ngay và không thể khôi phục.',
+    description: 'Đơn hàng đang chờ xác nhận nên sẽ được hủy ngay và không thể khôi phục.',
     confirm: 'Hủy đơn hàng',
     success: 'Đã hủy đơn hàng',
   },
   request: {
     title: 'Gửi yêu cầu hủy đơn?',
-    description: 'Đơn hàng đã được shop xác nhận nên không thể hủy trực tiếp. Yêu cầu của bạn sẽ được gửi tới shop để xem xét và liên hệ lại.',
+    description: 'Đơn hàng đang được xử lý nên không thể hủy trực tiếp. Yêu cầu của bạn sẽ được gửi tới shop để xem xét và liên hệ lại.',
     confirm: 'Gửi yêu cầu',
     success: 'Đã gửi yêu cầu hủy đơn. Shop sẽ liên hệ với bạn sớm.',
   },
@@ -111,7 +114,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   const statusInfo = ORDER_STATUS_MAP[order.status] || { label: order.status, chipColor: 'default' };
   const canSelfCancel = SELF_CANCEL_STATUSES.includes(order.status);
   const canRequestCancel = REQUEST_CANCEL_STATUSES.includes(order.status) && !order.cancelRequest;
-  const cancelRequestPending = REQUEST_CANCEL_STATUSES.includes(order.status) && !!order.cancelRequest;
+  const cancelRequestPending = OPEN_REQUEST_STATUSES.includes(order.status) && !!order.cancelRequest;
   const closeDialog = () => { if (!cancelMutation.isPending) setCancelMode(null); };
 
   return (
@@ -292,7 +295,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           </Button>
           {canRequestCancel && (
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
-              Đơn đã được xác nhận — shop sẽ xem xét yêu cầu hủy của bạn
+              Đơn đang được xử lý — shop sẽ xem xét yêu cầu hủy của bạn
             </Typography>
           )}
         </Box>

@@ -128,7 +128,7 @@ export interface Order {
   customerNote?: string;
   csNote?: string;
   cancelReason?: string;
-  /** Set once the customer asked the shop to cancel a confirmed/processing order. */
+  /** Set once the customer asked the shop to cancel a processing order. */
   cancelRequest?: {
     requestedAt: string;
     reason?: string;
