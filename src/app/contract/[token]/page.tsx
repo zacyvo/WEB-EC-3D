@@ -6,7 +6,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import {
   Alert, Box, Button, Chip, CircularProgress, Container, Dialog, DialogActions,
-  DialogContent, DialogContentText, DialogTitle, Divider, Paper, Stack, TextField,
+  DialogContent, DialogContentText, DialogTitle, Divider, Paper, Stack, Tab, Tabs, TextField,
   Typography,
 } from '@mui/material';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
@@ -19,6 +19,7 @@ import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
 import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
 import GestureOutlinedIcon from '@mui/icons-material/GestureOutlined';
+import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import { formatCurrency } from '@/lib/utils';
 import ContractDocument, {
   type ContractParty,
@@ -27,6 +28,7 @@ import ContractDocument, {
 import JoyloveAdvanceDocument from './JoyloveAdvanceDocument';
 import SignatureCanvas from './SignatureCanvas';
 import PdfDocumentViewer from './PdfDocumentViewer';
+import ContractEInvoices, { type ContractEInvoice } from './ContractEInvoices';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
@@ -282,6 +284,10 @@ export default function ContractAccessPage({ params }: { params: { token: string
   const [jwt, setJwt] = useState<string | null>(null);
   const [contract, setContract] = useState<PublicContract | null>(null);
 
+  // Hoá đơn điện tử liên kết — có ít nhất 1 hoá đơn thì hiện tab "Hoá đơn điện tử"
+  const [einvoices, setEinvoices] = useState<ContractEInvoice[]>([]);
+  const [tab, setTab] = useState<'contract' | 'einvoice'>('contract');
+
   // Unlock form
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
@@ -306,6 +312,22 @@ export default function ContractAccessPage({ params }: { params: { token: string
     setDeliveryAddress(c.deliveryAddress ?? '');
     setUserNote(c.userNote ?? '');
   }, []);
+
+  const loadEinvoices = useCallback(async (accessJwt: string) => {
+    try {
+      const res = await contractApi.get(`/contracts/public/${token}/einvoices`, {
+        headers: { 'X-Contract-Access': accessJwt },
+      });
+      setEinvoices(res.data.data ?? []);
+    } catch {
+      // Không chặn việc xem hợp đồng nếu tải hoá đơn lỗi — chỉ ẩn tab
+      setEinvoices([]);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (jwt) loadEinvoices(jwt);
+  }, [jwt, loadEinvoices]);
 
   // ── Load meta + phiên đã lưu ──
   useEffect(() => {
@@ -368,6 +390,7 @@ export default function ContractAccessPage({ params }: { params: { token: string
     try {
       const res = await contractApi.get(`/contracts/public/${token}`, { headers: authHeaders });
       applyContract(res.data.data);
+      await loadEinvoices(jwt);
       toast.success('Đã tải lại hợp đồng');
     } catch (err) {
       toast.error(errMsg(err, 'Phiên hết hạn, vui lòng xác thực lại'));
@@ -524,6 +547,7 @@ export default function ContractAccessPage({ params }: { params: { token: string
     contract.partyBSignature?.status,
     contract.partyASignature?.status,
   ].join('|');
+  const activeTab = einvoices.length > 0 ? tab : 'contract';
   const watermark =
     contract.status === 'CLOSED' ? 'ĐÃ HỦY'
     : ['FINAL', 'SUCCESS'].includes(contract.status) ? undefined
@@ -562,7 +586,7 @@ export default function ContractAccessPage({ params }: { params: { token: string
           >
             Tải lại
           </Button>
-          {isImported ? (
+          {activeTab !== 'contract' ? null : isImported ? (
             <Button
               size="small"
               variant="outlined"
@@ -587,6 +611,33 @@ export default function ContractAccessPage({ params }: { params: { token: string
           )}
         </Stack>
 
+        {einvoices.length > 0 && (
+          <Tabs
+            value={activeTab}
+            onChange={(_, v) => setTab(v)}
+            sx={{ borderBottom: 1, borderColor: 'divider', minHeight: 44, '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, minHeight: 44 } }}
+          >
+            <Tab value="contract" label="Hợp đồng" icon={<DescriptionOutlinedIcon fontSize="small" />} iconPosition="start" />
+            <Tab
+              value="einvoice"
+              label={`Hoá đơn điện tử (${einvoices.length})`}
+              icon={<ReceiptLongOutlinedIcon fontSize="small" />}
+              iconPosition="start"
+            />
+          </Tabs>
+        )}
+
+        {activeTab === 'einvoice' && authHeaders && (
+          <ContractEInvoices
+            apiUrl={API_URL}
+            contractToken={token}
+            authHeaders={authHeaders}
+            invoices={einvoices}
+          />
+        )}
+
+        {/* Nội dung hợp đồng — ẩn bằng CSS (không unmount) để giữ trạng thái form/PDF khi đổi tab */}
+        <Stack spacing={3} sx={{ display: activeTab === 'contract' ? 'flex' : 'none' }}>
         {/* Banner theo trạng thái */}
         {isNew && (
           <Alert severity="warning" sx={{ borderRadius: 3 }}>
@@ -799,6 +850,7 @@ export default function ContractAccessPage({ params }: { params: { token: string
           </Box>
           )}
         </Paper>
+        </Stack>
       </Stack>
 
       {/* Dialog xác nhận gửi */}
