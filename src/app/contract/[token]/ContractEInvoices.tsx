@@ -3,10 +3,11 @@
 import { Accordion, AccordionDetails, AccordionSummary, Box, Chip, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatCurrency } from '@/lib/utils';
 import EInvoiceDetailView, {
   EINVOICE_STATUS_META,
   downloadEInvoiceFile,
+  formatInvoiceDate,
   type EInvoiceFileFormat,
   type PublicEInvoice,
 } from '@/components/einvoice/EInvoiceDetailView';
@@ -35,13 +36,13 @@ export default function ContractEInvoices({
     downloadEInvoiceFile(
       `${apiUrl}/contracts/public/${contractToken}/einvoices/${inv.token}/download?format=${format}`,
       authHeaders,
-      `hoa-don-${inv.invoiceNo || inv.token.slice(0, 8)}.${format}`,
+      `${inv.localStatus === 'DRAFT' ? 'ban-nhap-hoa-don' : 'hoa-don'}-${inv.invoiceNo || inv.token.slice(0, 8)}.${format}`,
     );
 
   return (
     <Stack spacing={1.5}>
       <Typography variant="body2" color="text.secondary">
-        Hoá đơn điện tử đã phát hành cho hợp đồng này, đã đăng ký với cơ quan thuế.
+        Hoá đơn điện tử lập cho hợp đồng này, nội dung trùng khớp với hoá đơn PDF/XML đã đăng ký với cơ quan thuế.
       </Typography>
       {invoices.map((inv, i) => {
         const status = EINVOICE_STATUS_META[inv.localStatus];
@@ -58,10 +59,10 @@ export default function ContractEInvoices({
                 <ReceiptLongOutlinedIcon sx={{ color: '#2563EB' }} />
                 <Box>
                   <Typography sx={{ fontWeight: 700 }}>
-                    Hoá đơn {inv.invoiceNo ? `số ${inv.invoiceNo}` : ''}
+                    Hoá đơn {inv.invoiceNo ? `số ${inv.invoiceNo}` : inv.localStatus === 'DRAFT' ? '(bản nháp)' : ''}
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Ngày lập {inv.arisingDate ? formatDate(inv.arisingDate) : '—'}
+                    Ngày lập {formatInvoiceDate(inv.arisingDate)}
                   </Typography>
                 </Box>
                 <Chip size="small" color={status.color} label={status.label} sx={{ fontWeight: 600 }} />

@@ -134,7 +134,7 @@ export default function InvoiceAccessPage({ params }: { params: { token: string 
     await downloadEInvoiceFile(
       `${API_URL}/einvoices/public/${token}/download?format=${format}`,
       { 'X-Einvoice-Access': jwt },
-      `hoa-don-${invoice?.invoiceNo || token}.${format}`,
+      `${invoice?.localStatus === 'DRAFT' ? 'ban-nhap-hoa-don' : 'hoa-don'}-${invoice?.invoiceNo || token}.${format}`,
     );
   };
 
@@ -219,7 +219,7 @@ export default function InvoiceAccessPage({ params }: { params: { token: string 
         <Stack direction="row" spacing={1.5} useFlexGap sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
           <ReceiptLongOutlinedIcon sx={{ color: '#2563EB' }} />
           <Typography variant="h5" sx={{ fontWeight: 700 }}>
-            Hoá đơn {invoice.invoiceNo ? `số ${invoice.invoiceNo}` : ''}
+            Hoá đơn {invoice.invoiceNo ? `số ${invoice.invoiceNo}` : invoice.localStatus === 'DRAFT' ? '(bản nháp)' : ''}
           </Typography>
           <Chip size="small" color={statusMeta.color} label={statusMeta.label} sx={{ fontWeight: 600 }} />
           <Box sx={{ flexGrow: 1 }} />
