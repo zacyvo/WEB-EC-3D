@@ -7,6 +7,7 @@ import { formatCurrency } from '@/lib/utils';
 import EInvoiceDetailView, {
   EINVOICE_STATUS_META,
   downloadEInvoiceFile,
+  fetchEInvoiceFile,
   formatInvoiceDate,
   type EInvoiceFileFormat,
   type PublicEInvoice,
@@ -32,9 +33,11 @@ export default function ContractEInvoices({
   authHeaders: Record<string, string>;
   invoices: ContractEInvoice[];
 }) {
+  const fileUrl = (inv: ContractEInvoice, format: EInvoiceFileFormat) =>
+    `${apiUrl}/contracts/public/${contractToken}/einvoices/${inv.token}/download?format=${format}`;
   const download = (inv: ContractEInvoice) => (format: EInvoiceFileFormat) =>
     downloadEInvoiceFile(
-      `${apiUrl}/contracts/public/${contractToken}/einvoices/${inv.token}/download?format=${format}`,
+      fileUrl(inv, format),
       authHeaders,
       `${inv.localStatus === 'DRAFT' ? 'ban-nhap-hoa-don' : 'hoa-don'}-${inv.invoiceNo || inv.token.slice(0, 8)}.${format}`,
     );
@@ -42,7 +45,7 @@ export default function ContractEInvoices({
   return (
     <Stack spacing={1.5}>
       <Typography variant="body2" color="text.secondary">
-        Hoá đơn điện tử lập cho hợp đồng này, nội dung trùng khớp với hoá đơn PDF/XML đã đăng ký với cơ quan thuế.
+        Hoá đơn điện tử lập cho hợp đồng này — bấm vào từng hoá đơn để xem file PDF.
       </Typography>
       {invoices.map((inv, i) => {
         const status = EINVOICE_STATUS_META[inv.localStatus];
@@ -51,6 +54,7 @@ export default function ContractEInvoices({
             key={inv.token}
             defaultExpanded={i === 0}
             disableGutters
+            slotProps={{ transition: { unmountOnExit: true } }}
             elevation={0}
             sx={{ borderRadius: '16px !important', border: '1px solid', borderColor: 'grey.200', '&:before': { display: 'none' } }}
           >
@@ -71,7 +75,11 @@ export default function ContractEInvoices({
               </Stack>
             </AccordionSummary>
             <AccordionDetails sx={{ px: { xs: 2, md: 3 }, pb: 3 }}>
-              <EInvoiceDetailView invoice={inv} onDownload={download(inv)} />
+              <EInvoiceDetailView
+                invoice={inv}
+                loadPdf={() => fetchEInvoiceFile(fileUrl(inv, 'pdf'), authHeaders)}
+                onDownload={download(inv)}
+              />
             </AccordionDetails>
           </Accordion>
         );

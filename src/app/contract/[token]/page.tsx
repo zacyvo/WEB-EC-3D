@@ -27,7 +27,7 @@ import ContractDocument, {
 } from './ContractDocument';
 import JoyloveAdvanceDocument from './JoyloveAdvanceDocument';
 import SignatureCanvas from './SignatureCanvas';
-import PdfDocumentViewer from './PdfDocumentViewer';
+import PdfDocumentViewer from '@/components/pdf/PdfDocumentViewer';
 import ContractEInvoices, { type ContractEInvoice } from './ContractEInvoices';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';

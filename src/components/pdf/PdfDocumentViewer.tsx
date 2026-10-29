@@ -1,20 +1,30 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
 import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined';
 
 /**
- * Hiển thị văn bản hợp đồng dạng file PDF (hợp đồng admin import) bằng trình xem PDF của trình
- * duyệt. File tải qua API có xác thực (header X-Contract-Access) nên không nhúng URL trực tiếp
- * được — tải về Blob rồi tạo object URL. Một số trình duyệt di động không hiển thị PDF trong
- * iframe → luôn kèm nút mở tab mới.
+ * Hiển thị file PDF (văn bản hợp đồng admin import, hoá đơn điện tử…) bằng trình xem PDF của trình
+ * duyệt. File tải qua API có xác thực (header X-Contract-Access / X-Einvoice-Access) nên không nhúng
+ * URL trực tiếp được — tải về Blob rồi tạo object URL. Một số trình duyệt di động không hiển thị PDF
+ * trong iframe → luôn kèm nút mở tab mới.
  */
 export default function PdfDocumentViewer({
-  load, reloadKey,
+  load,
+  reloadKey,
+  title = 'Văn bản hợp đồng',
+  openLabel = 'Mở hợp đồng trong tab mới',
+  errorText = 'Không tải được file hợp đồng. Vui lòng bấm Tải lại.',
+  fallback,
 }: {
   load: () => Promise<Blob>;
   reloadKey?: string;
+  title?: string;
+  openLabel?: string;
+  errorText?: string;
+  /** Nội dung thay thế khi không tải được PDF (mặc định hiện errorText) */
+  fallback?: ReactNode;
 }) {
   const [url, setUrl] = useState<string | null>(null);
   const [error, setError] = useState(false);
@@ -38,9 +48,9 @@ export default function PdfDocumentViewer({
   }, [reloadKey]);
 
   if (error) {
-    return (
+    return fallback ?? (
       <Typography variant="body2" color="error" sx={{ p: 3, textAlign: 'center' }}>
-        Không tải được file hợp đồng. Vui lòng bấm Tải lại.
+        {errorText}
       </Typography>
     );
   }
@@ -56,7 +66,7 @@ export default function PdfDocumentViewer({
       <Box
         component="iframe"
         src={url}
-        title="Văn bản hợp đồng"
+        title={title}
         sx={{ width: '100%', height: { xs: 560, md: 900 }, border: 0, bgcolor: '#fff', display: 'block' }}
       />
       <Button
@@ -67,7 +77,7 @@ export default function PdfDocumentViewer({
         startIcon={<OpenInNewOutlinedIcon />}
         sx={{ textTransform: 'none', alignSelf: 'flex-start' }}
       >
-        Mở hợp đồng trong tab mới
+        {openLabel}
       </Button>
     </Stack>
   );

@@ -7,6 +7,7 @@ import {
 } from '@mui/material';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
 import { formatDate } from '@/lib/utils';
+import PdfDocumentViewer from '@/components/pdf/PdfDocumentViewer';
 
 export type EInvoiceLocalStatus = 'DRAFT' | 'ISSUED' | 'CANCELLED' | 'FAILED';
 export type EInvoiceFileFormat = 'pdf' | 'xml';
@@ -109,16 +110,20 @@ function vatRateLabel(item: Pick<PublicEInvoiceItem, 'vatRate' | 'vatRateOther'>
 const FEATURE_SUFFIX: Record<number, string> = { 2: ' (Khuyến mại)', 3: ' (Chiết khấu thương mại)' };
 
 /**
- * Tải file hoá đơn từ endpoint public. Dùng fetch (không dùng axios responseType blob)
+ * Lấy file hoá đơn (PDF/XML) từ endpoint public. Dùng fetch (không dùng axios responseType blob)
  * để đọc được message lỗi JSON khi backend/EasyInvoice từ chối.
  */
-export async function downloadEInvoiceFile(url: string, headers: Record<string, string>, filename: string) {
+export async function fetchEInvoiceFile(url: string, headers: Record<string, string>): Promise<Blob> {
   const res = await fetch(url, { headers });
   if (!res.ok) {
     const errJson = await res.json().catch(() => null);
     throw new Error(errJson?.message || 'Tải hoá đơn thất bại');
   }
-  const blob = await res.blob();
+  return res.blob();
+}
+
+export async function downloadEInvoiceFile(url: string, headers: Record<string, string>, filename: string) {
+  const blob = await fetchEInvoiceFile(url, headers);
   const blobUrl = window.URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = blobUrl;
@@ -142,15 +147,149 @@ const headCellSx = { fontWeight: 700, fontSize: 12, color: 'text.secondary', whi
 const cellSx = { fontSize: 13, px: 1, py: 1 } as const;
 const numCellSx = { ...cellSx, textAlign: 'right', whiteSpace: 'nowrap' } as const;
 
+/** Nội dung hoá đơn (cùng nguồn XmlData gửi EasyInvoice) — dự phòng khi không tải được file PDF */
+function InvoiceInfoSheet({ invoice }: { invoice: PublicEInvoice }) {
+  const hasDiscount = invoice.items.some((i) => (i.discountAmount ?? 0) > 0);
+  const rates = new Set(invoice.items.filter((i) => i.feature !== 4).map((i) => vatRateLabel(i)));
+  const uniformRate = rates.size === 1 ? [...rates][0] : undefined;
+  const isDraft = invoice.localStatus === 'DRAFT';
+
+  return (
+    <Paper elevation={0} sx={{ p: { xs: 2, md: 3.5 }, borderRadius: 4, border: '1px solid', borderColor: 'grey.200' }}>
+      <Stack spacing={2.5}>
+        {/* Tiêu đề + ký hiệu, số */}
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { md: 'flex-start' } }}>
+          <Box sx={{ textAlign: { xs: 'left', md: 'center' }, flex: 1 }}>
+            <Typography sx={{ fontWeight: 800, fontSize: { xs: 18, md: 22 }, textTransform: 'uppercase', color: '#1E3A8A', letterSpacing: 0.5 }}>
+              {invoiceTitle(invoice.pattern)}
+            </Typography>
+            {isDraft && (
+              <Typography variant="body2" sx={{ fontWeight: 700, color: 'warning.dark' }}>(BẢN NHÁP)</Typography>
+            )}
+            <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', mt: 0.5 }}>
+              {invoiceDayLine(invoice.arisingDate)}
+            </Typography>
+          </Box>
+          <Stack spacing={0.5} sx={{ minWidth: { md: 200 } }}>
+            {invoice.pattern && <InfoLine label="Ký hiệu">{invoice.pattern}{invoice.serial}</InfoLine>}
+            <InfoLine label="Số">
+              {invoice.invoiceNo
+                ? <Box component="span" sx={{ color: 'error.main', fontWeight: 700 }}>{invoice.invoiceNo}</Box>
+                : <Box component="span" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>(chưa cấp số)</Box>}
+            </InfoLine>
+            {invoice.lookupCode && <InfoLine label="Mã tra cứu">{invoice.lookupCode}</InfoLine>}
+          </Stack>
+        </Stack>
+
+        <Divider />
+
+        {/* Người bán */}
+        <Stack spacing={0.75}>
+          <InfoLine label="Đơn vị bán hàng"><b>{invoice.sellerName}</b></InfoLine>
+          <InfoLine label="Mã số thuế">{invoice.sellerTaxCode}</InfoLine>
+          <InfoLine label="Địa chỉ">{invoice.sellerAddress}</InfoLine>
+        </Stack>
+
+        <Divider />
+
+        {/* Người mua */}
+        <Stack spacing={0.75}>
+          <InfoLine label="Họ tên người mua hàng">{invoice.buyerName}</InfoLine>
+          <InfoLine label="Tên đơn vị">{invoice.customerName}</InfoLine>
+          <InfoLine label="Mã số thuế">{invoice.customerTaxCode}</InfoLine>
+          <InfoLine label="Địa chỉ">{invoice.customerAddress}</InfoLine>
+          <InfoLine label="Hình thức thanh toán">{invoice.paymentMethod}</InfoLine>
+          <InfoLine label="Đồng tiền thanh toán">{invoice.currencyUnit}</InfoLine>
+        </Stack>
+
+        {/* Hàng hoá, dịch vụ */}
+        <TableContainer sx={{ border: '1px solid', borderColor: 'grey.200', borderRadius: 2 }}>
+          <Table size="small" sx={{ minWidth: hasDiscount ? 820 : 720 }}>
+            <TableHead sx={{ backgroundColor: 'grey.50' }}>
+              <TableRow>
+                <TableCell sx={{ ...headCellSx, textAlign: 'center' }}>STT</TableCell>
+                <TableCell sx={headCellSx}>Tên hàng hoá, dịch vụ</TableCell>
+                <TableCell sx={{ ...headCellSx, textAlign: 'center' }}>ĐVT</TableCell>
+                <TableCell sx={{ ...headCellSx, textAlign: 'right' }}>Số lượng</TableCell>
+                <TableCell sx={{ ...headCellSx, textAlign: 'right' }}>Đơn giá</TableCell>
+                {hasDiscount && <TableCell sx={{ ...headCellSx, textAlign: 'right' }}>Chiết khấu</TableCell>}
+                <TableCell sx={{ ...headCellSx, textAlign: 'right' }}>Thành tiền chưa thuế</TableCell>
+                <TableCell sx={{ ...headCellSx, textAlign: 'center' }}>Thuế suất</TableCell>
+                <TableCell sx={{ ...headCellSx, textAlign: 'right' }}>Tiền thuế GTGT</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {invoice.items.map((item, i) =>
+                item.feature === 4 ? (
+                  <TableRow key={i}>
+                    <TableCell sx={{ ...cellSx, textAlign: 'center' }}>{i + 1}</TableCell>
+                    <TableCell sx={{ ...cellSx, fontStyle: 'italic' }} colSpan={hasDiscount ? 8 : 7}>{item.name}</TableCell>
+                  </TableRow>
+                ) : (
+                  <TableRow key={i}>
+                    <TableCell sx={{ ...cellSx, textAlign: 'center' }}>{i + 1}</TableCell>
+                    <TableCell sx={{ ...cellSx, fontWeight: 600 }}>{item.name}{FEATURE_SUFFIX[item.feature ?? 1] ?? ''}</TableCell>
+                    <TableCell sx={{ ...cellSx, textAlign: 'center' }}>{item.unit}</TableCell>
+                    <TableCell sx={numCellSx}>{formatNumber(item.quantity)}</TableCell>
+                    <TableCell sx={numCellSx}>{formatNumber(item.unitPrice)}</TableCell>
+                    {hasDiscount && (
+                      <TableCell sx={numCellSx}>
+                        {item.discountAmount ? formatNumber(item.discountAmount) : ''}
+                        {item.discountPercent ? ` (${item.discountPercent}%)` : ''}
+                      </TableCell>
+                    )}
+                    <TableCell sx={numCellSx}>{formatNumber(item.total)}</TableCell>
+                    <TableCell sx={{ ...cellSx, textAlign: 'center' }}>{vatRateLabel(item)}</TableCell>
+                    <TableCell sx={numCellSx}>{formatNumber(item.vatAmount)}</TableCell>
+                  </TableRow>
+                ),
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Tổng tiền */}
+        <Stack spacing={0.75} sx={{ alignSelf: { md: 'flex-end' }, width: { xs: '100%', md: 420 } }}>
+          <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
+            <Typography variant="body2" color="text.secondary">Cộng tiền hàng</Typography>
+            <Typography variant="body2">{formatNumber(invoice.totalBeforeTax)}</Typography>
+          </Stack>
+          <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
+            <Typography variant="body2" color="text.secondary">
+              Tiền thuế GTGT{uniformRate ? ` (${uniformRate})` : ''}
+            </Typography>
+            <Typography variant="body2">{formatNumber(invoice.vatAmount)}</Typography>
+          </Stack>
+          <Divider />
+          <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <Typography sx={{ fontWeight: 700 }}>Tổng tiền thanh toán</Typography>
+            <Typography sx={{ fontWeight: 800, color: '#2563EB', fontSize: 18 }}>
+              {formatNumber(invoice.totalAmount)} <Box component="span" sx={{ fontSize: 13, fontWeight: 600 }}>{invoice.currencyUnit}</Box>
+            </Typography>
+          </Stack>
+        </Stack>
+        {invoice.amountInWords && (
+          <Typography variant="body2">
+            <Box component="span" sx={{ color: 'text.secondary' }}>Số tiền viết bằng chữ: </Box>
+            <Box component="span" sx={{ fontStyle: 'italic', fontWeight: 600 }}>{invoice.amountInWords}</Box>
+          </Typography>
+        )}
+      </Stack>
+    </Paper>
+  );
+}
+
 /**
- * Chi tiết 1 hoá đơn điện tử, trình bày theo nội dung hoá đơn đã gửi EasyInvoice (XmlData):
- * tiêu đề, ngày lập, ký hiệu/số, người bán, người mua, bảng hàng hoá, tổng tiền + số tiền bằng chữ.
+ * Chi tiết 1 hoá đơn điện tử: trạng thái + file PDF hoá đơn (bản do EasyInvoice phát hành) để khách
+ * xem trực tiếp, kèm nút tải PDF/XML. Không tải được PDF thì hiện nội dung hoá đơn thay thế.
  */
 export default function EInvoiceDetailView({
   invoice,
+  loadPdf,
   onDownload,
 }: {
   invoice: PublicEInvoice;
+  loadPdf: () => Promise<Blob>;
   onDownload: (format: EInvoiceFileFormat) => Promise<void>;
 }) {
   const [downloading, setDownloading] = useState<EInvoiceFileFormat | null>(null);
@@ -166,9 +305,6 @@ export default function EInvoiceDetailView({
     }
   };
 
-  const hasDiscount = invoice.items.some((i) => (i.discountAmount ?? 0) > 0);
-  const rates = new Set(invoice.items.filter((i) => i.feature !== 4).map((i) => vatRateLabel(i)));
-  const uniformRate = rates.size === 1 ? [...rates][0] : undefined;
   const isDraft = invoice.localStatus === 'DRAFT';
 
   return (
@@ -192,127 +328,22 @@ export default function EInvoiceDetailView({
         </Alert>
       )}
 
-      <Paper elevation={0} sx={{ p: { xs: 2, md: 3.5 }, borderRadius: 4, border: '1px solid', borderColor: 'grey.200' }}>
-        <Stack spacing={2.5}>
-          {/* Tiêu đề + ký hiệu, số */}
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { md: 'flex-start' } }}>
-            <Box sx={{ textAlign: { xs: 'left', md: 'center' }, flex: 1 }}>
-              <Typography sx={{ fontWeight: 800, fontSize: { xs: 18, md: 22 }, textTransform: 'uppercase', color: '#1E3A8A', letterSpacing: 0.5 }}>
-                {invoiceTitle(invoice.pattern)}
-              </Typography>
-              {isDraft && (
-                <Typography variant="body2" sx={{ fontWeight: 700, color: 'warning.dark' }}>(BẢN NHÁP)</Typography>
-              )}
-              <Typography variant="body2" color="text.secondary" sx={{ fontStyle: 'italic', mt: 0.5 }}>
-                {invoiceDayLine(invoice.arisingDate)}
-              </Typography>
-            </Box>
-            <Stack spacing={0.5} sx={{ minWidth: { md: 200 } }}>
-              {invoice.pattern && <InfoLine label="Ký hiệu">{invoice.pattern}{invoice.serial}</InfoLine>}
-              <InfoLine label="Số">
-                {invoice.invoiceNo
-                  ? <Box component="span" sx={{ color: 'error.main', fontWeight: 700 }}>{invoice.invoiceNo}</Box>
-                  : <Box component="span" sx={{ color: 'text.secondary', fontStyle: 'italic' }}>(chưa cấp số)</Box>}
-              </InfoLine>
-              {invoice.lookupCode && <InfoLine label="Mã tra cứu">{invoice.lookupCode}</InfoLine>}
+      <Box sx={{ bgcolor: 'grey.100', borderRadius: 3, p: { xs: 1, md: 2 } }}>
+        <PdfDocumentViewer
+          load={loadPdf}
+          reloadKey={`${invoice.invoiceNo ?? ''}|${invoice.localStatus}|${invoice.easyInvoiceStatus ?? ''}`}
+          title={`Hoá đơn ${invoice.invoiceNo ?? ''}`.trim()}
+          openLabel="Mở hoá đơn trong tab mới"
+          fallback={
+            <Stack spacing={2}>
+              <Alert severity="warning" sx={{ borderRadius: 3 }}>
+                Chưa hiển thị được file PDF hoá đơn — dưới đây là nội dung hoá đơn. Vui lòng thử lại sau ít phút.
+              </Alert>
+              <InvoiceInfoSheet invoice={invoice} />
             </Stack>
-          </Stack>
-
-          <Divider />
-
-          {/* Người bán */}
-          <Stack spacing={0.75}>
-            <InfoLine label="Đơn vị bán hàng"><b>{invoice.sellerName}</b></InfoLine>
-            <InfoLine label="Mã số thuế">{invoice.sellerTaxCode}</InfoLine>
-            <InfoLine label="Địa chỉ">{invoice.sellerAddress}</InfoLine>
-          </Stack>
-
-          <Divider />
-
-          {/* Người mua */}
-          <Stack spacing={0.75}>
-            <InfoLine label="Họ tên người mua hàng">{invoice.buyerName}</InfoLine>
-            <InfoLine label="Tên đơn vị">{invoice.customerName}</InfoLine>
-            <InfoLine label="Mã số thuế">{invoice.customerTaxCode}</InfoLine>
-            <InfoLine label="Địa chỉ">{invoice.customerAddress}</InfoLine>
-            <InfoLine label="Hình thức thanh toán">{invoice.paymentMethod}</InfoLine>
-            <InfoLine label="Đồng tiền thanh toán">{invoice.currencyUnit}</InfoLine>
-          </Stack>
-
-          {/* Hàng hoá, dịch vụ */}
-          <TableContainer sx={{ border: '1px solid', borderColor: 'grey.200', borderRadius: 2 }}>
-            <Table size="small" sx={{ minWidth: hasDiscount ? 820 : 720 }}>
-              <TableHead sx={{ backgroundColor: 'grey.50' }}>
-                <TableRow>
-                  <TableCell sx={{ ...headCellSx, textAlign: 'center' }}>STT</TableCell>
-                  <TableCell sx={headCellSx}>Tên hàng hoá, dịch vụ</TableCell>
-                  <TableCell sx={{ ...headCellSx, textAlign: 'center' }}>ĐVT</TableCell>
-                  <TableCell sx={{ ...headCellSx, textAlign: 'right' }}>Số lượng</TableCell>
-                  <TableCell sx={{ ...headCellSx, textAlign: 'right' }}>Đơn giá</TableCell>
-                  {hasDiscount && <TableCell sx={{ ...headCellSx, textAlign: 'right' }}>Chiết khấu</TableCell>}
-                  <TableCell sx={{ ...headCellSx, textAlign: 'right' }}>Thành tiền chưa thuế</TableCell>
-                  <TableCell sx={{ ...headCellSx, textAlign: 'center' }}>Thuế suất</TableCell>
-                  <TableCell sx={{ ...headCellSx, textAlign: 'right' }}>Tiền thuế GTGT</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {invoice.items.map((item, i) =>
-                  item.feature === 4 ? (
-                    <TableRow key={i}>
-                      <TableCell sx={{ ...cellSx, textAlign: 'center' }}>{i + 1}</TableCell>
-                      <TableCell sx={{ ...cellSx, fontStyle: 'italic' }} colSpan={hasDiscount ? 8 : 7}>{item.name}</TableCell>
-                    </TableRow>
-                  ) : (
-                    <TableRow key={i}>
-                      <TableCell sx={{ ...cellSx, textAlign: 'center' }}>{i + 1}</TableCell>
-                      <TableCell sx={{ ...cellSx, fontWeight: 600 }}>{item.name}{FEATURE_SUFFIX[item.feature ?? 1] ?? ''}</TableCell>
-                      <TableCell sx={{ ...cellSx, textAlign: 'center' }}>{item.unit}</TableCell>
-                      <TableCell sx={numCellSx}>{formatNumber(item.quantity)}</TableCell>
-                      <TableCell sx={numCellSx}>{formatNumber(item.unitPrice)}</TableCell>
-                      {hasDiscount && (
-                        <TableCell sx={numCellSx}>
-                          {item.discountAmount ? formatNumber(item.discountAmount) : ''}
-                          {item.discountPercent ? ` (${item.discountPercent}%)` : ''}
-                        </TableCell>
-                      )}
-                      <TableCell sx={numCellSx}>{formatNumber(item.total)}</TableCell>
-                      <TableCell sx={{ ...cellSx, textAlign: 'center' }}>{vatRateLabel(item)}</TableCell>
-                      <TableCell sx={numCellSx}>{formatNumber(item.vatAmount)}</TableCell>
-                    </TableRow>
-                  ),
-                )}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {/* Tổng tiền */}
-          <Stack spacing={0.75} sx={{ alignSelf: { md: 'flex-end' }, width: { xs: '100%', md: 420 } }}>
-            <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-              <Typography variant="body2" color="text.secondary">Cộng tiền hàng</Typography>
-              <Typography variant="body2">{formatNumber(invoice.totalBeforeTax)}</Typography>
-            </Stack>
-            <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
-              <Typography variant="body2" color="text.secondary">
-                Tiền thuế GTGT{uniformRate ? ` (${uniformRate})` : ''}
-              </Typography>
-              <Typography variant="body2">{formatNumber(invoice.vatAmount)}</Typography>
-            </Stack>
-            <Divider />
-            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <Typography sx={{ fontWeight: 700 }}>Tổng tiền thanh toán</Typography>
-              <Typography sx={{ fontWeight: 800, color: '#2563EB', fontSize: 18 }}>
-                {formatNumber(invoice.totalAmount)} <Box component="span" sx={{ fontSize: 13, fontWeight: 600 }}>{invoice.currencyUnit}</Box>
-              </Typography>
-            </Stack>
-          </Stack>
-          {invoice.amountInWords && (
-            <Typography variant="body2">
-              <Box component="span" sx={{ color: 'text.secondary' }}>Số tiền viết bằng chữ: </Box>
-              <Box component="span" sx={{ fontStyle: 'italic', fontWeight: 600 }}>{invoice.amountInWords}</Box>
-            </Typography>
-          )}
-        </Stack>
-      </Paper>
+          }
+        />
+      </Box>
 
       {/* Tải hoá đơn */}
       <Stack direction="row" spacing={1.5} useFlexGap sx={{ flexWrap: 'wrap' }}>

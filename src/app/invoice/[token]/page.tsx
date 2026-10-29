@@ -12,6 +12,7 @@ import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
 import EInvoiceDetailView, {
   EINVOICE_STATUS_META,
   downloadEInvoiceFile,
+  fetchEInvoiceFile,
   type EInvoiceFileFormat,
   type EInvoiceLocalStatus,
   type PublicEInvoice,
@@ -52,13 +53,18 @@ export default function InvoiceAccessPage({ params }: { params: { token: string 
 
   const [jwt, setJwt] = useState<string | null>(null);
   const [invoice, setInvoice] = useState<PublicEInvoice | null>(null);
+  // Tăng mỗi lần tải lại hoá đơn -> tải lại file PDF đang hiển thị
+  const [loadSeq, setLoadSeq] = useState(0);
 
   const [code, setCode] = useState('');
   const [verifying, setVerifying] = useState(false);
 
   const authHeaders = useMemo(() => (jwt ? { 'X-Einvoice-Access': jwt } : undefined), [jwt]);
 
-  const applyInvoice = useCallback((inv: PublicEInvoice) => setInvoice(inv), []);
+  const applyInvoice = useCallback((inv: PublicEInvoice) => {
+    setInvoice(inv);
+    setLoadSeq((n) => n + 1);
+  }, []);
 
   // ── Load meta + phiên đã lưu ──
   useEffect(() => {
@@ -228,7 +234,12 @@ export default function InvoiceAccessPage({ params }: { params: { token: string 
           </Button>
         </Stack>
 
-        <EInvoiceDetailView invoice={invoice} onDownload={handleDownload} />
+        <EInvoiceDetailView
+          key={loadSeq}
+          invoice={invoice}
+          loadPdf={() => fetchEInvoiceFile(`${API_URL}/einvoices/public/${token}/download?format=pdf`, { 'X-Einvoice-Access': jwt })}
+          onDownload={handleDownload}
+        />
       </Stack>
     </Container>
   );
