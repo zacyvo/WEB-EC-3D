@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { Box, Container, Typography, Stack, Divider, alpha } from '@mui/material';
 import { STORE } from '@/lib/store-config';
+import { RETURN_WINDOW_DAYS } from '@/lib/utils';
 
-const LAST_UPDATED = '19/07/2026';
+const LAST_UPDATED = '31/10/2026';
 
 type ContentItem = { subtitle?: string; body: string };
 type Section = {
@@ -22,7 +23,7 @@ const SECTIONS: Section[] = [
     title: '1. Thời hạn đổi trả',
     content: [
       {
-        body: `${STORE.name} chấp nhận đổi trả trong vòng 30 ngày kể từ ngày bạn nhận được hàng.`,
+        body: `${STORE.name} chấp nhận yêu cầu trả hàng/hoàn tiền trong vòng ${RETURN_WINDOW_DAYS} ngày kể từ ngày đơn hàng được giao thành công (trạng thái "Đã giao"). Sau thời hạn này, nút yêu cầu trả hàng sẽ không còn hiển thị.`,
       },
     ],
   },
@@ -68,13 +69,17 @@ const SECTIONS: Section[] = [
     title: '5. Quy trình đổi trả',
     content: [
       {
-        body: 'Để yêu cầu đổi trả, vui lòng thực hiện theo các bước sau:',
+        body: 'Yêu cầu trả hàng được gửi trực tuyến ngay trên website, tại mục "Đơn hàng của tôi":',
       },
     ],
     list: [
-      'Liên hệ hotline, email hoặc Zalo trong vòng 24 giờ kể từ khi nhận hàng (đối với hàng lỗi/hư hỏng do vận chuyển) kèm ảnh hoặc video sản phẩm',
-      'Chúng tôi xác nhận yêu cầu và hướng dẫn gửi trả sản phẩm',
-      'Sau khi nhận và kiểm tra hàng trả về, chúng tôi tiến hành đổi mới hoặc hoàn tiền',
+      'Bước 1 — Gửi yêu cầu: mở đơn hàng đã giao, bấm "Yêu cầu trả hàng/hoàn tiền". Chọn sản phẩm và số lượng muốn trả, chọn lý do, mô tả tình trạng, đính kèm 1–5 ảnh và nhập tài khoản ngân hàng nhận tiền hoàn (bắt buộc với đơn đã thanh toán).',
+      'Bước 2 — Shop duyệt: chúng tôi xem xét trong 1–2 ngày làm việc. Nếu chấp nhận, trang đơn hàng hiển thị địa chỉ và hướng dẫn gửi trả; nếu từ chối, bạn sẽ thấy lý do cụ thể.',
+      'Bước 3 — Gửi trả hàng: đóng gói sản phẩm kèm đầy đủ phụ kiện, bao bì, ghi mã đơn trên kiện hàng, gửi qua đơn vị vận chuyển bất kỳ rồi nhập mã vận đơn vào trang đơn hàng.',
+      'Bước 4 — Shop nhận và kiểm tra hàng: khi hàng về, chúng tôi xác nhận đã nhận và kiểm tra tình trạng sản phẩm so với điều kiện đổi trả.',
+      'Bước 5 — Hoàn tiền: nếu hàng đạt, chúng tôi chốt số tiền hoàn và chuyển khoản trong 3–5 ngày làm việc; trạng thái chuyển sang "Trả hàng thành công". Nếu hàng không đạt, yêu cầu bị từ chối kèm lý do và sản phẩm được gửi lại cho bạn.',
+      'Bạn có thể theo dõi từng bước tại tab "Trả hàng/Hoàn tiền" và hủy yêu cầu khi chưa gửi hàng đi. Mỗi đơn hàng chỉ được gửi một yêu cầu trả hàng — sau khi hủy sẽ không gửi lại được.',
+      `Đơn hàng mua qua sàn thương mại điện tử (Shopee...) vui lòng yêu cầu trả hàng trên ứng dụng của sàn đó.`,
     ],
     afterList: [
       {
@@ -96,7 +101,7 @@ const SECTIONS: Section[] = [
     title: '7. Hoàn tiền',
     content: [
       {
-        body: 'Sau khi nhận và kiểm tra sản phẩm trả về đạt điều kiện, chúng tôi xử lý hoàn tiền trong vòng 3–5 ngày làm việc. Hoàn tiền được thực hiện theo đúng phương thức thanh toán ban đầu của đơn hàng (chuyển khoản, ví điện tử) hoặc bằng tiền mặt/chuyển khoản đối với đơn thanh toán COD.',
+        body: 'Tiền chỉ được hoàn khi đơn hàng đã thanh toán, sau khi chúng tôi nhận và kiểm tra sản phẩm trả về đạt điều kiện, trong vòng 3–5 ngày làm việc, qua chuyển khoản vào tài khoản bạn cung cấp khi gửi yêu cầu (áp dụng cả đơn COD). Số tiền hoàn bằng giá các sản phẩm trả trừ phần giảm giá/mã khuyến mãi đã phân bổ cho chúng, không vượt quá số tiền đã thanh toán; phí giao hàng ban đầu không được hoàn. Với lỗi từ phía shop, phí gửi trả sẽ được hoàn thêm.',
       },
     ],
   },

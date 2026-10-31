@@ -139,9 +139,73 @@ export interface Order {
     trackingUrl?: string;
     estimatedDeliveryDate?: string;
   };
+  subtotal?: number;
+  discountAmount?: number;
+  shippingFee?: number;
+  /** First time the order was delivered — starts the 7-day return window. */
+  deliveredAt?: string;
+  returnRequest?: OrderReturnRequest;
+  /** Set when the order was synced from a marketplace (returns happen there). */
+  externalRef?: { channel: string; code: string };
   currentVersion: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export type ReturnStatus =
+  | 'REQUESTED'
+  | 'APPROVED'
+  | 'SHIPPING_BACK'
+  | 'RECEIVED'
+  | 'REFUNDING'
+  | 'COMPLETED'
+  | 'REJECTED'
+  | 'CANCELLED';
+
+export type ReturnReason =
+  | 'DAMAGED'
+  | 'DEFECTIVE'
+  | 'WRONG_ITEM'
+  | 'MISSING_PARTS'
+  | 'NOT_AS_DESCRIBED'
+  | 'CHANGED_MIND';
+
+export interface OrderReturnRequest {
+  status: ReturnStatus;
+  items: {
+    itemIndex: number;
+    productName: string;
+    productImage?: string;
+    color?: string;
+    size?: string;
+    quantity: number;
+    unitPrice: number;
+  }[];
+  reason: ReturnReason;
+  description: string;
+  images: string[];
+  refundAccount?: { bankName: string; accountNumber: string; accountHolder: string };
+  requestedAt: string;
+  estimatedRefund: number;
+  shopNote?: string;
+  rejectReason?: string;
+  rejectedAt?: 'REQUEST' | 'INSPECTION';
+  shipment?: { carrierName?: string; trackingCode: string; shippedAt: string };
+  receivedAt?: string;
+  inspectionNote?: string;
+  refundAmount?: number;
+  returnShippingRefund?: number;
+  refundedAt?: string;
+  refundTransferRef?: string;
+  history: { status: ReturnStatus; at: string; byType: 'user' | 'staff'; note?: string }[];
+}
+
+export interface ReturnEligibility {
+  eligible: boolean;
+  reason?: string;
+  deliveredAt?: string;
+  deadline?: string;
+  requiresRefundAccount: boolean;
 }
 
 export interface ApiResponse<T> {

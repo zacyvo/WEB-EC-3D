@@ -94,7 +94,7 @@ const SECTIONS = [
     content: [
       {
         subtitle: 'Điều kiện đổi trả',
-        body: 'Chúng tôi chấp nhận đổi/trả trong vòng 30 ngày kể từ ngày nhận hàng trong các trường hợp:',
+        body: 'Chúng tôi chấp nhận trả hàng/hoàn tiền trong vòng 7 ngày kể từ ngày nhận hàng trong các trường hợp:',
       },
     ],
     list: [

@@ -65,7 +65,7 @@ function VisualMock({
       accent: '#FF3B30',
       icon: <CachedOutlinedIcon sx={{ fontSize: 40, color: '#FF3B30' }} />,
       label: 'Đổi trả & Hoàn tiền',
-      tags: ['30 ngày đổi trả', 'Hoàn 100%', 'Nhanh chóng'],
+      tags: ['7 ngày trả hàng', 'Yêu cầu online', 'Hoàn tiền 3–5 ngày'],
     },
     quality: {
       bg: '#F5F5F7',
@@ -166,7 +166,7 @@ const CATEGORIES: Category[] = [
       },
       {
         q: 'Màu sắc thực tế có giống ảnh không?',
-        a: 'Chúng tôi luôn cố gắng chụp ảnh trong điều kiện ánh sáng chuẩn. Do đặc tính vật liệu in 3D, màu sắc thực tế có thể chênh nhẹ 5–10% tùy màn hình. Nếu không hài lòng, bạn có thể đổi trả trong 30 ngày.',
+        a: 'Chúng tôi luôn cố gắng chụp ảnh trong điều kiện ánh sáng chuẩn. Do đặc tính vật liệu in 3D, màu sắc thực tế có thể chênh nhẹ 5–10% tùy màn hình. Nếu không hài lòng, bạn có thể yêu cầu trả hàng trong 7 ngày kể từ khi nhận hàng.',
       },
     ],
   },
@@ -300,8 +300,9 @@ const CATEGORIES: Category[] = [
         q: 'Chính sách đổi trả như thế nào?',
         a: (
           <>
-            Chúng tôi nhận đổi trả trong vòng <strong>30 ngày</strong> kể từ ngày nhận hàng với điều kiện:{' '}
-            sản phẩm chưa qua sử dụng, còn nguyên vẹn bao bì, kèm hóa đơn mua hàng.
+            Chúng tôi nhận trả hàng trong vòng <strong>7 ngày</strong> kể từ ngày nhận hàng với điều kiện:{' '}
+            sản phẩm chưa qua sử dụng, còn nguyên vẹn bao bì. Bạn gửi yêu cầu ngay tại trang chi tiết đơn hàng
+            (nút &quot;Yêu cầu trả hàng/hoàn tiền&quot;) và theo dõi tiến trình ở tab &quot;Trả hàng/Hoàn tiền&quot;.
           </>
         ),
         visual: <VisualMock type="return" />,
@@ -325,7 +326,7 @@ const CATEGORIES: Category[] = [
       },
       {
         q: 'Quy trình hoàn tiền mất bao lâu?',
-        a: 'Sau khi nhận được hàng đổi trả và kiểm tra, chúng tôi sẽ hoàn tiền trong vòng 3–5 ngày làm việc qua phương thức thanh toán ban đầu của bạn.',
+        a: 'Sau khi nhận được hàng đổi trả và kiểm tra, chúng tôi sẽ hoàn tiền trong vòng 3–5 ngày làm việc bằng chuyển khoản vào tài khoản ngân hàng bạn cung cấp khi gửi yêu cầu.',
       },
     ],
   },
