@@ -16,7 +16,8 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { formatCurrency, formatDate, ORDER_STATUS_MAP } from '@/lib/utils';
 import { loginHref } from '@/lib/auth-redirect';
-import type { ApiResponse, Order, OrderStatus } from '@/types';
+import type { ApiResponse, Order, OrderStatus, ReturnEligibility } from '@/types';
+import ReturnRequestCard from '@/components/order-return/ReturnRequestCard';
 
 /** Customer may cancel by themselves only while the order awaits confirmation. */
 const SELF_CANCEL_STATUSES: OrderStatus[] = ['PENDING'];
@@ -63,6 +64,14 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       return res.data.data;
     },
     enabled: isAuthenticated,
+  });
+
+  // Only a delivered website order without a request yet can start a return.
+  const mayReturn = !!order && order.status === 'DELIVERED' && !order.returnRequest && !order.externalRef;
+  const { data: returnEligibility } = useQuery({
+    queryKey: ['order-return-eligibility', params.id],
+    queryFn: async () => (await api.get<ApiResponse<ReturnEligibility>>(`/orders/${params.id}/return-eligibility`)).data.data,
+    enabled: isAuthenticated && mayReturn,
   });
 
   const queryClient = useQueryClient();
@@ -139,6 +148,8 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           {order.cancelRequest!.reason && <><br />Lý do: {order.cancelRequest!.reason}</>}
         </Alert>
       )}
+
+      {order.returnRequest && <ReturnRequestCard order={order} />}
 
       {/* Items */}
       <Card variant="outlined" sx={{ borderRadius: 3, mb: 2 }}>
@@ -298,6 +309,24 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
               Đơn đang được xử lý — shop sẽ xem xét yêu cầu hủy của bạn
             </Typography>
           )}
+        </Box>
+      )}
+
+      {mayReturn && returnEligibility?.eligible && (
+        <Box sx={{ mt: 3 }}>
+          <Button
+            fullWidth
+            variant="outlined"
+            size="large"
+            component={Link}
+            href={`/orders/${order._id}/return`}
+            sx={{ borderRadius: 980, fontWeight: 600 }}
+          >
+            Yêu cầu trả hàng/hoàn tiền
+          </Button>
+          <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
+            Hạn yêu cầu: {formatDate(returnEligibility.deadline!)}
+          </Typography>
         </Box>
       )}
 

@@ -8,7 +8,7 @@ import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined';
 const FEATURES = [
   { Icon: LocalShippingOutlinedIcon, title: 'Giao hàng nhanh', desc: 'Nhận hàng trong 3-7 ngày làm việc trên toàn quốc.' },
   { Icon: VerifiedOutlinedIcon, title: 'Bảo hành 12 tháng', desc: 'Cam kết đổi mới nếu sản phẩm có lỗi từ nhà sản xuất.' },
-  { Icon: CachedOutlinedIcon, title: 'Đổi trả 30 ngày', desc: 'Không hài lòng? Đổi trả miễn phí trong vòng 30 ngày.' },
+  { Icon: CachedOutlinedIcon, title: 'Trả hàng 7 ngày', desc: 'Không hài lòng? Yêu cầu trả hàng/hoàn tiền online trong vòng 7 ngày.' },
   { Icon: SupportAgentOutlinedIcon, title: 'Hỗ trợ 24/7', desc: 'Đội ngũ tư vấn luôn sẵn sàng hỗ trợ bạn mọi lúc.' },
 ];
 

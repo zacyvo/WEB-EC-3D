@@ -11,13 +11,17 @@ import {
 } from '@mui/material';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import api from '@/lib/api';
-import { formatCurrency, formatDate, ORDER_STATUS_MAP } from '@/lib/utils';
+import { formatCurrency, formatDate, ORDER_STATUS_MAP, RETURN_STATUS_MAP } from '@/lib/utils';
 import { loginHref } from '@/lib/auth-redirect';
 import type { ApiResponse, Order, OrderStatus, PaginatedResponse } from '@/types';
 
 const PAGE_SIZE = 10;
 
-const STATUS_TABS: { value: OrderStatus | 'ALL'; label: string }[] = [
+/** 'RETURN' is not an order status: it lists orders with a return/refund request (Shopee's
+ * "Trả hàng/Hoàn tiền" tab). */
+type OrdersTab = OrderStatus | 'ALL' | 'RETURN';
+
+const STATUS_TABS: { value: OrdersTab; label: string }[] = [
   { value: 'ALL', label: 'Tất cả' },
   { value: 'PENDING', label: ORDER_STATUS_MAP.PENDING.label },
   { value: 'CONFIRMED', label: ORDER_STATUS_MAP.CONFIRMED.label },
@@ -25,10 +29,11 @@ const STATUS_TABS: { value: OrderStatus | 'ALL'; label: string }[] = [
   { value: 'SHIPPED', label: ORDER_STATUS_MAP.SHIPPED.label },
   { value: 'DELIVERED', label: ORDER_STATUS_MAP.DELIVERED.label },
   { value: 'CANCELLED', label: ORDER_STATUS_MAP.CANCELLED.label },
+  { value: 'RETURN', label: 'Trả hàng/Hoàn tiền' },
 ];
 
-function parseTab(raw: string | null): OrderStatus | 'ALL' {
-  return STATUS_TABS.some((t) => t.value === raw) ? (raw as OrderStatus) : 'ALL';
+function parseTab(raw: string | null): OrdersTab {
+  return STATUS_TABS.some((t) => t.value === raw) ? (raw as OrdersTab) : 'ALL';
 }
 
 function ListSkeleton() {
@@ -68,7 +73,11 @@ function OrdersContent() {
     queryKey: ['orders', status],
     queryFn: async ({ pageParam }) => {
       const res = await api.get<ApiResponse<PaginatedResponse<Order>>>('/orders', {
-        params: { page: pageParam, limit: PAGE_SIZE, ...(status === 'ALL' ? {} : { status }) },
+        params: {
+          page: pageParam,
+          limit: PAGE_SIZE,
+          ...(status === 'ALL' ? {} : status === 'RETURN' ? { hasReturn: 'true' } : { status }),
+        },
       });
       return res.data.data;
     },
@@ -82,7 +91,7 @@ function OrdersContent() {
     .filter((o, i, all) => all.findIndex((x) => x._id === o._id) === i);
   const total = data?.pages[0]?.total ?? 0;
 
-  const changeTab = (value: OrderStatus | 'ALL') => {
+  const changeTab = (value: OrdersTab) => {
     router.replace(value === 'ALL' ? '/orders' : `/orders?status=${value}`, { scroll: false });
   };
 
@@ -173,6 +182,14 @@ function OrderCard({ order }: { order: Order }) {
               <Typography variant="caption" color="text.disabled">{formatDate(order.createdAt)}</Typography>
             </Box>
             <Stack direction="row" spacing={0.75} sx={{ flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {order.returnRequest && (
+                <Chip
+                  label={`Trả hàng: ${RETURN_STATUS_MAP[order.returnRequest.status]?.label ?? order.returnRequest.status}`}
+                  size="small"
+                  variant="outlined"
+                  sx={RETURN_STATUS_MAP[order.returnRequest.status]?.chipSx}
+                />
+              )}
               {cancelRequested && (
                 <Chip label="Đã yêu cầu hủy" size="small" variant="outlined" color="warning" sx={{ fontWeight: 600 }} />
               )}
