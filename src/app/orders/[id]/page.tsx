@@ -18,6 +18,7 @@ import { formatCurrency, formatDate, ORDER_STATUS_MAP } from '@/lib/utils';
 import { loginHref } from '@/lib/auth-redirect';
 import type { ApiResponse, Order, OrderStatus, ReturnEligibility } from '@/types';
 import ReturnRequestCard from '@/components/order-return/ReturnRequestCard';
+import EInvoiceRequestCard from '@/components/einvoice-request/EInvoiceRequestCard';
 
 /** Customer may cancel by themselves only while the order awaits confirmation. */
 const SELF_CANCEL_STATUSES: OrderStatus[] = ['PENDING'];
@@ -180,6 +181,12 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           </Stack>
           <Divider sx={{ mb: 2 }} />
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {(order.vatAmount ?? 0) > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="body2" color="text.secondary">VAT {order.einvoiceRequest?.vatRate ?? 10}% (hoá đơn điện tử)</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>+{formatCurrency(order.vatAmount ?? 0)}</Typography>
+              </Box>
+            )}
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography variant="body2" color="text.secondary">Giá trị đơn hàng</Typography>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>{formatCurrency(order.total)}</Typography>
@@ -196,6 +203,8 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           </Box>
         </CardContent>
       </Card>
+
+      <EInvoiceRequestCard order={order} />
 
       {/* Shipping */}
       <Card variant="outlined" sx={{ borderRadius: 3, mb: 2 }}>

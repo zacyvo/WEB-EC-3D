@@ -8,12 +8,13 @@ import dynamic from 'next/dynamic';
 import {
   Box, Container, Typography, Grid, Card, CardContent,
   TextField, Button, Divider, Stack, Alert, CircularProgress,
-  Chip,
+  Chip, Checkbox, FormControlLabel,
 } from '@mui/material';
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
+import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -23,8 +24,13 @@ import { useAuthStore } from '@/lib/store/auth.store';
 import { formatCurrency } from '@/lib/utils';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import type { ApiResponse, Order, User, Coupon, ValidateCouponsResponse } from '@/types';
+import type { ApiResponse, Order, User, Coupon, ValidateCouponsResponse, EInvoiceRequestInput } from '@/types';
 import AddressPicker, { type OldAddressSelection } from '@/components/AddressPicker';
+import EInvoiceRequestFields from '@/components/einvoice-request/EInvoiceRequestFields';
+import {
+  EINVOICE_VAT_RATE, EMPTY_EINVOICE_REQUEST, estimateVat, toEInvoiceRequestPayload, validateEInvoiceRequest,
+  type EInvoiceRequestErrors,
+} from '@/lib/einvoice-request';
 // Loaded only after a successful order — keeps the QR/animation code out of the checkout bundle.
 const ZaloOaRewardModal = dynamic(() => import('@/components/zalo-oa-reward/ZaloOaRewardModal'), { ssr: false });
 
@@ -62,6 +68,14 @@ export default function CheckoutPage() {
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
   const [validateResult, setValidateResult] = useState<ValidateCouponsResponse | null>(null);
   const [isValidating, setIsValidating] = useState(false);
+
+  // ── VAT e-invoice request ─────────────────────────────────────────────────
+  const [wantsEInvoice, setWantsEInvoice] = useState(false);
+  const [einvoice, setEInvoice] = useState<EInvoiceRequestInput>({
+    ...EMPTY_EINVOICE_REQUEST, buyerName: user?.name ?? '', email: user?.email ?? '',
+  });
+  const [einvoiceErrors, setEInvoiceErrors] = useState<EInvoiceRequestErrors>({});
+  const [einvoiceSubmitted, setEInvoiceSubmitted] = useState(false);
 
   useEffect(() => { setMounted(true); }, []);
 
@@ -136,7 +150,17 @@ export default function CheckoutPage() {
     }
   }
 
-  const onSubmit = async (data: ShippingForm) => {    try {
+  const onSubmit = async (data: ShippingForm) => {
+    if (wantsEInvoice) {
+      setEInvoiceSubmitted(true);
+      const found = validateEInvoiceRequest(einvoice);
+      setEInvoiceErrors(found);
+      if (Object.keys(found).length) {
+        toast.error('Vui lòng kiểm tra thông tin xuất hoá đơn điện tử');
+        return;
+      }
+    }
+    try {
       const payload = {
         items: items.map((i) => ({
           productId: i.productId,
@@ -158,6 +182,7 @@ export default function CheckoutPage() {
         ...(validateResult?.appliedCoupons.length
           ? { couponCodes: validateResult.appliedCoupons.map((c) => c.code) }
           : {}),
+        ...(wantsEInvoice ? { einvoiceRequest: toEInvoiceRequestPayload(einvoice) } : {}),
       };
       const res = await api.post<ApiResponse<Order>>('/orders', payload);
       const newOrder = res.data.data;
@@ -189,6 +214,11 @@ export default function CheckoutPage() {
       toast.error(msg || 'Đặt hàng thất bại, vui lòng thử lại');
     }
   };
+
+  // Same split/rounding as the backend, so the total shown is the total charged.
+  const vatAmount = wantsEInvoice
+    ? estimateVat(items.map((i) => ({ unitPrice: i.price, quantity: i.quantity })), validateResult?.totalDiscount ?? 0)
+    : 0;
 
   if (!mounted) return null;
   if (!isAuthenticated) return (
@@ -390,6 +420,32 @@ export default function CheckoutPage() {
                 />
               </CardContent>
             </Card>
+
+            {/* Section 5 — Hoá đơn điện tử (VAT) */}
+            <Card variant="outlined" sx={{ borderRadius: 3, mt: 3 }}>
+              <CardContent sx={{ p: 3 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                  <ReceiptLongOutlinedIcon sx={{ fontSize: 20, color: 'primary.main' }} />
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>Hoá đơn điện tử</Typography>
+                </Box>
+                <FormControlLabel
+                  control={<Checkbox checked={wantsEInvoice} onChange={(e) => setWantsEInvoice(e.target.checked)} />}
+                  label={`Yêu cầu xuất hoá đơn điện tử (VAT ${EINVOICE_VAT_RATE}%)`}
+                />
+                {wantsEInvoice && (
+                  <Box sx={{ mt: 1.5 }}>
+                    <EInvoiceRequestFields
+                      value={einvoice}
+                      onChange={(v) => {
+                        setEInvoice(v);
+                        if (einvoiceSubmitted) setEInvoiceErrors(validateEInvoiceRequest(v));
+                      }}
+                      errors={einvoiceErrors}
+                    />
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
           </Grid>
 
           {/* ── Right: order summary ── */}
@@ -451,6 +507,12 @@ export default function CheckoutPage() {
                     <Typography variant="body2" color="text.secondary">Phí vận chuyển</Typography>
                     <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>Miễn phí</Typography>
                   </Box>
+                  {vatAmount > 0 && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="text.secondary">VAT {EINVOICE_VAT_RATE}% (hoá đơn điện tử)</Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>+{formatCurrency(vatAmount)}</Typography>
+                    </Box>
+                  )}
                 </Stack>
 
                 <Divider sx={{ mb: 2 }} />
@@ -458,7 +520,7 @@ export default function CheckoutPage() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                   <Typography sx={{ fontWeight: 700 }}>Tổng cộng</Typography>
                   <Typography color="primary.main" variant="h6" sx={{ fontWeight: 700 }}>
-                    {formatCurrency(validateResult ? validateResult.finalTotal : total())}
+                    {formatCurrency((validateResult ? validateResult.finalTotal : total()) + vatAmount)}
                   </Typography>
                 </Box>
 

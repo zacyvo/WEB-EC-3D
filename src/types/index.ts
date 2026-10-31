@@ -145,11 +145,40 @@ export interface Order {
   /** First time the order was delivered — starts the 7-day return window. */
   deliveredAt?: string;
   returnRequest?: OrderReturnRequest;
+  /** VAT added because the customer asked for a VAT e-invoice (0 otherwise). */
+  vatAmount?: number;
+  einvoiceRequest?: OrderEInvoiceRequest;
   /** Set when the order was synced from a marketplace (returns happen there). */
   externalRef?: { channel: string; code: string };
   currentVersion: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export type EInvoiceRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'ISSUED';
+export type EInvoiceBuyerType = 'INDIVIDUAL' | 'COMPANY';
+
+/** Buyer details for a VAT e-invoice — what the customer submits. */
+export interface EInvoiceRequestInput {
+  buyerType: EInvoiceBuyerType;
+  buyerName: string;
+  companyName?: string;
+  taxCode?: string;
+  address: string;
+  email: string;
+  phone?: string;
+}
+
+export interface OrderEInvoiceRequest extends EInvoiceRequestInput {
+  status: EInvoiceRequestStatus;
+  vatRate: number;
+  vatAmount: number;
+  requestedAt: string;
+  decidedAt?: string;
+  rejectReason?: string;
+  issuedAt?: string;
+  invoiceUrl?: string;
+  emailSentAt?: string;
 }
 
 export type ReturnStatus =
