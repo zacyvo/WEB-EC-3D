@@ -16,13 +16,13 @@ export const STORE = {
   // ── Chủ sở hữu website (công khai theo pháp luật thương mại điện tử) ──
   // Điền đúng theo Giấy chứng nhận đăng ký kinh doanh. Trường để trống sẽ không hiển thị.
   /** Tên hộ kinh doanh / doanh nghiệp, VD: "Hộ kinh doanh Luxe Glow". */
-  legalName: '',
+  legalName: 'Hộ kinh doanh Luxe Glow',
   /** Số Giấy chứng nhận đăng ký kinh doanh. */
-  businessRegNo: '',
+  businessRegNo: '079197022908',
   /** Ngày cấp, nơi cấp Giấy chứng nhận đăng ký kinh doanh. */
-  businessRegIssued: '',
+  businessRegIssued: '15/07/2026, Phòng Kinh tế, Hạ tầng và Đô thị, UBND phường Phú Thọ Hòa, TP. Hồ Chí Minh',
   /** Chủ hộ kinh doanh / người đại diện theo pháp luật. */
-  representative: '',
+  representative: 'Quách Phương Thanh Trúc',
 } as const;
 
 /** Thông tin chủ sở hữu website hiển thị trên các trang pháp lý — chỉ gồm các trường đã điền. */
