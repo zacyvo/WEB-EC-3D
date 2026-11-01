@@ -161,7 +161,7 @@ export interface Order {
 
 /** Keep in sync with backend orders/schemas/order.schema.ts. */
 export type PaymentMethod = 'COD' | 'BANK_TRANSFER';
-export type PaymentStatus = 'PENDING_PAYMENT' | 'PAID';
+export type PaymentStatus = 'PENDING_PAYMENT' | 'PAID' | 'REFUNDED';
 /** The customer's own "Tôi đã chuyển khoản" claim — never proof of payment. */
 export type PaymentVerificationStatus = 'NOT_REPORTED' | 'AWAITING_CONFIRMATION' | 'CONFIRMED';
 
@@ -201,6 +201,8 @@ export interface PaymentInstructions {
   qrError?: string;
   customerReportedAt?: string;
   confirmedAt?: string;
+  refundAmount?: number;
+  refundedAt?: string;
   /** Only on POST /orders/:id/payment/report. */
   alreadyReported?: boolean;
 }

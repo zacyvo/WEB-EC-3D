@@ -20,6 +20,10 @@ const REPORTED_MESSAGE =
   'Luxe Glow đã nhận được yêu cầu xác nhận thanh toán. Chúng tôi sẽ kiểm tra và cập nhật trạng thái đơn hàng.';
 
 function statusChip(p: PaymentInstructions): { label: string; sx: Record<string, string> } {
+  if (p.paymentStatus === 'REFUNDED') return { label: 'Đã hoàn tiền', sx: { bgcolor: '#F3F4F6', color: '#374151', borderColor: '#E5E7EB' } };
+  if (p.paymentStatus === 'PAID' && p.orderStatus === 'CANCELLED') {
+    return { label: 'Chờ hoàn tiền', sx: { bgcolor: '#FEF3C7', color: '#92400E', borderColor: '#FDE68A' } };
+  }
   if (p.paymentStatus === 'PAID') return { label: 'Đã thanh toán', sx: { bgcolor: '#D1FAE5', color: '#065F46', borderColor: '#A7F3D0' } };
   if (!p.payable) return { label: 'Không cần thanh toán', sx: { bgcolor: '#F3F4F6', color: '#4B5563', borderColor: '#E5E7EB' } };
   if (p.verificationStatus === 'AWAITING_CONFIRMATION') {
@@ -192,13 +196,24 @@ export default function BankTransferPayment({
           <Chip label={chip.label} variant="outlined" sx={{ ...chip.sx, fontWeight: 600 }} />
         </Box>
 
-        {payment.paymentStatus === 'PAID' && (
+        {payment.paymentStatus === 'PAID' && payment.orderStatus === 'CANCELLED' && (
+          <Alert severity="warning" sx={{ borderRadius: 2, mb: 2 }}>
+            Đơn hàng đã hủy. Luxe Glow sẽ hoàn lại {formatCurrency(payment.amount)} cho bạn và cập nhật tại đây khi đã chuyển tiền.
+          </Alert>
+        )}
+        {payment.paymentStatus === 'PAID' && payment.orderStatus !== 'CANCELLED' && (
           <Alert icon={<CheckCircleOutlinedIcon />} severity="success" sx={{ borderRadius: 2, mb: 2 }}>
             Luxe Glow đã xác nhận nhận được thanh toán {formatCurrency(payment.amount)}
             {payment.confirmedAt ? ` lúc ${formatDate(payment.confirmedAt)}` : ''}. Cảm ơn bạn!
           </Alert>
         )}
-        {!payment.payable && payment.paymentStatus !== 'PAID' && (
+        {payment.paymentStatus === 'REFUNDED' && (
+          <Alert severity="info" sx={{ borderRadius: 2, mb: 2 }}>
+            Luxe Glow đã hoàn {formatCurrency(payment.refundAmount ?? 0)}
+            {payment.refundedAt ? ` lúc ${formatDate(payment.refundedAt)}` : ''}. Vui lòng kiểm tra tài khoản ngân hàng của bạn.
+          </Alert>
+        )}
+        {!payment.payable && payment.paymentStatus === 'PENDING_PAYMENT' && (
           <Alert severity="info" sx={{ borderRadius: 2, mb: 2 }}>
             Đơn hàng đã hủy — bạn không cần thanh toán. Nếu đã chuyển khoản, vui lòng liên hệ Luxe Glow để được hoàn tiền.
           </Alert>
