@@ -254,7 +254,7 @@ const CATEGORIES: Category[] = [
       },
       {
         q: 'Tôi có thể xin hóa đơn VAT không?',
-        a: 'Có. Bạn chọn "Yêu cầu xuất hoá đơn điện tử" khi đặt hàng hoặc tại trang chi tiết đơn hàng (trước khi đơn được giao đi). Thuế GTGT 10% được cộng vào tổng thanh toán; hoá đơn được gửi tới email của bạn sau khi đơn được thanh toán. Nếu shop từ chối yêu cầu, khoản VAT sẽ được trừ lại.',
+        a: 'Có. Bạn chọn "Yêu cầu xuất hoá đơn điện tử" khi đặt hàng hoặc tại trang chi tiết đơn hàng. Shop sẽ xử lý yêu cầu và gửi hoá đơn tới email của bạn sau khi đơn được thanh toán.',
       },
     ],
   },

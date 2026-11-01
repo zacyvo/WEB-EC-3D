@@ -76,7 +76,7 @@ const SECTIONS: Section[] = [
     title: '6. Hoá đơn điện tử',
     content: [
       {
-        body: 'Bạn có thể yêu cầu xuất hoá đơn điện tử (cá nhân hoặc doanh nghiệp) khi đặt hàng hoặc tại trang chi tiết đơn hàng, trước khi đơn được giao đi. Thuế GTGT 10% được cộng vào tổng thanh toán; hoá đơn được gửi tới email của bạn sau khi đơn được thanh toán. Chi tiết tại Điều khoản dịch vụ.',
+        body: 'Bạn có thể yêu cầu xuất hoá đơn điện tử (cá nhân hoặc doanh nghiệp) khi đặt hàng hoặc tại trang chi tiết đơn hàng. Hoá đơn được gửi tới email của bạn sau khi đơn được thanh toán. Chi tiết tại Điều khoản dịch vụ.',
       },
     ],
   },

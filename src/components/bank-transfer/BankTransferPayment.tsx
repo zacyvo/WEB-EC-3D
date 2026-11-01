@@ -85,7 +85,7 @@ export default function BankTransferPayment({
 }: {
   orderId: string;
   showOrderLink?: boolean;
-  /** Changes when the order changes elsewhere on the page (cancelled, VAT added…) → reload. */
+  /** Changes when the order changes elsewhere on the page (cancelled, e-invoice request rejected…) → reload. */
   refreshKey?: string;
 }) {
   const queryClient = useQueryClient();

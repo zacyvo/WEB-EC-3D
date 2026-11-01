@@ -10,8 +10,8 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import {
-  EINVOICE_REQUESTABLE_STATUSES, EINVOICE_STATUS_MAP, EINVOICE_VAT_RATE, EMPTY_EINVOICE_REQUEST,
-  estimateVat, toEInvoiceRequestPayload, validateEInvoiceRequest, type EInvoiceRequestErrors,
+  EINVOICE_REQUESTABLE_STATUSES, EINVOICE_STATUS_MAP, EMPTY_EINVOICE_REQUEST,
+  toEInvoiceRequestPayload, validateEInvoiceRequest, type EInvoiceRequestErrors,
 } from '@/lib/einvoice-request';
 import type { ApiResponse, EInvoiceRequestInput, Order } from '@/types';
 import EInvoiceRequestFields from './EInvoiceRequestFields';
@@ -20,16 +20,18 @@ import EInvoiceRequestFields from './EInvoiceRequestFields';
 function statusText(order: Order): string {
   const r = order.einvoiceRequest!;
   switch (r.status) {
-    case 'PENDING': return 'Shop sẽ xác nhận yêu cầu trước khi giao hàng. Nếu yêu cầu bị từ chối, khoản VAT sẽ được trừ lại khỏi đơn hàng.';
+    case 'PENDING': return 'Shop đã nhận yêu cầu và sẽ liên hệ nếu cần bổ sung thông tin.';
     case 'APPROVED': return `Sau khi thanh toán, hoá đơn điện tử sẽ được gửi tới email ${r.email}.`;
-    case 'REJECTED': return 'Shop đã từ chối yêu cầu — khoản VAT đã được trừ khỏi đơn hàng.';
+    case 'REJECTED': return (order.vatAmount ?? 0) > 0
+      ? 'Shop đã từ chối yêu cầu — khoản VAT đã được trừ khỏi đơn hàng.'
+      : 'Shop đã từ chối yêu cầu xuất hoá đơn.';
     case 'ISSUED': return r.emailSentAt
       ? `Hoá đơn đã được gửi tới email ${r.email} (kèm khoá mở hoá đơn).`
       : `Hoá đơn đã được phát hành. Shop sẽ gửi hoá đơn và khoá mở hoá đơn tới email ${r.email}.`;
   }
 }
 
-/** Order page: shows the e-invoice request, or lets the customer send one while the order hasn't shipped. */
+/** Order page: shows the e-invoice request, or lets the customer send one (any order that isn't cancelled). */
 export default function EInvoiceRequestCard({ order }: { order: Order }) {
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
@@ -57,7 +59,6 @@ export default function EInvoiceRequestCard({ order }: { order: Order }) {
   const canRequest = !r && !order.externalRef && EINVOICE_REQUESTABLE_STATUSES.includes(order.status);
   if (!r && !canRequest) return null;
 
-  const vatPreview = estimateVat(order.items, order.discountAmount ?? 0, order.shippingFee ?? 0);
   const onFormChange = (v: EInvoiceRequestInput) => {
     setForm(v);
     if (submitted) setErrors(validateEInvoiceRequest(v));
@@ -81,7 +82,7 @@ export default function EInvoiceRequestCard({ order }: { order: Order }) {
             Yêu cầu xuất hoá đơn điện tử (VAT)
           </Button>
           <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
-            Cộng thêm {EINVOICE_VAT_RATE}% VAT · chỉ yêu cầu được trước khi đơn được giao đi
+            Hoá đơn được gửi tới email sau khi đơn hàng được thanh toán
           </Typography>
         </Box>
 
@@ -93,16 +94,8 @@ export default function EInvoiceRequestCard({ order }: { order: Order }) {
             </Box>
             <Stack spacing={0.75} sx={{ mt: 2.5, p: 2, bgcolor: 'grey.50', borderRadius: 2 }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2" color="text.secondary">Giá trị đơn hàng hiện tại</Typography>
-                <Typography variant="body2">{formatCurrency(order.total)}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2" color="text.secondary">VAT {EINVOICE_VAT_RATE}%</Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>+{formatCurrency(vatPreview)}</Typography>
-              </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                <Typography variant="body2" sx={{ fontWeight: 700 }}>Tổng thanh toán mới</Typography>
-                <Typography variant="body2" color="primary.main" sx={{ fontWeight: 700 }}>{formatCurrency(order.total + vatPreview)}</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 700 }}>Tổng thanh toán</Typography>
+                <Typography variant="body2" color="primary.main" sx={{ fontWeight: 700 }}>{formatCurrency(order.total)}</Typography>
               </Box>
             </Stack>
           </DialogContent>

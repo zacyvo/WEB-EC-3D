@@ -1,13 +1,11 @@
 import type { EInvoiceRequestInput, EInvoiceRequestStatus } from '@/types';
 
-/** Must match backend/src/orders/einvoice-request.util.ts (EINVOICE_VAT_RATE). */
-export const EINVOICE_VAT_RATE = 10;
-
-/** Statuses in which the customer can still ask for an invoice (before the parcel ships). */
-export const EINVOICE_REQUESTABLE_STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING'];
+/** Statuses in which the customer can ask for an invoice — any order that isn't cancelled (must
+ * match backend/src/orders/einvoice-request.util.ts). */
+export const EINVOICE_REQUESTABLE_STATUSES = ['PENDING', 'CONFIRMED', 'PROCESSING', 'SHIPPED', 'DELIVERED'];
 
 export const EINVOICE_NOTE =
-  'Bạn phải trả thêm 10% VAT cho đơn hàng xuất hóa đơn điện tử. Sau khi thanh toán, email bạn sẽ nhận được hóa đơn điện tử.';
+  'Shop sẽ xử lý yêu cầu và gửi hóa đơn điện tử tới email của bạn sau khi đơn hàng được thanh toán.';
 
 export const EINVOICE_STATUS_MAP: Record<EInvoiceRequestStatus, { label: string; color: 'warning' | 'info' | 'error' | 'success' }> = {
   PENDING: { label: 'Chờ shop xác nhận', color: 'warning' },
@@ -24,22 +22,6 @@ export const EMPTY_EINVOICE_REQUEST: EInvoiceRequestInput = {
   address: '',
   email: '',
 };
-
-/** VAT preview — same split as the backend (discount prorated over lines, VAT rounded per line,
- * shipping fee as its own line), so the amount shown is the amount charged. */
-export function estimateVat(items: { unitPrice: number; quantity: number }[], discountAmount = 0, shippingFee = 0): number {
-  const subtotals = items.map((i) => i.unitPrice * i.quantity);
-  const subtotal = subtotals.reduce((s, v) => s + v, 0);
-  const discount = Math.min(Math.max(0, discountAmount), subtotal);
-  let left = discount;
-  const goodsVat = subtotals.reduce((vat, lineSubtotal, idx) => {
-    const share = idx === subtotals.length - 1 ? left : subtotal > 0 ? Math.round((discount * lineSubtotal) / subtotal) : 0;
-    const lineDiscount = Math.min(share, lineSubtotal, left);
-    left -= lineDiscount;
-    return vat + Math.round(((lineSubtotal - lineDiscount) * EINVOICE_VAT_RATE) / 100);
-  }, 0);
-  return goodsVat + Math.round((Math.max(0, shippingFee) * EINVOICE_VAT_RATE) / 100);
-}
 
 const COMPANY_TAX_CODE = /^\d{10}(-\d{3})?$/;
 const PERSONAL_TAX_CODE = /^(\d{10}|\d{12})$/;

@@ -32,7 +32,7 @@ import AddressPicker, { type OldAddressSelection } from '@/components/AddressPic
 import EInvoiceRequestFields from '@/components/einvoice-request/EInvoiceRequestFields';
 import BankTransferPayment from '@/components/bank-transfer/BankTransferPayment';
 import {
-  EINVOICE_VAT_RATE, EMPTY_EINVOICE_REQUEST, estimateVat, toEInvoiceRequestPayload, validateEInvoiceRequest,
+  EMPTY_EINVOICE_REQUEST, toEInvoiceRequestPayload, validateEInvoiceRequest,
   type EInvoiceRequestErrors,
 } from '@/lib/einvoice-request';
 // Loaded only after a successful order — keeps the QR/animation code out of the checkout bundle.
@@ -243,12 +243,9 @@ export default function CheckoutPage() {
     }
   };
 
-  // Same fee rule and VAT split/rounding as the backend, so the total shown is the total charged.
+  // Same fee rule as the backend, so the total shown is the total charged (prices include VAT).
   const selectedCity = watch('city');
   const shippingFee = selectedCity ? computeShippingFee(selectedCity) : 0;
-  const vatAmount = wantsEInvoice
-    ? estimateVat(items.map((i) => ({ unitPrice: i.price, quantity: i.quantity })), validateResult?.totalDiscount ?? 0, shippingFee)
-    : 0;
 
   if (!mounted) return null;
   if (!isAuthenticated) return (
@@ -508,7 +505,7 @@ export default function CheckoutPage() {
                 </Box>
                 <FormControlLabel
                   control={<Checkbox checked={wantsEInvoice} onChange={(e) => setWantsEInvoice(e.target.checked)} />}
-                  label={`Yêu cầu xuất hoá đơn điện tử (VAT ${EINVOICE_VAT_RATE}%)`}
+                  label="Yêu cầu xuất hoá đơn điện tử (VAT)"
                 />
                 {wantsEInvoice && (
                   <Box sx={{ mt: 1.5 }}>
@@ -589,12 +586,6 @@ export default function CheckoutPage() {
                       <Typography variant="body2" color="text.secondary">Chọn địa chỉ giao hàng</Typography>
                     )}
                   </Box>
-                  {vatAmount > 0 && (
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <Typography variant="body2" color="text.secondary">VAT {EINVOICE_VAT_RATE}% (hoá đơn điện tử)</Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 600 }}>+{formatCurrency(vatAmount)}</Typography>
-                    </Box>
-                  )}
                 </Stack>
 
                 <Divider sx={{ mb: 2 }} />
@@ -602,7 +593,7 @@ export default function CheckoutPage() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                   <Typography sx={{ fontWeight: 700 }}>Tổng cộng</Typography>
                   <Typography color="primary.main" variant="h6" sx={{ fontWeight: 700 }}>
-                    {formatCurrency((validateResult ? validateResult.finalTotal : total()) + shippingFee + vatAmount)}
+                    {formatCurrency((validateResult ? validateResult.finalTotal : total()) + shippingFee)}
                   </Typography>
                 </Box>
 

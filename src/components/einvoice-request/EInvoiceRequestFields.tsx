@@ -13,14 +13,14 @@ interface Props {
   errors?: EInvoiceRequestErrors;
 }
 
-/** Buyer details for a VAT e-invoice + the "+10% VAT" note — used at checkout and on the order page. */
+/** Buyer details for a VAT e-invoice + when/where the invoice is sent — used at checkout and on the order page. */
 export default function EInvoiceRequestFields({ value, onChange, errors = {} }: Props) {
   const set = (patch: Partial<EInvoiceRequestInput>) => onChange({ ...value, ...patch });
   const isCompany = value.buyerType === 'COMPANY';
 
   return (
     <Stack spacing={2}>
-      <Alert severity="warning" sx={{ borderRadius: 2 }}>{EINVOICE_NOTE}</Alert>
+      <Alert severity="info" sx={{ borderRadius: 2 }}>{EINVOICE_NOTE}</Alert>
 
       <RadioGroup
         row

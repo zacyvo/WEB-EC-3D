@@ -73,11 +73,7 @@ const SECTIONS: Section[] = [
       },
       {
         subtitle: 'Giá bán',
-        body: 'Giá được niêm yết bằng Việt Nam đồng (VNĐ). Tổng số tiền phải thanh toán (gồm giảm giá, phí vận chuyển và thuế GTGT nếu có) được hiển thị đầy đủ ở bước thanh toán trước khi bạn bấm "Đặt hàng" và được giữ nguyên cho đơn hàng đó, kể cả khi giá niêm yết thay đổi sau đó.',
-      },
-      {
-        subtitle: 'Thuế GTGT khi yêu cầu hóa đơn',
-        body: 'Giá niêm yết là giá thanh toán khi không yêu cầu hóa đơn giá trị gia tăng. Nếu bạn yêu cầu xuất hóa đơn điện tử, thuế GTGT 10% được cộng vào tổng thanh toán và hiển thị trước khi đặt hàng (xem Mục 7).',
+        body: 'Giá được niêm yết bằng Việt Nam đồng (VNĐ). Tổng số tiền phải thanh toán (gồm giảm giá và phí vận chuyển) được hiển thị đầy đủ ở bước thanh toán trước khi bạn bấm "Đặt hàng" và được giữ nguyên cho đơn hàng đó, kể cả khi giá niêm yết thay đổi sau đó.',
       },
       {
         subtitle: 'Mã giảm giá',
@@ -143,12 +139,11 @@ const SECTIONS: Section[] = [
     title: '7. Hóa đơn điện tử',
     content: [
       {
-        body: 'Bạn có thể yêu cầu xuất hóa đơn điện tử (cá nhân hoặc doanh nghiệp) ngay khi đặt hàng hoặc tại trang chi tiết đơn hàng, trước khi đơn được giao cho đơn vị vận chuyển. Mỗi đơn hàng được gửi một yêu cầu.',
+        body: 'Bạn có thể yêu cầu xuất hóa đơn điện tử (cá nhân hoặc doanh nghiệp) ngay khi đặt hàng hoặc tại trang chi tiết đơn hàng (trừ đơn đã hủy). Mỗi đơn hàng được gửi một yêu cầu.',
       },
     ],
     list: [
-      'Thuế GTGT 10% được cộng vào tổng thanh toán ngay khi gửi yêu cầu',
-      `${STORE.name} xem xét và chấp nhận hoặc từ chối yêu cầu trước khi giao hàng; nếu từ chối, khoản thuế GTGT được trừ lại khỏi đơn và lý do được hiển thị cho bạn`,
+      `${STORE.name} xem xét và chấp nhận hoặc từ chối yêu cầu; nếu từ chối, lý do được hiển thị cho bạn`,
       'Hóa đơn được phát hành sau khi đơn hàng được thanh toán và gửi tới email bạn đã cung cấp',
       'Đơn mua qua sàn thương mại điện tử vui lòng yêu cầu hóa đơn trên sàn',
     ],
