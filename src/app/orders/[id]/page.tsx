@@ -186,6 +186,12 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           </Stack>
           <Divider sx={{ mb: 2 }} />
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+            {(order.shippingFee ?? 0) > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="body2" color="text.secondary">Phí vận chuyển</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>+{formatCurrency(order.shippingFee ?? 0)}</Typography>
+              </Box>
+            )}
             {(order.vatAmount ?? 0) > 0 && (
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2" color="text.secondary">VAT {order.einvoiceRequest?.vatRate ?? 10}% (hoá đơn điện tử)</Typography>

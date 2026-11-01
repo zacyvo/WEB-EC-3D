@@ -25,19 +25,20 @@ export const EMPTY_EINVOICE_REQUEST: EInvoiceRequestInput = {
   email: '',
 };
 
-/** VAT preview — same split as the backend (discount prorated over lines, VAT rounded per line),
- * so the amount shown is the amount charged. */
-export function estimateVat(items: { unitPrice: number; quantity: number }[], discountAmount = 0): number {
+/** VAT preview — same split as the backend (discount prorated over lines, VAT rounded per line,
+ * shipping fee as its own line), so the amount shown is the amount charged. */
+export function estimateVat(items: { unitPrice: number; quantity: number }[], discountAmount = 0, shippingFee = 0): number {
   const subtotals = items.map((i) => i.unitPrice * i.quantity);
   const subtotal = subtotals.reduce((s, v) => s + v, 0);
   const discount = Math.min(Math.max(0, discountAmount), subtotal);
   let left = discount;
-  return subtotals.reduce((vat, lineSubtotal, idx) => {
+  const goodsVat = subtotals.reduce((vat, lineSubtotal, idx) => {
     const share = idx === subtotals.length - 1 ? left : subtotal > 0 ? Math.round((discount * lineSubtotal) / subtotal) : 0;
     const lineDiscount = Math.min(share, lineSubtotal, left);
     left -= lineDiscount;
     return vat + Math.round(((lineSubtotal - lineDiscount) * EINVOICE_VAT_RATE) / 100);
   }, 0);
+  return goodsVat + Math.round((Math.max(0, shippingFee) * EINVOICE_VAT_RATE) / 100);
 }
 
 const COMPANY_TAX_CODE = /^\d{10}(-\d{3})?$/;

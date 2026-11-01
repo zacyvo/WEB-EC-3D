@@ -57,7 +57,7 @@ export default function EInvoiceRequestCard({ order }: { order: Order }) {
   const canRequest = !r && !order.externalRef && EINVOICE_REQUESTABLE_STATUSES.includes(order.status);
   if (!r && !canRequest) return null;
 
-  const vatPreview = estimateVat(order.items, order.discountAmount ?? 0);
+  const vatPreview = estimateVat(order.items, order.discountAmount ?? 0, order.shippingFee ?? 0);
   const onFormChange = (v: EInvoiceRequestInput) => {
     setForm(v);
     if (submitted) setErrors(validateEInvoiceRequest(v));

@@ -22,6 +22,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useCartStore } from '@/lib/store/cart.store';
 import { useAuthStore } from '@/lib/store/auth.store';
 import { formatCurrency } from '@/lib/utils';
+import { computeShippingFee } from '@/lib/shipping-fee';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import type {
@@ -242,9 +243,11 @@ export default function CheckoutPage() {
     }
   };
 
-  // Same split/rounding as the backend, so the total shown is the total charged.
+  // Same fee rule and VAT split/rounding as the backend, so the total shown is the total charged.
+  const selectedCity = watch('city');
+  const shippingFee = selectedCity ? computeShippingFee(selectedCity) : 0;
   const vatAmount = wantsEInvoice
-    ? estimateVat(items.map((i) => ({ unitPrice: i.price, quantity: i.quantity })), validateResult?.totalDiscount ?? 0)
+    ? estimateVat(items.map((i) => ({ unitPrice: i.price, quantity: i.quantity })), validateResult?.totalDiscount ?? 0, shippingFee)
     : 0;
 
   if (!mounted) return null;
@@ -580,7 +583,11 @@ export default function CheckoutPage() {
                   )}
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="body2" color="text.secondary">Phí vận chuyển</Typography>
-                    <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>Miễn phí</Typography>
+                    {selectedCity ? (
+                      <Typography variant="body2" sx={{ fontWeight: 600 }}>+{formatCurrency(shippingFee)}</Typography>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">Chọn địa chỉ giao hàng</Typography>
+                    )}
                   </Box>
                   {vatAmount > 0 && (
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -595,7 +602,7 @@ export default function CheckoutPage() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                   <Typography sx={{ fontWeight: 700 }}>Tổng cộng</Typography>
                   <Typography color="primary.main" variant="h6" sx={{ fontWeight: 700 }}>
-                    {formatCurrency((validateResult ? validateResult.finalTotal : total()) + vatAmount)}
+                    {formatCurrency((validateResult ? validateResult.finalTotal : total()) + shippingFee + vatAmount)}
                   </Typography>
                 </Box>
 

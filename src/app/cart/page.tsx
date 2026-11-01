@@ -11,6 +11,7 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useCartStore } from '@/lib/store/cart.store';
 import { formatCurrency } from '@/lib/utils';
+import { SHIPPING_FEE_HCM, SHIPPING_FEE_OTHER } from '@/lib/shipping-fee';
 import { useAuthStore } from '@/lib/store/auth.store';
 import QuantityStepper from '@/components/ui/QuantityStepper';
 import { useRouter } from 'next/navigation';
@@ -104,14 +105,16 @@ export default function CartPage() {
                   <Typography variant="body2" color="text.secondary">Tạm tính</Typography>
                   <Typography variant="body2" sx={{ fontWeight: 500 }}>{formatCurrency(total())}</Typography>
                 </Box>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2 }}>
                   <Typography variant="body2" color="text.secondary">Phí vận chuyển</Typography>
-                  <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>Miễn phí</Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'right' }}>
+                    {formatCurrency(SHIPPING_FEE_HCM)} (TP.HCM) / {formatCurrency(SHIPPING_FEE_OTHER)} (tỉnh khác)
+                  </Typography>
                 </Box>
               </Stack>
               <Divider sx={{ mb: 2 }} />
               <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-                <Typography sx={{ fontWeight: 700 }}>Tổng cộng</Typography>
+                <Typography sx={{ fontWeight: 700 }}>Tạm tính (chưa gồm phí vận chuyển)</Typography>
                 <Typography color="primary.main" variant="h6" sx={{ fontWeight: 700 }}>{formatCurrency(total())}</Typography>
               </Box>
               <Button fullWidth variant="contained" size="large" endIcon={<ArrowForwardIcon />} onClick={handleCheckout} sx={{ py: 1.5, fontWeight: 600 }}>Tiến hành đặt hàng</Button>

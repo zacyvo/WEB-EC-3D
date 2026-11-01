@@ -3,6 +3,8 @@
 import Link from 'next/link';
 import { Box, Container, Typography, Stack, Divider, alpha } from '@mui/material';
 import { STORE } from '@/lib/store-config';
+import { formatCurrency } from '@/lib/utils';
+import { SHIPPING_FEE_HCM, SHIPPING_FEE_OTHER } from '@/lib/shipping-fee';
 
 const LAST_UPDATED = '02/11/2026';
 
@@ -68,7 +70,7 @@ const SECTIONS: Section[] = [
     title: '4. Phí vận chuyển',
     content: [
       {
-        body: `Hiện ${STORE.name} miễn phí vận chuyển cho đơn hàng đặt trên website. Phí vận chuyển luôn được hiển thị tại trang Thanh toán và trong tổng tiền trước khi bạn bấm "Đặt hàng"; nếu chính sách phí thay đổi, mức phí mới cũng được hiển thị tại bước này — không phát sinh khoản thu nào khác khi giao hàng.`,
+        body: `Phí vận chuyển đồng giá theo địa chỉ nhận hàng: ${formatCurrency(SHIPPING_FEE_HCM)}/đơn trong TP. Hồ Chí Minh và ${formatCurrency(SHIPPING_FEE_OTHER)}/đơn cho các tỉnh, thành phố khác. Phí vận chuyển luôn được hiển thị tại trang Thanh toán và trong tổng tiền trước khi bạn bấm "Đặt hàng"; nếu chính sách phí thay đổi, mức phí mới cũng được hiển thị tại bước này — không phát sinh khoản thu nào khác khi giao hàng.`,
       },
       {
         body: 'Chi phí gửi trả hàng (nếu có) được áp dụng theo Chính sách bảo hành đổi trả.',

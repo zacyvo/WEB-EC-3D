@@ -20,6 +20,8 @@ import InventoryOutlinedIcon from '@mui/icons-material/InventoryOutlined';
 import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import { formatCurrency } from '@/lib/utils';
+import { SHIPPING_FEE_HCM, SHIPPING_FEE_OTHER } from '@/lib/shipping-fee';
 
 // ── Visual mockup component (replaces screenshots) ──────────────────────────
 
@@ -282,7 +284,7 @@ const CATEGORIES: Category[] = [
       },
       {
         q: 'Phí vận chuyển được tính như thế nào?',
-        a: 'Hiện shop miễn phí vận chuyển cho mọi đơn đặt trên website. Phí vận chuyển (nếu có thay đổi) luôn được hiển thị tại trang Thanh toán trước khi bạn đặt hàng.',
+        a: `Phí vận chuyển đồng giá ${formatCurrency(SHIPPING_FEE_HCM)}/đơn trong TP. Hồ Chí Minh và ${formatCurrency(SHIPPING_FEE_OTHER)}/đơn cho các tỉnh, thành phố khác. Phí vận chuyển luôn được hiển thị tại trang Thanh toán trước khi bạn đặt hàng.`,
       },
       {
         q: 'Đơn vị vận chuyển nào được sử dụng?',
