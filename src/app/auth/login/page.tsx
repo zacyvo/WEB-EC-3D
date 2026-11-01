@@ -135,6 +135,12 @@ function LoginContent() {
           Tiếp tục với Facebook
         </Button>
 
+        <Typography variant="caption" color="text.secondary" align="center" sx={{ display: 'block', mt: 1.5, lineHeight: 1.6 }}>
+          Khi tiếp tục với Google hoặc Facebook lần đầu, một tài khoản sẽ được tạo và bạn đồng ý với{' '}
+          <Link href="/terms-of-service" target="_blank" style={{ color: '#007AFF' }}>Điều khoản dịch vụ</Link> và{' '}
+          <Link href="/privacy-policy" target="_blank" style={{ color: '#007AFF' }}>Chính sách bảo mật</Link>.
+        </Typography>
+
         <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 3 }}>
           Chưa có tài khoản?{' '}
           <Link href={redirect === '/' ? '/auth/register' : `/auth/register?redirect=${encodeURIComponent(redirect)}`} style={{ color: '#007AFF', fontWeight: 600, textDecoration: 'none' }}>Đăng ký ngay</Link>

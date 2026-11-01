@@ -10,6 +10,8 @@ export interface User {
   addresses: Address[];
   isBlocked?: boolean;
   dob?: string;
+  /** Opted in to promotional messages (Zalo/email) — can be withdrawn on the profile page. */
+  marketingOptIn?: boolean;
   createdAt: string;
 }
 

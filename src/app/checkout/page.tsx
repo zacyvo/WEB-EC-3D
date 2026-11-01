@@ -76,6 +76,9 @@ export default function CheckoutPage() {
 
   // ── VAT e-invoice request ─────────────────────────────────────────────────
   const [wantsEInvoice, setWantsEInvoice] = useState(false);
+  // "Tôi đồng ý với Điều khoản dịch vụ và Chính sách bảo mật" — required to place the order.
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [termsError, setTermsError] = useState(false);
   const [einvoice, setEInvoice] = useState<EInvoiceRequestInput>({
     ...EMPTY_EINVOICE_REQUEST, buyerName: user?.name ?? '', email: user?.email ?? '',
   });
@@ -167,6 +170,11 @@ export default function CheckoutPage() {
   }
 
   const onSubmit = async (data: ShippingForm) => {
+    if (!acceptTerms) {
+      setTermsError(true);
+      toast.error('Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách bảo mật');
+      return;
+    }
     if (wantsEInvoice) {
       setEInvoiceSubmitted(true);
       const found = validateEInvoiceRequest(einvoice);
@@ -200,6 +208,7 @@ export default function CheckoutPage() {
           : {}),
         ...(wantsEInvoice ? { einvoiceRequest: toEInvoiceRequestPayload(einvoice) } : {}),
         paymentMethod: effectivePaymentMethod,
+        acceptTerms: true,
       };
       const res = await api.post<ApiResponse<Order>>('/orders', payload);
       const newOrder = res.data.data;
@@ -589,6 +598,31 @@ export default function CheckoutPage() {
                     {formatCurrency((validateResult ? validateResult.finalTotal : total()) + vatAmount)}
                   </Typography>
                 </Box>
+
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      size="small"
+                      checked={acceptTerms}
+                      onChange={(e) => { setAcceptTerms(e.target.checked); if (e.target.checked) setTermsError(false); }}
+                    />
+                  }
+                  label={
+                    <Typography variant="caption" sx={{ lineHeight: 1.5, display: 'block' }}>
+                      Tôi đồng ý với{' '}
+                      <Link href="/terms-of-service" target="_blank" style={{ color: '#007AFF', fontWeight: 600 }}>Điều khoản dịch vụ</Link>
+                      {' '}và{' '}
+                      <Link href="/privacy-policy" target="_blank" style={{ color: '#007AFF', fontWeight: 600 }}>Chính sách bảo mật</Link>
+                      {' '}(bao gồm việc xử lý thông tin giao hàng để thực hiện đơn hàng)
+                    </Typography>
+                  }
+                  sx={{ alignItems: 'flex-start', mr: 0, mb: termsError ? 0.5 : 2, '& .MuiCheckbox-root': { pt: 0.25 } }}
+                />
+                {termsError && (
+                  <Typography variant="caption" color="error" sx={{ display: 'block', mb: 2 }}>
+                    Vui lòng đồng ý để đặt hàng
+                  </Typography>
+                )}
 
                 <Button
                   type="submit" fullWidth variant="contained" size="large"

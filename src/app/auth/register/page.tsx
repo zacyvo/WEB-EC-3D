@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   Box, Typography, TextField, Button, InputAdornment, IconButton,
-  Divider, Stack,
+  Divider, Stack, Checkbox, FormControlLabel,
 } from '@mui/material';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
@@ -29,6 +29,8 @@ const registerSchema = z.object({
       'Số điện thoại không hợp lệ (VD: 0912345678)',
     )
     .optional(),
+  acceptTerms: z.literal(true, { errorMap: () => ({ message: 'Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách bảo mật' }) }),
+  marketingOptIn: z.boolean().optional(),
 });
 type RegisterForm = z.infer<typeof registerSchema>;
 
@@ -50,7 +52,9 @@ function RegisterContent() {
 
   const onSubmit = async (data: RegisterForm) => {
     try {
-      const res = await api.post('/auth/register', data);
+      // An empty optional phone must not be sent — the API validates any phone it receives.
+      const { phone, ...rest } = data;
+      const res = await api.post('/auth/register', { ...rest, ...(phone?.trim() ? { phone: phone.trim() } : {}) });
       const { user, accessToken, refreshToken } = res.data.data;
       setAuth(user, { accessToken, refreshToken });
       toast.success('Đăng ký thành công! Chào mừng bạn 🎉');
@@ -92,6 +96,29 @@ function RegisterContent() {
               ),
             } }}
           />
+          <Box>
+            <FormControlLabel
+              control={<Checkbox size="small" {...register('acceptTerms')} />}
+              label={
+                <Typography variant="body2">
+                  Tôi đã đọc và đồng ý với{' '}
+                  <Link href="/terms-of-service" target="_blank" style={{ color: '#007AFF', fontWeight: 600 }}>Điều khoản dịch vụ</Link>
+                  {' '}và{' '}
+                  <Link href="/privacy-policy" target="_blank" style={{ color: '#007AFF', fontWeight: 600 }}>Chính sách bảo mật</Link>
+                  , bao gồm việc xử lý dữ liệu cá nhân theo chính sách này.
+                </Typography>
+              }
+              sx={{ alignItems: 'flex-start', mr: 0, '& .MuiCheckbox-root': { pt: 0.25 } }}
+            />
+            {errors.acceptTerms && (
+              <Typography variant="caption" color="error" sx={{ display: 'block', ml: 4 }}>{errors.acceptTerms.message}</Typography>
+            )}
+            <FormControlLabel
+              control={<Checkbox size="small" {...register('marketingOptIn')} />}
+              label={<Typography variant="body2">Nhận thông tin sản phẩm mới, khuyến mãi qua Zalo/email (không bắt buộc, có thể huỷ bất cứ lúc nào).</Typography>}
+              sx={{ alignItems: 'flex-start', mr: 0, mt: 0.5, '& .MuiCheckbox-root': { pt: 0.25 } }}
+            />
+          </Box>
           <Button type="submit" variant="contained" size="large" fullWidth disabled={isSubmitting} sx={{ py: 1.6, fontWeight: 600 }}>
             {isSubmitting ? 'Đang tạo tài khoản...' : 'Đăng ký'}
           </Button>

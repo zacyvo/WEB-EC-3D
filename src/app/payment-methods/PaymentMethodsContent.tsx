@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Box, Container, Typography, Stack, Divider, alpha } from '@mui/material';
 import { STORE } from '@/lib/store-config';
 
-const LAST_UPDATED = '19/07/2026';
+const LAST_UPDATED = '02/11/2026';
 
 type ContentItem = { subtitle?: string; body: string };
 type Section = {
@@ -21,13 +21,12 @@ const SECTIONS: Section[] = [
     title: '1. Các hình thức thanh toán được hỗ trợ',
     content: [
       {
-        body: `${STORE.name} hỗ trợ các hình thức thanh toán sau để bạn lựa chọn phù hợp nhất:`,
+        body: `Khi đặt hàng trên website, bạn chọn một trong hai hình thức thanh toán sau. ${STORE.name} hiện không kết nối với cổng thanh toán, thẻ hay ví điện tử.`,
       },
     ],
     list: [
       'Thanh toán khi nhận hàng (COD) — áp dụng toàn quốc',
-      'Chuyển khoản ngân hàng',
-      'Ví điện tử (MoMo, ZaloPay, VNPay)',
+      'Chuyển khoản ngân hàng (VietQR)',
     ],
   },
   {
@@ -35,61 +34,55 @@ const SECTIONS: Section[] = [
     title: '2. Thanh toán khi nhận hàng (COD)',
     content: [
       {
-        body: 'Bạn thanh toán bằng tiền mặt trực tiếp cho nhân viên giao hàng khi nhận sản phẩm. Đây là hình thức phổ biến nhất, phù hợp khi bạn muốn kiểm tra hàng trước khi thanh toán. Vui lòng chuẩn bị đúng số tiền theo giá trị đơn hàng hiển thị trong email/SMS xác nhận.',
+        body: 'Bạn thanh toán bằng tiền mặt (hoặc theo hình thức đơn vị vận chuyển hỗ trợ) cho nhân viên giao hàng khi nhận sản phẩm. Số tiền cần trả là mục "Cần thanh toán" hiển thị trong trang chi tiết đơn hàng — vui lòng không trả thêm bất kỳ khoản nào khác.',
       },
     ],
   },
   {
     id: '3',
-    title: '3. Chuyển khoản ngân hàng',
+    title: '3. Chuyển khoản ngân hàng (VietQR)',
     content: [
       {
-        body: 'Chọn "Chuyển khoản ngân hàng (VietQR)" khi đặt hàng. Sau khi đặt hàng, trang thanh toán (và trang chi tiết đơn hàng) hiển thị mã VietQR cùng số tài khoản, số tiền và nội dung chuyển khoản riêng của đơn — quét mã bằng ứng dụng ngân hàng là số tiền và nội dung đã được điền sẵn. Nếu chuyển khoản thủ công, vui lòng ghi đúng nội dung chuyển khoản để được đối soát nhanh chóng.',
+        body: 'Chọn "Chuyển khoản ngân hàng (VietQR)" và bấm "Đặt hàng & lấy mã QR". Trang thanh toán (và trang chi tiết đơn hàng) hiển thị mã VietQR cùng tên ngân hàng, chủ tài khoản, số tài khoản, số tiền và nội dung chuyển khoản riêng của đơn. Quét mã bằng ứng dụng ngân hàng là số tiền và nội dung đã được điền sẵn; nếu chuyển khoản thủ công, vui lòng nhập đúng số tiền và nội dung chuyển khoản.',
       },
       {
-        body: 'Đơn hàng sẽ được xử lý ngay sau khi chúng tôi xác nhận đã nhận được thanh toán, thường trong vòng vài giờ làm việc.',
+        body: 'Sau khi chuyển, bạn có thể bấm "Tôi đã chuyển khoản" để báo cho chúng tôi kiểm tra. Đơn được ghi nhận "Đã thanh toán" sau khi nhân viên xác nhận đã nhận đủ tiền trong tài khoản ngân hàng, và chuyển sang "Đang chuẩn bị hàng". Trạng thái thanh toán được cập nhật trên trang chi tiết đơn hàng.',
+      },
+      {
+        body: 'Nếu đơn đã chuyển khoản bị hủy, chúng tôi hoàn tiền bằng chuyển khoản theo Điều khoản dịch vụ; trạng thái "Đã hoàn tiền" được cập nhật trên trang đơn hàng.',
       },
     ],
   },
   {
     id: '4',
-    title: '4. Ví điện tử',
+    title: '4. Đơn thiết kế theo yêu cầu',
     content: [
       {
-        body: 'Chúng tôi chấp nhận thanh toán qua các ví điện tử phổ biến: MoMo, ZaloPay và VNPay. Làm theo hướng dẫn hiển thị tại trang thanh toán hoặc trong email xác nhận đơn để hoàn tất giao dịch.',
+        body: 'Với sản phẩm thiết kế riêng (custom order), giá, tiến độ và điều kiện thanh toán — bao gồm khoản đặt cọc (thông thường 50% giá trị đơn hàng) trước khi sản xuất — được báo giá và thống nhất với bạn trước khi bắt đầu. Số tiền còn lại được thanh toán khi nhận hàng hoặc trước khi giao, tùy theo thỏa thuận.',
       },
     ],
   },
   {
     id: '5',
-    title: '5. Đặt cọc cho đơn thiết kế theo yêu cầu',
+    title: '5. An toàn thanh toán',
     content: [
       {
-        body: 'Đối với sản phẩm thiết kế riêng theo yêu cầu (custom order), chúng tôi yêu cầu đặt cọc 50% giá trị đơn hàng trước khi bắt đầu sản xuất. Số tiền còn lại được thanh toán khi nhận hàng hoặc trước khi giao, tùy theo thỏa thuận.',
+        body: 'Chúng tôi chỉ nhận tiền vào tài khoản ngân hàng hiển thị trên website cho từng đơn hàng. Chúng tôi không bao giờ yêu cầu bạn chuyển khoản vào tài khoản khác, qua kênh trung gian, hay cung cấp số thẻ, mật khẩu, mã OTP ngân hàng. Nếu nhận được yêu cầu bất thường mạo danh cửa hàng, vui lòng liên hệ ngay với chúng tôi để xác minh.',
       },
     ],
   },
   {
     id: '6',
-    title: '6. An toàn thanh toán',
+    title: '6. Hoá đơn điện tử',
     content: [
       {
-        body: 'Mọi giao dịch chuyển khoản và ví điện tử đều được xác nhận qua email/SMS sau khi chúng tôi nhận được thanh toán. Chúng tôi không bao giờ yêu cầu bạn chuyển khoản qua kênh trung gian, số tài khoản cá nhân không rõ nguồn gốc hoặc cung cấp mã OTP/mật khẩu ngân hàng. Nếu nhận được yêu cầu bất thường mạo danh cửa hàng, vui lòng liên hệ ngay với chúng tôi để xác minh.',
+        body: 'Bạn có thể yêu cầu xuất hoá đơn điện tử (cá nhân hoặc doanh nghiệp) khi đặt hàng hoặc tại trang chi tiết đơn hàng, trước khi đơn được giao đi. Thuế GTGT 10% được cộng vào tổng thanh toán; hoá đơn được gửi tới email của bạn sau khi đơn được thanh toán. Chi tiết tại Điều khoản dịch vụ.',
       },
     ],
   },
   {
     id: '7',
-    title: '7. Hóa đơn',
-    content: [
-      {
-        body: 'Hiện tại chúng tôi CÓ hỗ trợ xuất hóa đơn giá trị gia tăng (VAT) điện tử. Vui lòng liên hệ nếu doanh nghiệp của bạn cần chứng từ mua hàng.',
-      },
-    ],
-  },
-  {
-    id: '8',
-    title: '8. Liên hệ',
+    title: '7. Liên hệ',
     content: [
       {
         body: 'Nếu bạn gặp vấn đề khi thanh toán hoặc cần hỗ trợ, vui lòng liên hệ:',
@@ -132,8 +125,8 @@ export default function PaymentMethodsContent() {
           }}
         >
           <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.secondary' }}>
-            {STORE.name} mang đến nhiều lựa chọn thanh toán linh hoạt và an toàn để bạn mua sắm thuận
-            tiện nhất. Trang này giải thích chi tiết từng hình thức thanh toán hiện có.
+            Trang này mô tả các hình thức thanh toán {STORE.name} đang áp dụng khi bạn đặt hàng trên website,
+            cách xác nhận thanh toán và hoàn tiền.
           </Typography>
         </Box>
 

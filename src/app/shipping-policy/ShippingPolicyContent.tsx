@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { Box, Container, Typography, Stack, Divider, alpha } from '@mui/material';
 import { STORE } from '@/lib/store-config';
 
-const LAST_UPDATED = '19/07/2026';
+const LAST_UPDATED = '02/11/2026';
 
 type ContentItem = { subtitle?: string; body: string };
 type Section = {
@@ -22,7 +22,7 @@ const SECTIONS: Section[] = [
     title: '1. Phạm vi giao hàng',
     content: [
       {
-        body: `${STORE.name} giao hàng toàn quốc — từ nội thành TP. Hồ Chí Minh đến các tỉnh, thành khác trên cả nước, kể cả khu vực vùng sâu, vùng xa.`,
+        body: `${STORE.name} giao hàng trên toàn lãnh thổ Việt Nam, bao gồm nội thành, ngoại thành TP. Hồ Chí Minh, các tỉnh, thành khác và khu vực vùng sâu, vùng xa mà đơn vị vận chuyển có hỗ trợ. Hiện chúng tôi chưa giao hàng ra nước ngoài.`,
       },
     ],
   },
@@ -31,26 +31,24 @@ const SECTIONS: Section[] = [
     title: '2. Đơn vị vận chuyển',
     content: [
       {
-        body: 'Chúng tôi hợp tác với các đơn vị vận chuyển uy tín tại Việt Nam để đảm bảo hàng đến tay bạn nhanh chóng và an toàn:',
+        body: 'Đơn hàng được giao qua đơn vị vận chuyển chuyên nghiệp — hiện chủ yếu là SPX Express. Tùy khu vực và kích thước kiện hàng, chúng tôi có thể sử dụng đơn vị vận chuyển khác.',
       },
-    ],
-    list: [
-      'Giao Hàng Tiết Kiệm (GHTK)',
-      'Giao Hàng Nhanh (GHN)',
-      'J&T Express',
-    ],
-    afterList: [
       {
-        body: 'Sau khi đơn hàng được bàn giao cho đơn vị vận chuyển, bạn sẽ nhận được mã vận đơn qua SMS hoặc trong mục "Đơn hàng" trên website để theo dõi hành trình đơn hàng.',
+        body: 'Khi đơn hàng được bàn giao cho đơn vị vận chuyển, tên đơn vị vận chuyển, mã vận đơn, đường dẫn tra cứu và ngày giao dự kiến (nếu có) được cập nhật tại trang chi tiết đơn hàng trong mục "Đơn hàng của tôi".',
       },
     ],
   },
   {
     id: '3',
-    title: '3. Thời gian giao hàng',
+    title: '3. Thời gian xử lý và giao hàng',
     content: [
       {
-        body: 'Thời gian giao hàng dự kiến, tính từ lúc đơn hàng được xác nhận và đóng gói:',
+        subtitle: 'Thời điểm bắt đầu xử lý',
+        body: 'Đơn thanh toán khi nhận hàng (COD) được chuẩn bị sau khi chúng tôi xác nhận đơn. Đơn chuyển khoản ngân hàng được chuẩn bị sau khi chúng tôi xác nhận đã nhận đủ tiền — lúc đó đơn tự chuyển sang trạng thái "Đang chuẩn bị hàng".',
+      },
+      {
+        subtitle: 'Thời gian giao hàng dự kiến',
+        body: 'Tính từ khi đơn hàng được xác nhận và đóng gói:',
       },
     ],
     list: [
@@ -61,7 +59,7 @@ const SECTIONS: Section[] = [
     ],
     afterList: [
       {
-        body: 'Thời gian trên không bao gồm các đơn hàng thiết kế theo yêu cầu (custom order), vốn cần thêm 2–3 ngày làm việc để sản xuất trước khi bàn giao vận chuyển. Thời gian giao hàng cũng có thể kéo dài hơn trong các dịp lễ, Tết hoặc do điều kiện thời tiết bất khả kháng.',
+        body: 'Sản phẩm thiết kế theo yêu cầu (custom order) cần thêm thời gian sản xuất theo tiến độ đã thống nhất với bạn trước khi bàn giao vận chuyển. Thời gian giao có thể kéo dài trong dịp lễ, Tết, khi thời tiết xấu hoặc do sự kiện bất khả kháng.',
       },
     ],
   },
@@ -70,46 +68,73 @@ const SECTIONS: Section[] = [
     title: '4. Phí vận chuyển',
     content: [
       {
-        body: 'Phí vận chuyển được tính tự động dựa trên địa chỉ nhận hàng và trọng lượng đơn hàng, hiển thị rõ ràng tại bước xác nhận đơn trước khi bạn đặt hàng — không phát sinh phí ẩn.',
+        body: `Hiện ${STORE.name} miễn phí vận chuyển cho đơn hàng đặt trên website. Phí vận chuyển luôn được hiển thị tại trang Thanh toán và trong tổng tiền trước khi bạn bấm "Đặt hàng"; nếu chính sách phí thay đổi, mức phí mới cũng được hiển thị tại bước này — không phát sinh khoản thu nào khác khi giao hàng.`,
       },
       {
-        body: 'Đơn hàng từ 1.000.000đ trở lên được miễn phí vận chuyển khi giao trong nội thành TP. Hồ Chí Minh.',
+        body: 'Chi phí gửi trả hàng (nếu có) được áp dụng theo Chính sách bảo hành đổi trả.',
       },
     ],
   },
   {
     id: '5',
-    title: '5. Đóng gói sản phẩm',
+    title: '5. Thanh toán khi giao hàng',
     content: [
       {
-        body: 'Vì đèn in 3D là sản phẩm thủ công dễ va đập, mỗi sản phẩm được kiểm tra kỹ và đóng gói cẩn thận bằng vật liệu chống sốc (mút xốp, giấy chèn) trước khi đưa vào thùng carton chắc chắn, đảm bảo an toàn trong suốt quá trình vận chuyển.',
+        body: 'Với đơn thanh toán khi nhận hàng (COD), bạn thanh toán cho nhân viên giao hàng đúng số tiền "Cần thanh toán" hiển thị trong đơn hàng. Với đơn đã chuyển khoản và được xác nhận thanh toán đủ, nhân viên giao hàng không thu thêm tiền. Vui lòng không thanh toán thêm bất kỳ khoản nào ngoài số tiền trên và liên hệ chúng tôi nếu được yêu cầu thu thêm.',
       },
     ],
   },
   {
     id: '6',
-    title: '6. Kiểm tra hàng khi nhận',
+    title: '6. Đóng gói sản phẩm',
     content: [
       {
-        body: 'Bạn nên kiểm tra tình trạng bên ngoài của kiện hàng trước khi ký nhận với nhân viên giao hàng. Nếu phát hiện thùng hàng móp méo, ướt hoặc có dấu hiệu bị mở, vui lòng quay video/chụp ảnh trước khi mở và có quyền từ chối nhận hàng.',
-      },
-      {
-        body: 'Trường hợp sản phẩm bị hư hỏng do vận chuyển, vui lòng chụp ảnh gói hàng và sản phẩm ngay khi nhận, liên hệ chúng tôi trong vòng 24 giờ để được đổi mới miễn phí. Xem thêm tại trang Chính sách bảo hành đổi trả.',
+        body: 'Đèn và sản phẩm in 3D dễ va đập, vì vậy mỗi sản phẩm được kiểm tra trước khi gửi và đóng gói bằng vật liệu chống sốc (mút xốp, giấy chèn) trong thùng carton chắc chắn.',
       },
     ],
   },
   {
     id: '7',
-    title: '7. Theo dõi đơn hàng',
+    title: '7. Kiểm tra hàng khi nhận',
     content: [
       {
-        body: 'Đăng nhập tài khoản và vào mục "Đơn hàng" để xem trạng thái theo thời gian thực: đang chuẩn bị hàng, đang giao hàng, đã giao thành công. Bạn cũng sẽ nhận email/SMS cập nhật ở các mốc quan trọng.',
+        body: 'Vui lòng kiểm tra tình trạng bên ngoài kiện hàng trước khi nhận. Nếu kiện hàng móp méo, ướt hoặc có dấu hiệu đã bị mở, bạn nên chụp ảnh/quay video và có quyền từ chối nhận hàng.',
+      },
+      {
+        body: 'Khi mở hộp, bạn nên quay video quá trình mở. Nếu sản phẩm bị hư hỏng, thiếu hoặc sai so với đơn hàng, hãy gửi yêu cầu "Trả hàng/Hoàn tiền" tại trang chi tiết đơn hàng trong vòng 7 ngày kể từ khi đơn ở trạng thái "Đã giao", kèm hình ảnh — chúng tôi khuyến khích báo ngay trong 24 giờ đầu để được xử lý nhanh nhất. Chi tiết tại Chính sách bảo hành đổi trả.',
       },
     ],
   },
   {
     id: '8',
-    title: '8. Liên hệ',
+    title: '8. Giao hàng không thành công',
+    content: [
+      {
+        body: 'Nếu đơn vị vận chuyển không liên lạc được với người nhận, địa chỉ không chính xác hoặc người nhận từ chối nhận hàng, kiện hàng sẽ được hoàn về cho chúng tôi. Chúng tôi sẽ liên hệ với bạn để thống nhất giao lại hoặc hủy đơn. Đơn đã thanh toán bị hủy được hoàn tiền theo Điều khoản dịch vụ.',
+      },
+    ],
+  },
+  {
+    id: '9',
+    title: '9. Trách nhiệm đối với hàng hóa trong quá trình vận chuyển',
+    content: [
+      {
+        body: `${STORE.name} chịu trách nhiệm đối với hàng hóa cho đến khi giao thành công cho người nhận. Trường hợp hàng bị thất lạc hoặc hư hỏng trong quá trình vận chuyển, chúng tôi sẽ gửi lại sản phẩm mới hoặc hoàn tiền cho bạn và tự làm việc với đơn vị vận chuyển, bạn không phải chịu thêm chi phí.`,
+      },
+    ],
+  },
+  {
+    id: '10',
+    title: '10. Theo dõi đơn hàng',
+    content: [
+      {
+        body: 'Đăng nhập và vào mục "Đơn hàng của tôi" để xem trạng thái đơn hàng: Chờ xác nhận → Đã xác nhận → Đang chuẩn bị hàng → Đang giao → Đã giao (hoặc Đã hủy), cùng thông tin vận chuyển và tình trạng thanh toán. Bạn cũng có thể liên hệ chúng tôi qua điện thoại, Zalo hoặc email để được hỗ trợ.',
+      },
+    ],
+  },
+  {
+    id: '11',
+    title: '11. Liên hệ',
     content: [
       {
         body: 'Nếu bạn có thắc mắc về đơn hàng đang vận chuyển hoặc cần hỗ trợ, vui lòng liên hệ:',
@@ -152,8 +177,8 @@ export default function ShippingPolicyContent() {
           }}
         >
           <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.secondary' }}>
-            {STORE.name} cam kết giao hàng nhanh chóng, an toàn trên toàn quốc. Trang này giải thích
-            chi tiết phạm vi, thời gian, phí vận chuyển và cách theo dõi đơn hàng của bạn.
+            {STORE.name} giao hàng trên toàn quốc. Trang này quy định phạm vi, đơn vị vận chuyển, thời gian,
+            phí vận chuyển, cách kiểm tra hàng và trách nhiệm của chúng tôi khi hàng hư hỏng, thất lạc.
           </Typography>
         </Box>
 

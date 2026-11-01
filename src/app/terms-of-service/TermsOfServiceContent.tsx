@@ -2,178 +2,270 @@
 
 import Link from 'next/link';
 import { Box, Container, Typography, Stack, Divider, alpha } from '@mui/material';
-import { STORE } from '@/lib/store-config';
+import { STORE, STORE_OWNER_LINES } from '@/lib/store-config';
 
-const LAST_UPDATED = '06/05/2025';
+const LAST_UPDATED = '02/11/2026';
+const SITE = STORE.website.replace(/^https?:\/\//, '').replace(/\/+$/, '');
 
-const SECTIONS = [
+type ContentItem = { subtitle?: string; body: string };
+type Section = {
+  id: string;
+  title: string;
+  content: ContentItem[];
+  list?: string[];
+  afterList?: ContentItem[];
+  /** Renders the website owner's identification block. */
+  owner?: boolean;
+  contact?: boolean;
+};
+
+const SECTIONS: Section[] = [
   {
     id: '1',
-    title: '1. Chấp nhận điều khoản',
+    title: '1. Thông tin chủ sở hữu website',
     content: [
       {
-        body: `Khi truy cập, đăng ký tài khoản hoặc thực hiện giao dịch trên website ${STORE.name} (luxeglow.vn), bạn đồng ý bị ràng buộc bởi các điều khoản dịch vụ này. Nếu bạn không đồng ý với bất kỳ điều khoản nào, vui lòng không sử dụng dịch vụ.`,
+        body: `Website ${SITE} (sau đây gọi là "Website") do ${STORE.legalName || STORE.name} (sau đây gọi là "${STORE.name}" hoặc "chúng tôi") sở hữu và trực tiếp bán hàng. Thông tin định danh:`,
       },
     ],
+    owner: true,
   },
   {
     id: '2',
-    title: '2. Tài khoản người dùng',
+    title: '2. Phạm vi áp dụng và chấp nhận điều khoản',
     content: [
       {
-        body: 'Bạn có trách nhiệm duy trì bảo mật tài khoản và mật khẩu. Mọi hoạt động xảy ra dưới tài khoản của bạn đều là trách nhiệm của bạn.',
+        body: `Điều khoản này áp dụng cho việc truy cập Website, đăng ký tài khoản và mua hàng trực tiếp trên Website. Khi đăng ký tài khoản và khi đặt hàng, bạn đánh dấu ô đồng ý để xác nhận đã đọc, hiểu và đồng ý với Điều khoản dịch vụ, Chính sách bảo mật, cùng Chính sách vận chuyển, Hình thức thanh toán và Chính sách bảo hành đổi trả được công bố trên Website tại thời điểm đó.`,
       },
-    ],
-    list: [
-      'Phải từ 18 tuổi trở lên hoặc được sự đồng ý của phụ huynh/người giám hộ',
-      'Cung cấp thông tin chính xác, đầy đủ khi đăng ký',
-      'Không sử dụng tài khoản người khác hoặc tạo nhiều tài khoản gian lận',
-      'Thông báo ngay cho chúng tôi nếu phát hiện truy cập trái phép',
-      `${STORE.name} có quyền đình chỉ hoặc xóa tài khoản vi phạm điều khoản`,
+      {
+        body: `Đơn hàng mua qua sàn thương mại điện tử (như Shopee) được điều chỉnh bởi chính sách của sàn đó; ${STORE.name} chỉ đồng bộ đơn về hệ thống để chuẩn bị và giao hàng.`,
+      },
     ],
   },
   {
     id: '3',
-    title: '3. Sản phẩm và đặt hàng',
+    title: '3. Tài khoản người dùng',
     content: [
       {
-        subtitle: 'Thông tin sản phẩm',
-        body: 'Chúng tôi cố gắng hiển thị chính xác màu sắc, kích thước và mô tả sản phẩm. Tuy nhiên, màu sắc thực tế có thể khác nhau tùy thuộc vào màn hình thiết bị. Đèn in 3D là sản phẩm handcraft nên có thể có sự khác biệt nhỏ giữa các lô sản xuất — điều này là đặc trưng của sản phẩm thủ công, không phải lỗi.',
+        body: 'Bạn cần đăng nhập để đặt hàng. Bạn có thể đăng ký bằng email và mật khẩu (kèm số điện thoại nếu muốn), hoặc đăng nhập bằng tài khoản Google/Facebook. Khi sử dụng tài khoản, bạn cam kết:',
       },
+    ],
+    list: [
+      'Từ đủ 18 tuổi; người chưa thành niên chỉ sử dụng khi có sự đồng ý và giám sát của cha, mẹ hoặc người giám hộ',
+      'Cung cấp thông tin chính xác, đầy đủ và cập nhật khi thay đổi',
+      'Tự bảo mật mật khẩu; chịu trách nhiệm về các giao dịch thực hiện bằng tài khoản của mình',
+      'Không sử dụng tài khoản của người khác, không tạo nhiều tài khoản nhằm gian lận khuyến mãi',
+      'Thông báo ngay cho chúng tôi khi phát hiện tài khoản bị truy cập trái phép',
+    ],
+    afterList: [
       {
-        subtitle: 'Xác nhận đơn hàng',
-        body: 'Đơn hàng chỉ được xác nhận sau khi chúng tôi gửi email xác nhận. Chúng tôi có quyền từ chối hoặc hủy đơn hàng trong trường hợp sản phẩm hết hàng, thông tin thanh toán không hợp lệ hoặc phát hiện gian lận.',
-      },
-      {
-        subtitle: 'Giá cả',
-        body: 'Giá sản phẩm được niêm yết bằng VNĐ và đã bao gồm VAT (nếu áp dụng). Chúng tôi bảo lưu quyền thay đổi giá mà không cần báo trước, nhưng giá tại thời điểm đặt hàng sẽ được giữ nguyên cho đơn hàng đó.',
+        body: `Bạn có thể tự xóa tài khoản tại trang Hồ sơ (xác nhận bằng mã gửi qua email). ${STORE.name} có quyền tạm khóa tài khoản có dấu hiệu gian lận hoặc vi phạm Điều khoản này và sẽ thông báo lý do cho bạn.`,
       },
     ],
   },
   {
     id: '4',
-    title: '4. Thanh toán',
+    title: '4. Thông tin sản phẩm, giá và khuyến mãi',
     content: [
       {
-        body: 'Chúng tôi chấp nhận các hình thức thanh toán sau:',
+        subtitle: 'Thông tin sản phẩm',
+        body: 'Chúng tôi cố gắng mô tả chính xác chất liệu, kích thước, màu sắc của sản phẩm. Sản phẩm in 3D được hoàn thiện thủ công nên có thể có khác biệt nhỏ giữa các lần sản xuất; màu hiển thị cũng phụ thuộc màn hình thiết bị. Các khác biệt này không được xem là lỗi sản phẩm.',
       },
-    ],
-    list: [
-      'Thanh toán khi nhận hàng (COD) — áp dụng toàn quốc',
-      'Chuyển khoản ngân hàng — thông tin tài khoản trong email xác nhận đơn',
-      'Ví điện tử (MoMo, ZaloPay,...) — theo hướng dẫn tại trang thanh toán',
-    ],
-    afterList: [
       {
-        body: 'Đối với đơn thiết kế theo yêu cầu (custom order), chúng tôi yêu cầu đặt cọc 50% trước khi bắt đầu sản xuất. Số còn lại thanh toán khi nhận hàng hoặc trước khi giao.',
+        subtitle: 'Giá bán',
+        body: 'Giá được niêm yết bằng Việt Nam đồng (VNĐ). Tổng số tiền phải thanh toán (gồm giảm giá, phí vận chuyển và thuế GTGT nếu có) được hiển thị đầy đủ ở bước thanh toán trước khi bạn bấm "Đặt hàng" và được giữ nguyên cho đơn hàng đó, kể cả khi giá niêm yết thay đổi sau đó.',
+      },
+      {
+        subtitle: 'Thuế GTGT khi yêu cầu hóa đơn',
+        body: 'Giá niêm yết là giá thanh toán khi không yêu cầu hóa đơn giá trị gia tăng. Nếu bạn yêu cầu xuất hóa đơn điện tử, thuế GTGT 10% được cộng vào tổng thanh toán và hiển thị trước khi đặt hàng (xem Mục 7).',
+      },
+      {
+        subtitle: 'Mã giảm giá',
+        body: 'Mã giảm giá áp dụng theo điều kiện ghi trên từng mã (giá trị đơn tối thiểu, mức giảm tối đa, thời hạn, số lần sử dụng). Hệ thống kiểm tra lại điều kiện khi đặt hàng; mã đã dùng cho một đơn hàng không được khôi phục khi đơn đó bị hủy.',
       },
     ],
   },
   {
     id: '5',
-    title: '5. Vận chuyển và giao hàng',
+    title: '5. Quy trình đặt hàng và giao kết hợp đồng',
     content: [
       {
-        body: 'Chúng tôi giao hàng toàn quốc thông qua các đối tác vận chuyển uy tín (GHN, GHTK,...). Thời gian giao hàng dự kiến:',
+        body: 'Quy trình đặt hàng trên Website gồm các bước:',
       },
     ],
     list: [
-      'TP. Hồ Chí Minh: 1–2 ngày làm việc',
-      'Các tỉnh thành khác: 3–7 ngày làm việc',
-      'Vùng sâu, vùng xa: có thể lâu hơn tùy khu vực',
+      'Chọn sản phẩm (màu, kích thước nếu có) và thêm vào giỏ hàng',
+      'Tại trang Thanh toán: nhập thông tin người nhận, địa chỉ giao hàng, chọn mã giảm giá, yêu cầu hóa đơn điện tử (nếu cần) và phương thức thanh toán',
+      'Kiểm tra lại sản phẩm, số lượng và tổng tiền, sau đó bấm "Đặt hàng" — đơn hàng được tạo với trạng thái "Chờ xác nhận"',
+      `${STORE.name} kiểm tra và xác nhận đơn hàng ("Đã xác nhận"); với đơn chuyển khoản, đơn chuyển sang "Đang chuẩn bị hàng" sau khi chúng tôi xác nhận đã nhận đủ tiền`,
+      'Đơn hàng được đóng gói ("Đang chuẩn bị hàng"), bàn giao cho đơn vị vận chuyển ("Đang giao") và hoàn tất khi bạn nhận hàng ("Đã giao")',
     ],
     afterList: [
       {
-        body: 'Thời gian giao hàng có thể thay đổi trong các dịp lễ Tết hoặc do điều kiện thời tiết. Chúng tôi không chịu trách nhiệm cho các chậm trễ ngoài tầm kiểm soát của đơn vị vận chuyển.',
+        subtitle: 'Thời điểm giao kết hợp đồng',
+        body: 'Việc bấm "Đặt hàng" là đề nghị mua hàng của bạn. Hợp đồng mua bán được giao kết khi đơn hàng chuyển sang trạng thái "Đã xác nhận" hoặc "Đang chuẩn bị hàng". Bạn theo dõi trạng thái đơn bất cứ lúc nào tại mục "Đơn hàng của tôi".',
+      },
+      {
+        subtitle: 'Từ chối đơn hàng',
+        body: `${STORE.name} có thể từ chối hoặc hủy đơn hàng khi sản phẩm hết hàng, thông tin người nhận không chính xác/không liên lạc được, hoặc có dấu hiệu gian lận. Khi đó chúng tôi sẽ thông báo cho bạn và hoàn lại toàn bộ số tiền đã thanh toán (nếu có).`,
       },
     ],
   },
   {
     id: '6',
-    title: '6. Đổi trả và hoàn tiền',
+    title: '6. Thanh toán',
     content: [
       {
-        subtitle: 'Điều kiện đổi trả',
-        body: 'Chúng tôi chấp nhận trả hàng/hoàn tiền trong vòng 7 ngày kể từ ngày nhận hàng trong các trường hợp:',
+        body: 'Website hiện hỗ trợ các phương thức thanh toán sau:',
       },
     ],
     list: [
-      'Sản phẩm bị lỗi sản xuất, hỏng hóc do vận chuyển',
-      'Sản phẩm không đúng với mô tả hoặc đơn hàng đã đặt',
-      'Sản phẩm còn nguyên vẹn, chưa qua sử dụng (trường hợp đổi ý)',
+      'Thanh toán khi nhận hàng (COD): bạn thanh toán cho nhân viên giao hàng số tiền "Cần thanh toán" của đơn hàng',
+      'Chuyển khoản ngân hàng (VietQR): sau khi đặt hàng, Website hiển thị mã VietQR cùng số tài khoản, số tiền và nội dung chuyển khoản riêng của đơn; bạn quét mã bằng ứng dụng ngân hàng để chuyển trực tiếp vào tài khoản của chúng tôi',
     ],
     afterList: [
       {
-        subtitle: 'Không áp dụng đổi trả',
-        body: 'Sản phẩm đặt thiết kế riêng theo yêu cầu (custom order) không được đổi trả trừ khi có lỗi sản xuất. Sản phẩm đã qua sử dụng hoặc bị tác động vật lý từ phía khách hàng không được chấp nhận.',
+        subtitle: 'Xác nhận chuyển khoản',
+        body: `Đơn chuyển khoản được ghi nhận "Đã thanh toán" sau khi nhân viên của ${STORE.name} kiểm tra và xác nhận đã nhận đủ tiền trong tài khoản ngân hàng. Nút "Tôi đã chuyển khoản" chỉ để báo cho chúng tôi kiểm tra, không tự động xác nhận thanh toán. Vui lòng chuyển đúng số tiền và nội dung chuyển khoản hiển thị để đơn được đối soát nhanh.`,
       },
       {
-        subtitle: 'Hoàn tiền',
-        body: 'Hoàn tiền sẽ được xử lý trong vòng 3–5 ngày làm việc sau khi chúng tôi nhận và kiểm tra sản phẩm trả về. Phương thức hoàn tiền theo hình thức thanh toán ban đầu.',
+        subtitle: 'An toàn thanh toán',
+        body: `${STORE.name} không thu thập số thẻ, mật khẩu hay mã OTP ngân hàng của bạn và không bao giờ yêu cầu chuyển tiền vào tài khoản khác với tài khoản hiển thị trên Website. Website hiện không kết nối với cổng thanh toán hoặc ví điện tử.`,
+      },
+      {
+        subtitle: 'Đơn thiết kế theo yêu cầu',
+        body: 'Với sản phẩm thiết kế riêng (custom order), giá, tiến độ và điều kiện thanh toán (bao gồm đặt cọc, nếu có) được báo giá và thống nhất với bạn trước khi bắt đầu sản xuất.',
       },
     ],
   },
   {
     id: '7',
-    title: '7. Sở hữu trí tuệ',
+    title: '7. Hóa đơn điện tử',
     content: [
       {
-        body: `Toàn bộ nội dung trên website bao gồm hình ảnh, mô tả sản phẩm, thiết kế, logo và bộ nhận diện thương hiệu ${STORE.name} đều thuộc quyền sở hữu của chúng tôi và được bảo vệ bởi luật sở hữu trí tuệ Việt Nam.`,
+        body: 'Bạn có thể yêu cầu xuất hóa đơn điện tử (cá nhân hoặc doanh nghiệp) ngay khi đặt hàng hoặc tại trang chi tiết đơn hàng, trước khi đơn được giao cho đơn vị vận chuyển. Mỗi đơn hàng được gửi một yêu cầu.',
       },
-      {
-        body: 'Bạn không được sao chép, tái sản xuất, phân phối hoặc sử dụng bất kỳ nội dung nào vì mục đích thương mại mà không có sự cho phép bằng văn bản của chúng tôi.',
-      },
+    ],
+    list: [
+      'Thuế GTGT 10% được cộng vào tổng thanh toán ngay khi gửi yêu cầu',
+      `${STORE.name} xem xét và chấp nhận hoặc từ chối yêu cầu trước khi giao hàng; nếu từ chối, khoản thuế GTGT được trừ lại khỏi đơn và lý do được hiển thị cho bạn`,
+      'Hóa đơn được phát hành sau khi đơn hàng được thanh toán và gửi tới email bạn đã cung cấp',
+      'Đơn mua qua sàn thương mại điện tử vui lòng yêu cầu hóa đơn trên sàn',
     ],
   },
   {
     id: '8',
-    title: '8. Hành vi bị cấm',
+    title: '8. Hủy đơn hàng',
     content: [
       {
-        body: 'Khi sử dụng website, bạn cam kết không thực hiện các hành vi sau:',
+        body: 'Quyền hủy đơn của khách hàng phụ thuộc trạng thái đơn hàng:',
       },
     ],
     list: [
-      'Đặt hàng giả mạo, gian lận hoặc với thông tin sai lệch',
-      'Tấn công, làm gián đoạn hoặc gây hại cho hạ tầng kỹ thuật website',
-      'Scraping, thu thập dữ liệu tự động mà không được phép',
-      'Đăng nội dung phỉ báng, thù hận hoặc vi phạm pháp luật',
-      'Sử dụng dịch vụ cho các mục đích bất hợp pháp',
+      '"Chờ xác nhận": bạn có thể tự hủy ngay trong mục "Đơn hàng của tôi"',
+      `"Đang chuẩn bị hàng": bạn có thể gửi yêu cầu hủy kèm lý do; ${STORE.name} xem xét và liên hệ lại với bạn`,
+      '"Đã xác nhận", "Đang giao", "Đã giao": không thể hủy trên Website — vui lòng liên hệ chúng tôi để được hỗ trợ; sau khi nhận hàng, áp dụng Chính sách bảo hành đổi trả',
+    ],
+    afterList: [
+      {
+        subtitle: 'Hoàn tiền khi hủy đơn đã thanh toán',
+        body: `Nếu đơn hàng đã chuyển khoản bị hủy (bởi bạn hoặc bởi ${STORE.name}), chúng tôi hoàn lại số tiền đã nhận bằng chuyển khoản ngân hàng vào tài khoản bạn cung cấp, trong vòng 3–5 ngày làm việc kể từ khi đơn bị hủy và có đủ thông tin tài khoản nhận. Trạng thái hoàn tiền được cập nhật tại trang chi tiết đơn hàng.`,
+      },
     ],
   },
   {
     id: '9',
-    title: '9. Giới hạn trách nhiệm',
+    title: '9. Vận chuyển và giao nhận',
     content: [
       {
-        body: `${STORE.name} không chịu trách nhiệm cho các thiệt hại gián tiếp, ngẫu nhiên hoặc hậu quả phát sinh từ việc sử dụng hoặc không thể sử dụng dịch vụ của chúng tôi. Trách nhiệm tối đa của chúng tôi không vượt quá giá trị đơn hàng liên quan.`,
+        body: `${STORE.name} giao hàng toàn quốc qua đơn vị vận chuyển. Phạm vi, thời gian, phí vận chuyển, cách kiểm tra hàng và trách nhiệm khi hàng hư hỏng, thất lạc được quy định tại Chính sách vận chuyển.`,
       },
     ],
   },
   {
     id: '10',
-    title: '10. Luật áp dụng',
+    title: '10. Đổi trả, bảo hành và hoàn tiền',
     content: [
       {
-        body: 'Các điều khoản này được điều chỉnh và giải thích theo pháp luật Việt Nam. Mọi tranh chấp phát sinh sẽ được giải quyết tại Tòa án nhân dân có thẩm quyền tại TP. Hồ Chí Minh.',
+        body: 'Bạn có thể gửi yêu cầu trả hàng/hoàn tiền trực tuyến trong vòng 7 ngày kể từ khi đơn hàng ở trạng thái "Đã giao", kèm lý do và hình ảnh. Tiền hoàn được chuyển khoản trong vòng 3–5 ngày làm việc sau khi chúng tôi nhận và kiểm tra hàng trả về. Điều kiện chi tiết, các trường hợp không áp dụng và chế độ bảo hành được quy định tại Chính sách bảo hành đổi trả.',
       },
     ],
   },
   {
     id: '11',
-    title: '11. Thay đổi điều khoản',
+    title: '11. Sở hữu trí tuệ',
     content: [
       {
-        body: `${STORE.name} có quyền sửa đổi các điều khoản này bất cứ lúc nào. Thay đổi có hiệu lực ngay khi được đăng tải trên website. Việc tiếp tục sử dụng dịch vụ sau khi thay đổi được coi là bạn đã chấp nhận điều khoản mới.`,
+        body: `Hình ảnh, mô tả sản phẩm, thiết kế, logo và nhận diện thương hiệu ${STORE.name} trên Website thuộc quyền sở hữu của chúng tôi hoặc được sử dụng hợp pháp. Bạn không được sao chép, phân phối hoặc sử dụng cho mục đích thương mại khi chưa có sự đồng ý bằng văn bản của chúng tôi.`,
+      },
+      {
+        body: 'Với đơn thiết kế theo yêu cầu, bạn cam kết có quyền sử dụng hợp pháp đối với hình ảnh, logo, nội dung gửi cho chúng tôi và chịu trách nhiệm nếu nội dung đó xâm phạm quyền của bên thứ ba. Chúng tôi có quyền từ chối sản xuất nội dung vi phạm pháp luật hoặc thuần phong mỹ tục.',
       },
     ],
   },
   {
     id: '12',
-    title: '12. Liên hệ',
+    title: '12. Hành vi bị cấm',
     content: [
       {
-        body: 'Mọi thắc mắc về điều khoản dịch vụ, vui lòng liên hệ:',
+        body: 'Khi sử dụng Website, bạn không được:',
+      },
+    ],
+    list: [
+      'Đặt hàng giả mạo, dùng thông tin của người khác hoặc thông tin sai lệch',
+      'Lạm dụng mã giảm giá, chương trình khuyến mãi bằng nhiều tài khoản hoặc thủ đoạn gian lận',
+      'Tấn công, dò quét, làm gián đoạn hoặc gây hại cho hệ thống của Website',
+      'Thu thập dữ liệu tự động (scraping) khi chưa được phép',
+      'Đăng tải nội dung vi phạm pháp luật, xúc phạm danh dự, nhân phẩm người khác',
+    ],
+  },
+  {
+    id: '13',
+    title: '13. Giới hạn trách nhiệm',
+    content: [
+      {
+        body: `${STORE.name} không chịu trách nhiệm đối với thiệt hại phát sinh do lỗi của khách hàng (cung cấp sai thông tin, để lộ mật khẩu, chuyển khoản sai tài khoản/nội dung không theo hướng dẫn) hoặc do sự kiện bất khả kháng. Điều khoản này không loại trừ hay hạn chế các quyền của người tiêu dùng theo Luật Bảo vệ quyền lợi người tiêu dùng và các quy định pháp luật có liên quan.`,
+      },
+    ],
+  },
+  {
+    id: '14',
+    title: '14. Tiếp nhận và giải quyết khiếu nại',
+    content: [
+      {
+        body: 'Bạn có thể gửi phản ánh, khiếu nại qua email, điện thoại hoặc Zalo ghi tại Mục 17, kèm mã đơn hàng và hình ảnh (nếu có). Quy trình xử lý:',
+      },
+    ],
+    list: [
+      'Tiếp nhận và phản hồi xác nhận đã nhận khiếu nại trong vòng 24 giờ làm việc',
+      'Kiểm tra thông tin, đề xuất phương án giải quyết trong vòng 3 ngày làm việc kể từ khi nhận đủ thông tin',
+      'Trường hợp hai bên không thống nhất được, tranh chấp được giải quyết bằng thương lượng, hòa giải, hoặc yêu cầu cơ quan nhà nước có thẩm quyền, Tòa án giải quyết theo quy định của pháp luật',
+    ],
+  },
+  {
+    id: '15',
+    title: '15. Luật áp dụng',
+    content: [
+      {
+        body: 'Điều khoản này được điều chỉnh bởi pháp luật Việt Nam, bao gồm Luật Thương mại điện tử, Luật Bảo vệ quyền lợi người tiêu dùng, Luật Bảo vệ dữ liệu cá nhân và các văn bản hướng dẫn thi hành.',
+      },
+    ],
+  },
+  {
+    id: '16',
+    title: '16. Thay đổi điều khoản',
+    content: [
+      {
+        body: `${STORE.name} có thể cập nhật Điều khoản này; ngày cập nhật được ghi ở đầu trang. Đơn hàng đã đặt trước thời điểm cập nhật tiếp tục áp dụng điều khoản tại thời điểm đặt hàng.`,
+      },
+    ],
+  },
+  {
+    id: '17',
+    title: '17. Liên hệ',
+    content: [
+      {
+        body: 'Mọi thắc mắc về Điều khoản dịch vụ, vui lòng liên hệ:',
       },
     ],
     contact: true,
@@ -213,9 +305,9 @@ export default function TermsOfServiceContent() {
           }}
         >
           <Typography variant="body1" sx={{ lineHeight: 1.8, color: 'text.secondary' }}>
-            Vui lòng đọc kỹ các điều khoản dưới đây trước khi sử dụng dịch vụ của{' '}
-            <strong>{STORE.name}</strong>. Các điều khoản này tạo thành thỏa thuận pháp lý giữa bạn
-            và chúng tôi về việc sử dụng website <strong>luxeglow.vn</strong>.
+            Vui lòng đọc kỹ các điều khoản dưới đây trước khi mua hàng tại{' '}
+            <strong>{STORE.name}</strong>. Các điều khoản này là điều kiện giao dịch chung giữa bạn
+            và chúng tôi khi sử dụng website <strong>{SITE}</strong>.
           </Typography>
         </Box>
 
@@ -229,7 +321,7 @@ export default function TermsOfServiceContent() {
               <Stack spacing={1.5}>
                 {section.content.map((item, idx) => (
                   <Box key={idx}>
-                    {'subtitle' in item && item.subtitle && (
+                    {item.subtitle && (
                       <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
                         {item.subtitle}
                       </Typography>
@@ -239,6 +331,17 @@ export default function TermsOfServiceContent() {
                     </Typography>
                   </Box>
                 ))}
+                {section.owner && (
+                  <Box sx={{ bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2.5 }}>
+                    <Stack spacing={0.75}>
+                      {STORE_OWNER_LINES.map((line) => (
+                        <Typography key={line.label} variant="body2" color="text.secondary">
+                          {line.label}: <strong>{line.value}</strong>
+                        </Typography>
+                      ))}
+                    </Stack>
+                  </Box>
+                )}
                 {section.list && (
                   <Box component="ul" sx={{ m: 0, pl: 2.5 }}>
                     {section.list.map((item) => (
@@ -252,7 +355,7 @@ export default function TermsOfServiceContent() {
                 )}
                 {section.afterList?.map((item, idx) => (
                   <Box key={`after-${idx}`}>
-                    {'subtitle' in item && item.subtitle && (
+                    {item.subtitle && (
                       <Typography variant="body1" sx={{ fontWeight: 600, mb: 0.5 }}>
                         {item.subtitle}
                       </Typography>
@@ -281,7 +384,7 @@ export default function TermsOfServiceContent() {
                         </Link>
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        📞 Điện thoại:{' '}
+                        📞 Điện thoại / Zalo:{' '}
                         <Link href={`tel:${STORE.phone}`} style={{ color: 'inherit', fontWeight: 600 }}>
                           {STORE.phone}
                         </Link>

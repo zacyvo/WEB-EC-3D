@@ -51,7 +51,7 @@ function VisualMock({
       accent: '#8B5CF6',
       icon: <PaymentOutlinedIcon sx={{ fontSize: 40, color: '#8B5CF6' }} />,
       label: 'Thanh toán an toàn',
-      tags: ['COD', 'Chuyển khoản', 'Ví điện tử'],
+      tags: ['COD', 'Chuyển khoản VietQR', 'Hoá đơn VAT'],
     },
     delivery: {
       bg: '#FFF5EA',
@@ -191,18 +191,22 @@ const CATEGORIES: Category[] = [
       },
       {
         q: 'Tôi có thể thay đổi hoặc hủy đơn hàng sau khi đặt không?',
-        a: 'Khi đơn còn ở trạng thái "Chờ xác nhận", bạn có thể tự hủy trong mục Đơn hàng của tôi. Khi đơn đã "Đã xác nhận" hoặc "Đang chuẩn bị hàng", bạn có thể gửi yêu cầu hủy để shop liên hệ xử lý. Đơn đang giao hoặc đã giao không thể hủy.',
+        a: 'Khi đơn còn ở trạng thái "Chờ xác nhận", bạn có thể tự hủy trong mục Đơn hàng của tôi. Khi đơn đang ở trạng thái "Đang chuẩn bị hàng", bạn có thể gửi yêu cầu hủy để shop xem xét và liên hệ lại. Đơn ở trạng thái "Đã xác nhận", đang giao hoặc đã giao không thể hủy trên website — vui lòng liên hệ shop để được hỗ trợ. Nếu đơn đã chuyển khoản bị hủy, shop sẽ hoàn tiền cho bạn.',
       },
       {
         q: 'Tôi quên mật khẩu, phải làm gì?',
         a: (
           <>
-            Truy cập trang{' '}
+            Nếu bạn đăng ký bằng Google hoặc Facebook, hãy chọn <strong>"Tiếp tục với Google/Facebook"</strong>{' '}
+            tại trang{' '}
             <Link href="/auth/login?redirect=/faq" style={{ color: '#007AFF', fontWeight: 600 }}>
               Đăng nhập
+            </Link>
+            . Nếu bạn đăng ký bằng email, vui lòng liên hệ shop qua{' '}
+            <Link href="/contact" style={{ color: '#007AFF', fontWeight: 600 }}>
+              trang Liên hệ
             </Link>{' '}
-            và chọn <strong>"Quên mật khẩu"</strong>. Hệ thống sẽ gửi liên kết đặt lại mật khẩu về
-            email của bạn trong vòng vài phút.
+            (email hoặc Zalo) từ email/số điện thoại của tài khoản để được hỗ trợ đặt lại mật khẩu.
           </>
         ),
       },
@@ -210,8 +214,9 @@ const CATEGORIES: Category[] = [
         q: 'Làm thế nào để theo dõi đơn hàng?',
         a: (
           <>
-            Đăng nhập vào tài khoản, vào mục <strong>"Đơn hàng"</strong> để xem trạng thái. Khi hàng
-            được giao vận chuyển, bạn sẽ nhận được mã vận đơn qua SMS hoặc trên trang đơn hàng.
+            Đăng nhập vào tài khoản, vào mục <strong>"Đơn hàng"</strong> để xem trạng thái đơn. Khi hàng
+            được bàn giao vận chuyển, tên đơn vị vận chuyển, mã vận đơn và đường dẫn tra cứu được cập nhật
+            ngay trên trang chi tiết đơn hàng.
           </>
         ),
       },
@@ -230,8 +235,7 @@ const CATEGORIES: Category[] = [
             <Typography variant="body2">Chúng tôi hỗ trợ các hình thức sau:</Typography>
             {[
               '💵 COD (thanh toán khi nhận hàng)',
-              '🏦 Chuyển khoản ngân hàng',
-              '📱 Ví điện tử (Momo, ZaloPay, VNPay)',
+              '🏦 Chuyển khoản ngân hàng (quét mã VietQR sau khi đặt hàng)',
             ].map((t) => (
               <Box key={t} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <CheckCircleOutlineIcon sx={{ fontSize: 16, color: '#34C759', flexShrink: 0 }} />
@@ -244,11 +248,11 @@ const CATEGORIES: Category[] = [
       },
       {
         q: 'Thanh toán chuyển khoản có an toàn không?',
-        a: 'Chúng tôi sử dụng thông tin tài khoản chính thức và luôn xác nhận đơn hàng qua SMS/email sau khi nhận được thanh toán. Không bao giờ yêu cầu chuyển khoản qua kênh thứ ba.',
+        a: 'Bạn chuyển trực tiếp vào tài khoản ngân hàng của shop hiển thị trên website, bằng mã VietQR đã điền sẵn số tiền và nội dung chuyển khoản riêng của đơn. Shop kiểm tra tài khoản và xác nhận thanh toán; trạng thái "Đã thanh toán" được cập nhật trên trang đơn hàng. Shop không bao giờ yêu cầu chuyển vào tài khoản khác hay cung cấp mã OTP, mật khẩu ngân hàng.',
       },
       {
         q: 'Tôi có thể xin hóa đơn VAT không?',
-        a: 'Hiện tại chúng tôi chưa hỗ trợ xuất hóa đơn VAT điện tử. Chúng tôi sẽ cập nhật tính năng này trong thời gian sớm nhất.',
+        a: 'Có. Bạn chọn "Yêu cầu xuất hoá đơn điện tử" khi đặt hàng hoặc tại trang chi tiết đơn hàng (trước khi đơn được giao đi). Thuế GTGT 10% được cộng vào tổng thanh toán; hoá đơn được gửi tới email của bạn sau khi đơn được thanh toán. Nếu shop từ chối yêu cầu, khoản VAT sẽ được trừ lại.',
       },
     ],
   },
@@ -278,15 +282,15 @@ const CATEGORIES: Category[] = [
       },
       {
         q: 'Phí vận chuyển được tính như thế nào?',
-        a: 'Phí vận chuyển được tính dựa theo địa chỉ nhận hàng và trọng lượng đơn. Hiển thị cụ thể tại bước xác nhận đơn hàng. Đơn hàng trên 500.000đ được miễn phí vận chuyển nội thành TP. HCM.',
+        a: 'Hiện shop miễn phí vận chuyển cho mọi đơn đặt trên website. Phí vận chuyển (nếu có thay đổi) luôn được hiển thị tại trang Thanh toán trước khi bạn đặt hàng.',
       },
       {
         q: 'Đơn vị vận chuyển nào được sử dụng?',
-        a: 'Chúng tôi hợp tác với GHTK, GHN và J&T Express — các đơn vị vận chuyển uy tín tại Việt Nam. Bạn sẽ nhận mã vận đơn để theo dõi qua app hoặc website của đơn vị tương ứng.',
+        a: 'Hiện shop gửi hàng chủ yếu qua SPX Express; tuỳ khu vực có thể sử dụng đơn vị vận chuyển khác. Mã vận đơn và đường dẫn tra cứu được cập nhật trên trang chi tiết đơn hàng.',
       },
       {
         q: 'Hàng giao bị hỏng/vỡ trong khi vận chuyển thì sao?',
-        a: 'Chúng tôi đóng gói sản phẩm rất kỹ lưỡng. Nếu sản phẩm bị hỏng do vận chuyển, vui lòng chụp ảnh gói hàng và sản phẩm ngay khi nhận và liên hệ chúng tôi trong vòng 24 giờ. Chúng tôi sẽ gửi lại sản phẩm miễn phí.',
+        a: 'Chúng tôi đóng gói sản phẩm rất kỹ lưỡng. Nếu sản phẩm bị hỏng do vận chuyển, vui lòng chụp ảnh/quay video gói hàng và sản phẩm khi nhận, rồi gửi yêu cầu "Trả hàng/Hoàn tiền" tại trang chi tiết đơn hàng trong vòng 7 ngày (nên báo ngay trong 24 giờ đầu). Chúng tôi sẽ gửi lại sản phẩm mới hoặc hoàn tiền miễn phí.',
       },
     ],
   },

@@ -8,7 +8,7 @@ import {
   Box, Container, Typography, Avatar, Card, CardContent,
   TextField, Button, Stack, CircularProgress,
   Dialog, DialogTitle, DialogContent, DialogActions,
-  InputAdornment, IconButton, Alert, Chip,
+  InputAdornment, IconButton, Alert, Chip, Switch, FormControlLabel,
 } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
@@ -165,6 +165,16 @@ export default function EditProfilePage() {
       toast.success('Đã cập nhật hồ sơ');
     },
     onError: () => toast.error('Không thể cập nhật hồ sơ'),
+  });
+
+  // Consent to promotional messages — granted or withdrawn at any time (Chính sách bảo mật §8).
+  const marketingMut = useMutation({
+    mutationFn: (marketingOptIn: boolean) => api.patch<ApiResponse<User>>('/users/me', { marketingOptIn }),
+    onSuccess: (res, marketingOptIn) => {
+      if (res.data.data) updateUser({ marketingOptIn: res.data.data.marketingOptIn ?? marketingOptIn });
+      toast.success(marketingOptIn ? 'Đã đăng ký nhận thông tin khuyến mãi' : 'Đã huỷ nhận thông tin khuyến mãi');
+    },
+    onError: () => toast.error('Không thể cập nhật, vui lòng thử lại'),
   });
 
   const passwordMut = useMutation({
@@ -489,6 +499,27 @@ export default function EditProfilePage() {
           </CardContent>
         </Card>
       )}
+
+      {/* ── Promotional messages consent ─────────────────────────────────── */}
+      <Card variant="outlined" sx={{ borderRadius: 3, mb: 3 }}>
+        <CardContent sx={{ p: 3 }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, mb: 0.5 }}>Thông tin khuyến mãi</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+            Nhận thông tin sản phẩm mới, mã giảm giá qua Zalo/email. Bạn có thể bật hoặc tắt bất cứ lúc nào; tin nhắn
+            về đơn hàng của bạn vẫn được gửi bình thường.
+          </Typography>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={!!user?.marketingOptIn}
+                disabled={marketingMut.isPending}
+                onChange={(e) => marketingMut.mutate(e.target.checked)}
+              />
+            }
+            label={user?.marketingOptIn ? 'Đang nhận thông tin khuyến mãi' : 'Không nhận thông tin khuyến mãi'}
+          />
+        </CardContent>
+      </Card>
 
       {/* ── Delete account ────────────────────────────────────────────────── */}
       <Card variant="outlined" sx={{ borderRadius: 3, borderColor: 'error.light' }}>
