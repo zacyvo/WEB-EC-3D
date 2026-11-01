@@ -150,9 +150,59 @@ export interface Order {
   einvoiceRequest?: OrderEInvoiceRequest;
   /** Set when the order was synced from a marketplace (returns happen there). */
   externalRef?: { channel: string; code: string };
+  /** COD / BANK_TRANSFER — absent on older orders (COD). */
+  paymentMethod?: PaymentMethod;
+  /** VietQR bank-transfer payment — only when paymentMethod = BANK_TRANSFER. */
+  payment?: OrderPayment;
   currentVersion: number;
   createdAt: string;
   updatedAt: string;
+}
+
+/** Keep in sync with backend orders/schemas/order.schema.ts. */
+export type PaymentMethod = 'COD' | 'BANK_TRANSFER';
+export type PaymentStatus = 'PENDING_PAYMENT' | 'PAID';
+/** The customer's own "Tôi đã chuyển khoản" claim — never proof of payment. */
+export type PaymentVerificationStatus = 'NOT_REPORTED' | 'AWAITING_CONFIRMATION' | 'CONFIRMED';
+
+export interface BankAccountInfo {
+  bankBin: string;
+  bankName: string;
+  accountNumber: string;
+  accountName: string;
+}
+
+export interface OrderPayment {
+  status: PaymentStatus;
+  reference: string;
+  amount: number;
+  currency: string;
+  bankAccount: BankAccountInfo;
+  verificationStatus: PaymentVerificationStatus;
+  customerReportedAt?: string;
+  confirmedAt?: string;
+}
+
+/** GET /orders/:id/payment — what the payment section renders. */
+export interface PaymentInstructions {
+  orderId: string;
+  orderCode: string;
+  orderStatus: OrderStatus;
+  paymentMethod: 'BANK_TRANSFER';
+  paymentStatus: PaymentStatus;
+  verificationStatus: PaymentVerificationStatus;
+  amount: number;
+  currency: string;
+  reference: string;
+  bank: BankAccountInfo;
+  payable: boolean;
+  /** VietQR payload to render; null when nothing is left to pay or it couldn't be built. */
+  qrPayload: string | null;
+  qrError?: string;
+  customerReportedAt?: string;
+  confirmedAt?: string;
+  /** Only on POST /orders/:id/payment/report. */
+  alreadyReported?: boolean;
 }
 
 export type EInvoiceRequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'ISSUED';

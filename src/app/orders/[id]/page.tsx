@@ -19,6 +19,7 @@ import { loginHref } from '@/lib/auth-redirect';
 import type { ApiResponse, Order, OrderStatus, ReturnEligibility } from '@/types';
 import ReturnRequestCard from '@/components/order-return/ReturnRequestCard';
 import EInvoiceRequestCard from '@/components/einvoice-request/EInvoiceRequestCard';
+import BankTransferPayment from '@/components/bank-transfer/BankTransferPayment';
 
 /** Customer may cancel by themselves only while the order awaits confirmation. */
 const SELF_CANCEL_STATUSES: OrderStatus[] = ['PENDING'];
@@ -151,6 +152,10 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
       )}
 
       {order.returnRequest && <ReturnRequestCard order={order} />}
+
+      {order.paymentMethod === 'BANK_TRANSFER' && (
+        <BankTransferPayment orderId={order._id} refreshKey={`${order.status}:${order.total}`} />
+      )}
 
       {/* Items */}
       <Card variant="outlined" sx={{ borderRadius: 3, mb: 2 }}>

@@ -8,7 +8,7 @@ import dynamic from 'next/dynamic';
 import {
   Box, Container, Typography, Grid, Card, CardContent,
   TextField, Button, Divider, Stack, Alert, CircularProgress,
-  Chip, Checkbox, FormControlLabel,
+  Chip, Checkbox, FormControlLabel, Radio, RadioGroup,
 } from '@mui/material';
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -24,9 +24,12 @@ import { useAuthStore } from '@/lib/store/auth.store';
 import { formatCurrency } from '@/lib/utils';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-import type { ApiResponse, Order, User, Coupon, ValidateCouponsResponse, EInvoiceRequestInput } from '@/types';
+import type {
+  ApiResponse, Order, User, Coupon, ValidateCouponsResponse, EInvoiceRequestInput, PaymentMethod,
+} from '@/types';
 import AddressPicker, { type OldAddressSelection } from '@/components/AddressPicker';
 import EInvoiceRequestFields from '@/components/einvoice-request/EInvoiceRequestFields';
+import BankTransferPayment from '@/components/bank-transfer/BankTransferPayment';
 import {
   EINVOICE_VAT_RATE, EMPTY_EINVOICE_REQUEST, estimateVat, toEInvoiceRequestPayload, validateEInvoiceRequest,
   type EInvoiceRequestErrors,
@@ -63,6 +66,8 @@ export default function CheckoutPage() {
   const [success, setSuccess] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const [oldAddress, setOldAddress] = useState<OldAddressSelection | undefined>(undefined);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
+  const [placedPaymentMethod, setPlacedPaymentMethod] = useState<PaymentMethod>('COD');
 
   // ── Coupon state ──────────────────────────────────────────────────────────
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
@@ -100,6 +105,17 @@ export default function CheckoutPage() {
   });
 
   const provinces: Province[] = locationData?.provinces ?? [];
+
+  // Bank transfer is offered only while the shop's receiving account is configured.
+  const { data: bankTransferAvailable = false } = useQuery<boolean>({
+    queryKey: ['bank-transfer-availability'],
+    queryFn: async () => {
+      const res = await api.get<ApiResponse<{ enabled: boolean }>>('/payments/bank-transfer/availability');
+      return res.data.data.enabled;
+    },
+    staleTime: 60_000,
+  });
+  const effectivePaymentMethod: PaymentMethod = bankTransferAvailable ? paymentMethod : 'COD';
 
   // Load available coupons for this user
   const { data: coupons = [] } = useQuery<Coupon[]>({
@@ -183,6 +199,7 @@ export default function CheckoutPage() {
           ? { couponCodes: validateResult.appliedCoupons.map((c) => c.code) }
           : {}),
         ...(wantsEInvoice ? { einvoiceRequest: toEInvoiceRequestPayload(einvoice) } : {}),
+        paymentMethod: effectivePaymentMethod,
       };
       const res = await api.post<ApiResponse<Order>>('/orders', payload);
       const newOrder = res.data.data;
@@ -208,6 +225,7 @@ export default function CheckoutPage() {
 
       clearCart();
       setOrderId(newOrder._id);
+      setPlacedPaymentMethod(newOrder.paymentMethod ?? 'COD');
       setSuccess(true);
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
@@ -228,6 +246,21 @@ export default function CheckoutPage() {
   );
 
   // ── Success screen ────────────────────────────────────────────────────────
+  if (success && orderId && placedPaymentMethod === 'BANK_TRANSFER') {
+    return (
+      <Container maxWidth="sm" sx={{ py: { xs: 4, md: 7 } }}>
+        <Box sx={{ textAlign: 'center', mb: 3 }}>
+          <CheckCircleOutlinedIcon sx={{ fontSize: 56, color: 'success.main' }} />
+          <Typography variant="h5" sx={{ fontWeight: 700, mt: 1 }}>Đặt hàng thành công!</Typography>
+          <Typography color="text.secondary">Vui lòng hoàn tất chuyển khoản để Luxe Glow xử lý đơn hàng.</Typography>
+        </Box>
+        <BankTransferPayment orderId={orderId} showOrderLink />
+        <Button component={Link} href="/products" fullWidth sx={{ mt: 1, color: 'text.secondary' }}>Tiếp tục mua hàng</Button>
+        <ZaloOaRewardModal orderId={orderId} />
+      </Container>
+    );
+  }
+
   if (success) {
     return (
       <Box sx={{ minHeight: '70vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3, px: 2 }}>
@@ -312,11 +345,38 @@ export default function CheckoutPage() {
                   />
                 </Stack>
 
-                <Alert severity="info" sx={{ mt: 3, borderRadius: 2 }}>
-                  Phương thức thanh toán: <strong>Thanh toán khi nhận hàng (COD)</strong>
-                </Alert>
+                {!bankTransferAvailable && (
+                  <Alert severity="info" sx={{ mt: 3, borderRadius: 2 }}>
+                    Phương thức thanh toán: <strong>Thanh toán khi nhận hàng (COD)</strong>
+                  </Alert>
+                )}
               </CardContent>
             </Card>
+
+            {/* Phương thức thanh toán — only shown when bank transfer is available */}
+            {bankTransferAvailable && (
+              <Card variant="outlined" sx={{ borderRadius: 3, mt: 3 }}>
+                <CardContent sx={{ p: 3 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mb: 1.5 }}>Phương thức thanh toán</Typography>
+                  <RadioGroup value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value as PaymentMethod)}>
+                    <FormControlLabel value="COD" control={<Radio />} label="Thanh toán khi nhận hàng (COD)" />
+                    <FormControlLabel
+                      value="BANK_TRANSFER"
+                      control={<Radio />}
+                      label={
+                        <Box>
+                          <Typography variant="body1">Chuyển khoản ngân hàng (VietQR)</Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Quét mã QR bằng ứng dụng ngân hàng sau khi đặt hàng — số tiền và nội dung đã điền sẵn
+                          </Typography>
+                        </Box>
+                      }
+                      sx={{ alignItems: 'flex-start', mt: 0.5, '& .MuiRadio-root': { pt: 0.5 } }}
+                    />
+                  </RadioGroup>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Section 3 — Mã giảm giá */}
             {coupons.length > 0 && (

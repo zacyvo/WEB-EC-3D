@@ -44,7 +44,7 @@ const SECTIONS: Section[] = [
     title: '3. Chuyển khoản ngân hàng',
     content: [
       {
-        body: 'Sau khi đặt hàng, thông tin tài khoản ngân hàng của chúng tôi sẽ được gửi trong email xác nhận đơn hàng. Vui lòng ghi rõ mã đơn hàng ở nội dung chuyển khoản để được đối soát nhanh chóng.',
+        body: 'Chọn "Chuyển khoản ngân hàng (VietQR)" khi đặt hàng. Sau khi đặt hàng, trang thanh toán (và trang chi tiết đơn hàng) hiển thị mã VietQR cùng số tài khoản, số tiền và nội dung chuyển khoản riêng của đơn — quét mã bằng ứng dụng ngân hàng là số tiền và nội dung đã được điền sẵn. Nếu chuyển khoản thủ công, vui lòng ghi đúng nội dung chuyển khoản để được đối soát nhanh chóng.',
       },
       {
         body: 'Đơn hàng sẽ được xử lý ngay sau khi chúng tôi xác nhận đã nhận được thanh toán, thường trong vòng vài giờ làm việc.',
