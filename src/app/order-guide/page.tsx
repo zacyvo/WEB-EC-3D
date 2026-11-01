@@ -191,7 +191,7 @@ function StepMock({ step }: { step: number }) {
         <Box sx={{ width: '100%' }}>
           {[
             { label: 'Đặt hàng thành công', done: true },
-            { label: 'Đang xử lý', done: true },
+            { label: 'Đang chuẩn bị hàng', done: true },
             { label: 'Đang giao hàng', done: false, active: true },
             { label: 'Đã nhận hàng', done: false },
           ].map(({ label, done, active }) => (

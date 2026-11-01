@@ -103,7 +103,7 @@ const SECTIONS: Section[] = [
     title: '7. Theo dõi đơn hàng',
     content: [
       {
-        body: 'Đăng nhập tài khoản và vào mục "Đơn hàng" để xem trạng thái theo thời gian thực: đang xử lý, đang giao hàng, đã giao thành công. Bạn cũng sẽ nhận email/SMS cập nhật ở các mốc quan trọng.',
+        body: 'Đăng nhập tài khoản và vào mục "Đơn hàng" để xem trạng thái theo thời gian thực: đang chuẩn bị hàng, đang giao hàng, đã giao thành công. Bạn cũng sẽ nhận email/SMS cập nhật ở các mốc quan trọng.',
       },
     ],
   },

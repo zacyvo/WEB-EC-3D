@@ -374,6 +374,12 @@ export default function CheckoutPage() {
                       sx={{ alignItems: 'flex-start', mt: 0.5, '& .MuiRadio-root': { pt: 0.5 } }}
                     />
                   </RadioGroup>
+                  {paymentMethod === 'BANK_TRANSFER' && (
+                    <Alert severity="info" sx={{ mt: 2, borderRadius: 2 }}>
+                      Mã QR thanh toán sẽ hiển thị ngay sau khi bạn bấm <strong>Đặt hàng &amp; lấy mã QR</strong> — số tiền
+                      và nội dung chuyển khoản được tạo riêng cho đơn hàng của bạn.
+                    </Alert>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -588,7 +594,9 @@ export default function CheckoutPage() {
                   type="submit" fullWidth variant="contained" size="large"
                   disabled={isSubmitting} sx={{ py: 1.5, fontWeight: 600 }}
                 >
-                  {isSubmitting ? <CircularProgress size={22} color="inherit" /> : 'Đặt hàng'}
+                  {isSubmitting
+                    ? <CircularProgress size={22} color="inherit" />
+                    : effectivePaymentMethod === 'BANK_TRANSFER' ? 'Đặt hàng & lấy mã QR' : 'Đặt hàng'}
                 </Button>
               </CardContent>
             </Card>

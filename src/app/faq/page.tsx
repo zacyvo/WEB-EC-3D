@@ -191,7 +191,7 @@ const CATEGORIES: Category[] = [
       },
       {
         q: 'Tôi có thể thay đổi hoặc hủy đơn hàng sau khi đặt không?',
-        a: 'Khi đơn còn ở trạng thái "Chờ xác nhận", bạn có thể tự hủy trong mục Đơn hàng của tôi. Khi đơn đã "Đã xác nhận" hoặc "Đang xử lý", bạn có thể gửi yêu cầu hủy để shop liên hệ xử lý. Đơn đang giao hoặc đã giao không thể hủy.',
+        a: 'Khi đơn còn ở trạng thái "Chờ xác nhận", bạn có thể tự hủy trong mục Đơn hàng của tôi. Khi đơn đã "Đã xác nhận" hoặc "Đang chuẩn bị hàng", bạn có thể gửi yêu cầu hủy để shop liên hệ xử lý. Đơn đang giao hoặc đã giao không thể hủy.',
       },
       {
         q: 'Tôi quên mật khẩu, phải làm gì?',

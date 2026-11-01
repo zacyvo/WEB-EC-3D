@@ -41,7 +41,7 @@ const CANCEL_COPY: Record<CancelMode, { title: string; description: string; conf
   },
   request: {
     title: 'Gửi yêu cầu hủy đơn?',
-    description: 'Đơn hàng đang được xử lý nên không thể hủy trực tiếp. Yêu cầu của bạn sẽ được gửi tới shop để xem xét và liên hệ lại.',
+    description: 'Đơn hàng đang được chuẩn bị nên không thể hủy trực tiếp. Yêu cầu của bạn sẽ được gửi tới shop để xem xét và liên hệ lại.',
     confirm: 'Gửi yêu cầu',
     success: 'Đã gửi yêu cầu hủy đơn. Shop sẽ liên hệ với bạn sớm.',
   },
@@ -320,7 +320,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           </Button>
           {canRequestCancel && (
             <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mt: 1 }}>
-              Đơn đang được xử lý — shop sẽ xem xét yêu cầu hủy của bạn
+              Đơn đang được chuẩn bị — shop sẽ xem xét yêu cầu hủy của bạn
             </Typography>
           )}
         </Box>
