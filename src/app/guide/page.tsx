@@ -11,6 +11,7 @@ import TouchAppOutlinedIcon from '@mui/icons-material/TouchAppOutlined';
 import SettingsRemoteOutlinedIcon from '@mui/icons-material/SettingsRemoteOutlined';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import ContactSupportOutlinedIcon from '@mui/icons-material/ContactSupportOutlined';
+import NfcOutlinedIcon from '@mui/icons-material/NfcOutlined';
 
 const GUIDES = [
   {
@@ -42,6 +43,21 @@ const GUIDES = [
     featureIcon: <SettingsRemoteOutlinedIcon sx={{ fontSize: 14 }} />,
     featureColor: '#8B5CF6',
     statusImages: ['/img/guide/status_off.png', '/img/guide/remote.png'],
+  },
+  {
+    href: '/nfc/huong-dan',
+    accent: '#2563EB',
+    gradientFrom: '#2563EB',
+    gradientTo: '#0EA5E9',
+    bgLight: '#EEF5FF',
+    Icon: NfcOutlinedIcon,
+    badge: 'Danh thiếp điện tử',
+    title: 'NFC Luxe-tag',
+    desc: 'Chạm thẻ vào điện thoại để chia sẻ số điện thoại, Zalo, Facebook và mạng xã hội của bạn — không cần cài ứng dụng. Hướng dẫn kích hoạt, thêm liên hệ và chia sẻ.',
+    features: ['Chạm lần đầu: kích hoạt bằng SĐT + mật khẩu', 'Thêm / sửa liên hệ, mạng xã hội bất cứ lúc nào', 'Người nhận chạm thẻ là xem danh thiếp'],
+    featureIcon: <NfcOutlinedIcon sx={{ fontSize: 14 }} />,
+    featureColor: '#2563EB',
+    statusImages: ['/img/guide/NFC/S_1B.png', '/img/guide/NFC/S_5.png'],
   },
 ];
 
@@ -78,11 +94,11 @@ export default function GuidePage() {
             variant="h2"
             sx={{ fontWeight: 700, fontSize: { xs: 28, md: 46 }, letterSpacing: '-0.03em', mb: 2, lineHeight: 1.15 }}
           >
-            Chọn loại đèn{' '}
+            Chọn sản phẩm{' '}
             <Box
               component="span"
               sx={{
-                background: 'linear-gradient(135deg, #FF9500 0%, #8B5CF6 100%)',
+                background: 'linear-gradient(135deg, #FF9500 0%, #8B5CF6 55%, #2563EB 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
               }}
@@ -96,7 +112,7 @@ export default function GuidePage() {
             color="text.secondary"
             sx={{ fontSize: { xs: 15, md: 17 }, maxWidth: 480, mx: 'auto', lineHeight: 1.7 }}
           >
-            Chọn đúng loại đèn để xem hướng dẫn chi tiết cách sử dụng và các tính năng đặc trưng.
+            Chọn đúng loại đèn hoặc thẻ NFC Luxe-tag để xem hướng dẫn chi tiết cách sử dụng và các tính năng đặc trưng.
           </Typography>
         </Container>
       </Box>
@@ -106,13 +122,15 @@ export default function GuidePage() {
         {/* ── Guide cards ── */}
         <Grid container spacing={{ xs: 2.5, md: 4 }} sx={{ mb: { xs: 6, md: 10 } }}>
           {GUIDES.map((g) => (
-            <Grid key={g.href} size={{ xs: 12, md: 6 }}>
+            <Grid key={g.href} size={{ xs: 12, md: 4 }}>
               <Paper
                 elevation={0}
                 component={Link}
                 href={g.href}
                 sx={{
-                  display: 'block',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  height: '100%',
                   textDecoration: 'none',
                   borderRadius: 4,
                   border: '1.5px solid',
@@ -165,7 +183,7 @@ export default function GuidePage() {
                 </Box>
 
                 {/* Content */}
-                <Box sx={{ p: { xs: 2.5, md: 3 } }}>
+                <Box sx={{ p: { xs: 2.5, md: 3 }, flex: 1, display: 'flex', flexDirection: 'column' }}>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5, flexWrap: 'wrap' }}>
                     <Typography variant="h6" sx={{ fontWeight: 700 }}>{g.title}</Typography>
                     <Chip
@@ -179,7 +197,7 @@ export default function GuidePage() {
                     {g.desc}
                   </Typography>
 
-                  <Stack spacing={1} sx={{ mb: 3 }}>
+                  <Stack spacing={1} sx={{ mb: 3, flex: 1 }}>
                     {g.features.map((f) => (
                       <Box key={f} sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                         <Box sx={{ color: g.featureColor, display: 'flex', alignItems: 'center', flexShrink: 0 }}>
@@ -192,7 +210,7 @@ export default function GuidePage() {
 
                   <Box
                     sx={{
-                      display: 'inline-flex', alignItems: 'center', gap: 0.75,
+                      display: 'inline-flex', alignItems: 'center', gap: 0.75, alignSelf: 'flex-start',
                       color: g.accent, fontWeight: 600, fontSize: 14,
                     }}
                   >

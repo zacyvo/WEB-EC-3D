@@ -59,7 +59,7 @@ function PhoneShot({ src, alt }: { src: string; alt: string }) {
 
 const FAQ: { q: string; a: string }[] = [
   {
-    q: 'Tôi quên mật khẩu quản lý thẻ NFC thì làm sao?',
+    q: 'Tôi quên mật khẩu quản lý thẻ Luxe-tag thì làm sao?',
     a: `Vui lòng liên hệ ${STORE.name} kèm số điện thoại đã đăng ký — chúng tôi sẽ đặt lại thẻ về trạng thái chưa kích hoạt để bạn thiết lập số điện thoại và mật khẩu mới. Lưu ý: đặt lại sẽ xoá toàn bộ danh sách liên hệ đã lưu trước đó.`,
   },
   {
@@ -85,14 +85,15 @@ export default function NfcGuideContent() {
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5 }}>
             <NfcOutlinedIcon sx={{ color: 'primary.main' }} />
             <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 600, letterSpacing: 2 }}>
-              Thẻ NFC
+              NFC Luxe-tag
             </Typography>
           </Stack>
           <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, fontSize: { xs: '1.8rem', md: '2.4rem' } }}>
-            Hướng dẫn kích hoạt và sử dụng thẻ NFC
+            Hướng dẫn kích hoạt và sử dụng thẻ NFC{' '}
+            <Box component="span" sx={{ whiteSpace: 'nowrap' }}>Luxe-tag</Box>
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-            Thẻ NFC {STORE.name} hoạt động như một danh thiếp điện tử — chạm thẻ vào điện thoại để
+            Thẻ NFC Luxe-tag của {STORE.name} hoạt động như một danh thiếp điện tử — chạm thẻ vào điện thoại để
             chia sẻ số điện thoại, Zalo, Facebook và các mạng xã hội khác của bạn chỉ trong một
             chạm. Trang này hướng dẫn bạn kích hoạt thẻ lần đầu, thêm thông tin liên hệ và chia sẻ
             cho người khác.
@@ -117,14 +118,14 @@ export default function NfcGuideContent() {
           </Stack>
           <Grid container spacing={4} sx={{ alignItems: 'center' }}>
             <Grid size={{ xs: 12, sm: 5 }}>
-              <PhoneShot src="/img/guide/NFC/S_1B.png" alt="Màn hình kích hoạt thẻ NFC" />
+              <PhoneShot src="/img/guide/NFC/S_1B.png" alt="Màn hình kích hoạt thẻ Luxe-tag" />
             </Grid>
             <Grid size={{ xs: 12, sm: 7 }}>
               <Stack spacing={3}>
                 <StepRow
                   n={1}
                   color="#2563EB"
-                  title="Chạm điện thoại vào thẻ NFC"
+                  title="Chạm điện thoại vào thẻ Luxe-tag"
                   desc="Đưa mặt sau điện thoại lại gần thẻ vài giây (hoặc quét mã QR / mở link đi kèm thẻ nếu điện thoại không hỗ trợ NFC). Trình duyệt sẽ tự mở trang kích hoạt."
                 />
                 <StepRow
@@ -160,7 +161,7 @@ export default function NfcGuideContent() {
           </Stack>
           <Grid container spacing={4} sx={{ alignItems: 'center' }}>
             <Grid size={{ xs: 12, sm: 5 }}>
-              <PhoneShot src="/img/guide/NFC/S_1A.png" alt="Màn hình đăng nhập thẻ NFC" />
+              <PhoneShot src="/img/guide/NFC/S_1A.png" alt="Màn hình đăng nhập thẻ Luxe-tag" />
             </Grid>
             <Grid size={{ xs: 12, sm: 7 }}>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8 }}>
@@ -239,7 +240,7 @@ export default function NfcGuideContent() {
             </Grid>
             <Grid size={{ xs: 12, sm: 7 }}>
               <Typography variant="body2" color="text.secondary" sx={{ lineHeight: 1.8, mb: 2 }}>
-                Khi người khác chạm thẻ NFC của bạn (hoặc mở link/mã QR công khai), họ sẽ thấy ngay
+                Khi người khác chạm thẻ Luxe-tag của bạn (hoặc mở link/mã QR công khai), họ sẽ thấy ngay
                 <b> danh thiếp điện tử</b> với toàn bộ liên hệ bạn đã thêm — chạm vào một mục để gọi
                 điện, nhắn tin hoặc mở trang mạng xã hội tương ứng. Không cần cài đặt ứng dụng gì
                 thêm.

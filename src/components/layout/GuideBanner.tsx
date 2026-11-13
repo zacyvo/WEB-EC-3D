@@ -10,6 +10,8 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import MenuBookOutlinedIcon from '@mui/icons-material/MenuBookOutlined';
 import TouchAppOutlinedIcon from '@mui/icons-material/TouchAppOutlined';
 import SettingsRemoteOutlinedIcon from '@mui/icons-material/SettingsRemoteOutlined';
+import NfcOutlinedIcon from '@mui/icons-material/NfcOutlined';
+import ContactlessOutlinedIcon from '@mui/icons-material/ContactlessOutlined';
 
 const GUIDE_ITEMS = [
   {
@@ -32,6 +34,16 @@ const GUIDE_ITEMS = [
     badge: 'Có remote',
     desc: 'Điều chỉnh màu RGB, hiệu ứng và độ sáng bằng remote điều khiển từ xa.',
   },
+  {
+    href: '/nfc/huong-dan',
+    accent: '#2563EB',
+    bg: '#EEF5FF',
+    Icon: NfcOutlinedIcon,
+    FeatureIcon: ContactlessOutlinedIcon,
+    title: 'NFC Luxe-tag',
+    badge: 'Danh thiếp điện tử',
+    desc: 'Kích hoạt thẻ, thêm liên hệ / mạng xã hội và chia sẻ chỉ bằng một chạm.',
+  },
 ];
 
 export function GuideBanner() {
@@ -53,7 +65,7 @@ export function GuideBanner() {
             <Box
               sx={{
                 width: 40, height: 40, borderRadius: 2.5, flexShrink: 0,
-                background: 'linear-gradient(135deg, #FF9500 0%, #8B5CF6 100%)',
+                background: 'linear-gradient(135deg, #FF9500 0%, #8B5CF6 55%, #2563EB 100%)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
             >
@@ -61,10 +73,10 @@ export function GuideBanner() {
             </Box>
             <Box>
               <Typography variant="h5" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
-                Hướng dẫn sử dụng đèn
+                Hướng dẫn sử dụng
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                Chọn loại đèn để xem hướng dẫn chi tiết
+                Chọn loại đèn hoặc thẻ NFC Luxe-tag để xem hướng dẫn chi tiết
               </Typography>
             </Box>
           </Box>
@@ -82,7 +94,7 @@ export function GuideBanner() {
         </Box>
 
         {/* Guide cards */}
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2.5}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5}>
           {GUIDE_ITEMS.map((g) => (
             <Paper
               key={g.href}

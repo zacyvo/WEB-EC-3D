@@ -4,7 +4,7 @@ import { Box, Container, Grid, Typography, Divider, Stack } from '@mui/material'
 
 const PRODUCTS = ['Đèn Bàn', 'Đèn Trần', 'Đèn Tường', 'Đèn Ngủ', 'Đèn Trang Trí'];
 const SUPPORT = [
-  { label: 'Hướng dẫn sử dụng đèn', href: '/guide' },
+  { label: 'Hướng dẫn sử dụng', href: '/guide' },
   { label: 'Hướng dẫn mua hàng', href: '/order-guide' },
   { label: 'Hợp tác sản xuất', href: '/partnership' },
   { label: 'Câu hỏi thường gặp', href: '/faq' },

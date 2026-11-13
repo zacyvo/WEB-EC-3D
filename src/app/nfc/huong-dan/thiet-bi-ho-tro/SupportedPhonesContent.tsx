@@ -69,15 +69,14 @@ export default function SupportedPhonesContent() {
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 1.5 }}>
             <PhoneIphoneOutlinedIcon sx={{ color: 'primary.main' }} />
             <Typography variant="overline" sx={{ color: 'primary.main', fontWeight: 600, letterSpacing: 2 }}>
-              Thẻ NFC
+              NFC Luxe-tag
             </Typography>
           </Stack>
           <Typography variant="h3" sx={{ fontWeight: 700, mb: 2, fontSize: { xs: '1.8rem', md: '2.4rem' } }}>
             Điện thoại hỗ trợ NFC
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.8 }}>
-            Tra cứu nhanh dòng máy có NFC theo hãng sản xuất, từ 2015 đến nay, để chạm thẻ NFC danh
-            thiếp {' '}
+            Tra cứu nhanh dòng máy có NFC theo hãng sản xuất, từ 2015 đến nay, để dùng thẻ Luxe-tag{' '}
             <Link href="/nfc/huong-dan" style={{ color: 'inherit', fontWeight: 600 }}>
               (xem hướng dẫn kích hoạt và sử dụng)
             </Link>.
