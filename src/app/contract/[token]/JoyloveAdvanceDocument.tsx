@@ -1,6 +1,6 @@
 'use client';
 
-import { numberToVietnameseWords } from './ContractDocument';
+import { isShippingIncluded, numberToVietnameseWords } from './ContractDocument';
 
 /**
  * Template JOYLOVE_ADVANCE — dựng theo mẫu JOYLOVE_Luxe_Glow_Hop_dong.pdf (15 Điều + Phụ lục 01, 02).
@@ -76,6 +76,7 @@ const S: Record<string, React.CSSProperties> = {
   p: { margin: '4px 0', textAlign: 'justify' },
   line: { margin: '2px 0' },
   sub: { margin: '2px 0 4px 18px', textAlign: 'justify' },
+  sub2: { margin: '2px 0 4px 36px', textAlign: 'justify' },
   table: { width: '100%', borderCollapse: 'collapse', margin: '6px 0', fontSize: '12.5px' },
   th: { border: '1px solid #b8c0cc', padding: '4px 6px', fontWeight: 700, textAlign: 'left', background: '#e8edf5', color: NAVY },
   td: { border: '1px solid #b8c0cc', padding: '4px 6px', verticalAlign: 'top' },
@@ -144,6 +145,7 @@ export default function JoyloveAdvanceDocument({
   const B = data.partyB;
   const total = num(data.totalAmount);
   const schedule = data.paymentSchedule ?? [];
+  const shippingIncluded = isShippingIncluded(data.items);
   const partyASigner = A?.representative || A?.name || '';
   const partyBSigner = B?.representative || B?.name || '';
 
@@ -266,7 +268,7 @@ export default function JoyloveAdvanceDocument({
         <Clause no="3.1.">
           Tổng giá trị Hợp đồng: <b>{total} đồng</b> (bằng chữ: <i>{numberToVietnameseWords(data.totalAmount)}</i>).
           Đây là giá trọn gói cho phạm vi tại Phụ lục 01, đã tính đến nghĩa vụ thuế, phí mà Bên B phải thực hiện
-          theo chế độ thuế thực tế áp dụng (nếu có), nhưng CHƯA bao gồm phí vận chuyển. Bên B cung cấp hóa
+          theo chế độ thuế thực tế áp dụng (nếu có){shippingIncluded ? '' : ', nhưng CHƯA bao gồm phí vận chuyển'}. Bên B cung cấp hóa
           đơn/chứng từ hợp pháp theo chế độ đăng ký; điều khoản này không đồng nghĩa với cam kết phát hành hóa đơn
           GTGT theo phương pháp khấu trừ nếu Bên B không thuộc đối tượng áp dụng.
         </Clause>
@@ -295,6 +297,25 @@ export default function JoyloveAdvanceDocument({
           Mọi thay đổi làm phát sinh giá trị Hợp đồng chỉ có hiệu lực sau khi người có thẩm quyền của hai bên xác
           nhận qua kênh chính thức tại Điều 13.
         </Clause>
+        <Clause no="3.5.">
+          Điều kiện thanh toán: Trừ khoản thanh toán Đợt 1, Bên A thực hiện thanh toán các đợt tiếp theo khi đáp
+          ứng đầy đủ các điều kiện sau:
+        </Clause>
+        <p style={S.sub}>
+          a) Bên A đã nhận đủ hàng hóa theo đúng số lượng quy định tại Điều 1 (Phụ lục 01) và tiến độ giao hàng
+          quy định tại Điều 4.1;
+        </p>
+        <p style={S.sub}>
+          b) Hàng hóa đã được Bên A kiểm tra, nghiệm thu và xác nhận đạt yêu cầu theo thỏa thuận tại Điều 4.3
+          (bao gồm trường hợp được coi là đã nghiệm thu theo Điều 4.3.3);
+        </p>
+        <p style={S.sub}>c) Bên A đã nhận đầy đủ hồ sơ thanh toán hợp lệ từ Bên B, bao gồm:</p>
+        <p style={S.sub2}>+ Hóa đơn hợp pháp, hợp lệ theo quy định pháp luật, phù hợp với Điều 3.1;</p>
+        <p style={S.sub2}>
+          + Biên bản giao nhận và nghiệm thu hàng hóa của từng đợt (theo mẫu Phụ lục 02 hoặc xác nhận tương đương
+          qua kênh chính thức tại Điều 13);
+        </p>
+        <p style={S.sub2}>+ Các chứng từ, tài liệu liên quan khác theo thỏa thuận (nếu có).</p>
 
         {/* ── Điều 4 ── */}
         <p style={S.article}>Điều 4. Tiến độ, giao hàng và nghiệm thu</p>
@@ -306,8 +327,9 @@ export default function JoyloveAdvanceDocument({
           12.
         </Clause>
         <Clause no="4.2.">
-          Địa điểm giao hàng: {dots(data.deliveryAddress)}. Người nhận: {SHORT_DOTS}. Phí vận chuyển do hai bên
-          thỏa thuận và xác nhận bằng văn bản trước khi gửi hàng; không nằm trong giá trị Hợp đồng tại Điều 3.1.
+          Địa điểm giao hàng: {dots(data.deliveryAddress)}. Người nhận: {SHORT_DOTS}.
+          {!shippingIncluded &&
+            ' Phí vận chuyển do hai bên thỏa thuận và xác nhận bằng văn bản trước khi gửi hàng; không nằm trong giá trị Hợp đồng tại Điều 3.1.'}
         </Clause>
         <Clause no="4.3.1.">
           Bên B giao đúng số lượng, chất lượng, thông số, địa điểm và thời hạn đã thỏa thuận; thông báo trước thông
@@ -660,7 +682,8 @@ export default function JoyloveAdvanceDocument({
             </tbody>
           </table>
           <p style={S.p}>
-            Ghi chú: Tổng các dòng hàng hóa/dịch vụ phải khớp {total} đồng; không bao gồm phí vận chuyển. Nếu có
+            Ghi chú: Tổng các dòng hàng hóa/dịch vụ phải khớp {total} đồng
+            {shippingIncluded ? '' : '; không bao gồm phí vận chuyển'}. Nếu có
             phí thiết kế riêng, ghi thành một dòng trong bảng.
           </p>
 

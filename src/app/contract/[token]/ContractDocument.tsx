@@ -1,6 +1,20 @@
 'use client';
 
+import { Fragment } from 'react';
 import { formatCurrency } from '@/lib/utils';
+
+/**
+ * Mã sản phẩm có giá đã gồm vận chuyển — hợp đồng chứa một trong các mã này sẽ KHÔNG in các câu
+ * "chưa bao gồm chi phí vận chuyển" (Điều 3.1, 4.2, ghi chú Phụ lục 01). Giữ đồng bộ ở 3 nơi:
+ * backend contract-pdf.definition.ts, frontend-admin lib/contractTemplates.ts, frontend-user ContractDocument.tsx.
+ */
+export const SHIPPING_INCLUDED_PRODUCT_CODES = ['D4296C'];
+
+export function isShippingIncluded(items: { productCode?: string }[] | undefined): boolean {
+  return (items ?? []).some((i) =>
+    SHIPPING_INCLUDED_PRODUCT_CODES.includes((i.productCode ?? '').trim().toUpperCase()),
+  );
+}
 
 // ── Types (public contract — không chứa dữ liệu nội bộ) ──────────────────────
 
@@ -172,6 +186,8 @@ const S: Record<string, React.CSSProperties> = {
   articleTitle: { fontWeight: 700, margin: '12px 0 4px' },
   p: { margin: '4px 0', textAlign: 'justify' },
   indent: { margin: '2px 0 2px 18px', textAlign: 'justify' },
+  indent2: { margin: '2px 0 2px 36px', textAlign: 'justify' },
+  indent3: { margin: '2px 0 2px 54px', textAlign: 'justify' },
   table: { width: '100%', borderCollapse: 'collapse', margin: '8px 0', fontSize: '12.5px' },
   th: { border: '1px solid #111', padding: '5px 6px', fontWeight: 700, textAlign: 'center', background: '#f5f5f5' },
   td: { border: '1px solid #111', padding: '5px 6px', verticalAlign: 'top' },
@@ -223,6 +239,8 @@ export default function ContractDocument({
   watermark?: string;
 }) {
   const d = data.signDate ? new Date(data.signDate) : null;
+  const schedule = data.paymentSchedule ?? [];
+  const shippingIncluded = isShippingIncluded(data.items);
 
   return (
     <div id="contract-doc" style={S.page}>
@@ -317,20 +335,66 @@ export default function ContractDocument({
         <p style={S.p}>
           3.1. Tổng giá trị hợp đồng: <b>{formatCurrency(data.totalAmount)}</b> (bằng chữ:{' '}
           <i>{numberToVietnameseWords(data.totalAmount)}</i>).{' '}
-          <b>Giá trên đã bao gồm thuế GTGT, chưa bao gồm chi phí vận chuyển.</b>
+          <b>
+            {shippingIncluded
+              ? 'Giá trên đã bao gồm thuế GTGT.'
+              : 'Giá trên đã bao gồm thuế GTGT, chưa bao gồm chi phí vận chuyển.'}
+          </b>
         </p>
-        <p style={S.p}>3.2. Thanh toán chia thành 03 đợt:</p>
-        {(data.paymentSchedule ?? []).map((installment, i) => {
-          const isLast = i === (data.paymentSchedule?.length ?? 0) - 1;
-          const amount = Math.round((data.totalAmount * installment.percent) / 100);
-          return (
-            <p style={S.indent} key={i}>
-              – Đợt {i + 1}: Bên A thanh toán {installment.percent}% giá trị hợp đồng (
-              {formatCurrency(amount)}) {dots(installment.timing, '……………')}
-              {isLast ? '.' : ';'}
-            </p>
-          );
-        })}
+        {schedule.length === 2 ? (
+          <>
+            <p style={S.p}>3.2. Thanh toán chia thành 02 lần:</p>
+            {schedule.map((installment, i) => {
+              const isLast = i === schedule.length - 1;
+              const amount = Math.round((data.totalAmount * installment.percent) / 100);
+              return (
+                <Fragment key={i}>
+                  <p style={S.indent}>
+                    <b>Lần {i + 1} – {isLast ? 'Thanh toán phần giá trị còn lại' : 'Thanh toán tạm ứng'}:</b>
+                  </p>
+                  <p style={S.indent}>
+                    Bên A thanh toán {installment.percent}% tổng giá trị hợp đồng, tương đương số tiền{' '}
+                    {formatCurrency(amount)} (bằng chữ: <i>{numberToVietnameseWords(amount)}</i>){' '}
+                    {dots(installment.timing, '……………')}
+                    {isLast ? ':' : '.'}
+                  </p>
+                  {isLast && (
+                    <>
+                      <p style={S.indent2}>
+                        – Bên A đã nhận đủ hàng hóa theo đúng số lượng quy định tại Điều 1 và thời gian giao hàng quy
+                        định tại Điều 4;
+                      </p>
+                      <p style={S.indent2}>
+                        – Hàng hóa đã được Bên A kiểm tra, nghiệm thu và xác nhận đạt yêu cầu theo thỏa thuận tại
+                        Điều 4.3;
+                      </p>
+                      <p style={S.indent2}>– Bên A đã nhận đầy đủ hồ sơ thanh toán hợp lệ từ Bên B, bao gồm:</p>
+                      <p style={S.indent3}>+ Hóa đơn hợp pháp, hợp lệ theo quy định pháp luật;</p>
+                      <p style={S.indent3}>+ Biên bản giao nhận và nghiệm thu hàng hóa của từng đợt giao hàng;</p>
+                      <p style={S.indent3}>+ Các chứng từ, tài liệu liên quan khác theo thỏa thuận (nếu có).</p>
+                    </>
+                  )}
+                </Fragment>
+              );
+            })}
+          </>
+        ) : (
+          // Hợp đồng cũ (lịch 3 đợt) — giữ nguyên văn bản như lúc lập/ký
+          <>
+            <p style={S.p}>3.2. Thanh toán chia thành {String(schedule.length).padStart(2, '0')} đợt:</p>
+            {schedule.map((installment, i) => {
+              const isLast = i === schedule.length - 1;
+              const amount = Math.round((data.totalAmount * installment.percent) / 100);
+              return (
+                <p style={S.indent} key={i}>
+                  – Đợt {i + 1}: Bên A thanh toán {installment.percent}% giá trị hợp đồng (
+                  {formatCurrency(amount)}) {dots(installment.timing, '……………')}
+                  {isLast ? '.' : ';'}
+                </p>
+              );
+            })}
+          </>
+        )}
         <p style={S.p}>
           3.3. Hình thức thanh toán: tiền mặt hoặc chuyển khoản. Số tài khoản: {dots(data.bankAccountNumber, '……………………')}{' '}
           Ngân hàng: {dots(data.bankName, '……………………')} Chủ tài khoản: {dots(data.bankAccountHolder, '……………………')}
@@ -339,8 +403,9 @@ export default function ContractDocument({
         <p style={S.articleTitle}>Điều 4. Thời gian thực hiện và giao nhận</p>
         <p style={S.p}>4.1. Thời gian giao hàng: {vnDate(data.deliveryDate)}.</p>
         <p style={S.p}>
-          4.2. Địa điểm giao hàng: {dots(data.deliveryAddress)}. Chi phí vận chuyển do hai bên thỏa
-          thuận (chưa bao gồm trong giá trị hợp đồng).
+          4.2. Địa điểm giao hàng: {dots(data.deliveryAddress)}.
+          {!shippingIncluded &&
+            ' Chi phí vận chuyển do hai bên thỏa thuận (chưa bao gồm trong giá trị hợp đồng).'}
         </p>
         <p style={S.p}>
           4.3. Bên A kiểm tra và nghiệm thu số lượng, ngoại quan sản phẩm khi Bên B bàn giao; khiếu nại
