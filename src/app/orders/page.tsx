@@ -190,6 +190,9 @@ function OrderCard({ order }: { order: Order }) {
                   sx={RETURN_STATUS_MAP[order.returnRequest.status]?.chipSx}
                 />
               )}
+              {order.adjustment?.status === 'PROPOSED' && order.status !== 'CANCELLED' && (
+                <Chip label="Cần xác nhận điều chỉnh" size="small" color="warning" sx={{ fontWeight: 600 }} />
+              )}
               {cancelRequested && (
                 <Chip label="Đã yêu cầu hủy" size="small" variant="outlined" color="warning" sx={{ fontWeight: 600 }} />
               )}

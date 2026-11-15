@@ -20,6 +20,7 @@ import type { ApiResponse, Order, OrderStatus, ReturnEligibility } from '@/types
 import ReturnRequestCard from '@/components/order-return/ReturnRequestCard';
 import EInvoiceRequestCard from '@/components/einvoice-request/EInvoiceRequestCard';
 import BankTransferPayment from '@/components/bank-transfer/BankTransferPayment';
+import OrderAdjustmentCard from '@/components/order-adjustment/OrderAdjustmentCard';
 
 /** Customer may cancel by themselves only while the order awaits confirmation. */
 const SELF_CANCEL_STATUSES: OrderStatus[] = ['PENDING'];
@@ -153,6 +154,9 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
 
       {order.returnRequest && <ReturnRequestCard order={order} />}
 
+      {/* Shop-proposed change of the order — needs the customer's answer, so it goes before payment */}
+      <OrderAdjustmentCard order={order} />
+
       {order.paymentMethod === 'BANK_TRANSFER' && (
         <BankTransferPayment orderId={order._id} refreshKey={`${order.status}:${order.total}`} />
       )}
@@ -221,6 +225,13 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
               <Typography variant="body2" color="text.secondary">Đã thanh toán</Typography>
               <Typography variant="body2" sx={{ fontWeight: 600, color: 'success.main' }}>{formatCurrency(order.paidAmount ?? 0)}</Typography>
             </Box>
+            {/* Paid more than the (adjusted) total — the shop owes the difference until it records the refund. */}
+            {(order.paidAmount ?? 0) > order.total && order.status !== 'CANCELLED' && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="body2" color="text.secondary">Chờ shop hoàn lại</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: 'warning.dark' }}>{formatCurrency((order.paidAmount ?? 0) - order.total)}</Typography>
+              </Box>
+            )}
             <Divider sx={{ my: 0.5 }} />
             <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
               <Typography sx={{ fontWeight: 700 }}>Cần thanh toán</Typography>

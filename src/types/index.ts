@@ -171,6 +171,8 @@ export interface Order {
   paymentMethod?: PaymentMethod;
   /** VietQR bank-transfer payment — only when paymentMethod = BANK_TRANSFER. */
   payment?: OrderPayment;
+  /** Latest shop-proposed change of the order ("Điều chỉnh đơn hàng"). */
+  adjustment?: OrderAdjustment;
   currentVersion: number;
   createdAt: string;
   updatedAt: string;
@@ -392,4 +394,57 @@ export interface ValidateCouponsResponse {
   shippingDiscount: number;
   /** Fee the free-shipping code was priced against (null: no address yet). */
   shippingFee: number | null;
+}
+
+/** Keep in sync with backend orders/schemas/order.schema.ts (OrderAdjustment). */
+export interface OrderAdjustmentSnapshot {
+  items: OrderItem[];
+  shippingInfo: ShippingInfo;
+  subtotal: number;
+  discountAmount: number;
+  shippingFee: number;
+  shippingDiscount: number;
+  total: number;
+  customerNote?: string;
+}
+
+export interface OrderAdjustment {
+  number: number;
+  status: 'PROPOSED' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN';
+  reason: string;
+  proposedAt: string;
+  before: OrderAdjustmentSnapshot;
+  after: OrderAdjustmentSnapshot;
+  paidAmountAtProposal: number;
+  /** after.total − paid: < 0 the shop refunds, > 0 the customer pays the rest; 0 when unpaid. */
+  balance: number;
+  respondedAt?: string;
+  rejectReason?: string;
+  settlement?: {
+    type: 'REFUND' | 'EXTRA_PAYMENT';
+    amount: number;
+    status: 'PENDING' | 'AWAITING_CONFIRMATION' | 'COMPLETED';
+    refundAccount?: { bankName: string; accountNumber: string; accountHolder: string };
+    method?: 'COD' | 'BANK_TRANSFER';
+    reference?: string;
+    customerReportedAt?: string;
+    completedAt?: string;
+    transferRef?: string;
+  };
+}
+
+/** GET /orders/:id/adjustment/payment — VietQR for the extra amount of an accepted adjustment. */
+export interface AdjustmentPaymentInstructions {
+  orderId: string;
+  orderCode: string;
+  adjustmentNumber: number;
+  amount: number;
+  reference: string;
+  bank: { bankBin: string; bankName: string; accountNumber: string; accountName: string };
+  status: 'PENDING' | 'AWAITING_CONFIRMATION' | 'COMPLETED';
+  payable: boolean;
+  qrPayload: string | null;
+  qrError?: string;
+  customerReportedAt?: string;
+  completedAt?: string;
 }
