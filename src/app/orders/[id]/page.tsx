@@ -186,10 +186,25 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
           </Stack>
           <Divider sx={{ mb: 2 }} />
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-            {(order.shippingFee ?? 0) > 0 && (
+            {(order.discountAmount ?? 0) > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="body2" color="text.secondary">Giảm giá</Typography>
+                <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>-{formatCurrency(order.discountAmount ?? 0)}</Typography>
+              </Box>
+            )}
+            {((order.shippingFee ?? 0) > 0 || (order.shippingDiscount ?? 0) > 0) && (
               <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                 <Typography variant="body2" color="text.secondary">Phí vận chuyển</Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600 }}>+{formatCurrency(order.shippingFee ?? 0)}</Typography>
+                {/* shippingFee is already net of the free-shipping code — show the original fee first. */}
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  +{formatCurrency((order.shippingFee ?? 0) + (order.shippingDiscount ?? 0))}
+                </Typography>
+              </Box>
+            )}
+            {(order.shippingDiscount ?? 0) > 0 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                <Typography variant="body2" color="text.secondary">Miễn phí vận chuyển</Typography>
+                <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>-{formatCurrency(order.shippingDiscount ?? 0)}</Typography>
               </Box>
             )}
             {(order.vatAmount ?? 0) > 0 && (

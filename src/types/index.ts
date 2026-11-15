@@ -154,7 +154,11 @@ export interface Order {
   };
   subtotal?: number;
   discountAmount?: number;
+  /** Charged shipping fee — already net of shippingDiscount. */
   shippingFee?: number;
+  /** Shipping fee waived by a free-shipping code. */
+  shippingDiscount?: number;
+  appliedCoupons?: AppliedCoupon[];
   /** First time the order was delivered — starts the 7-day return window. */
   deliveredAt?: string;
   returnRequest?: OrderReturnRequest;
@@ -346,7 +350,8 @@ export interface CustomOrder {
 
 // ── Promotions ────────────────────────────────────────────────────────────────
 
-export type DiscountType = 'percentage' | 'fixed';
+/** free_shipping waives the shipping fee (whole fee, or up to maxDiscountAmount); `value` is unused. */
+export type DiscountType = 'percentage' | 'fixed' | 'free_shipping';
 
 export interface Coupon {
   _id: string;
@@ -367,10 +372,24 @@ export interface AppliedCoupon {
   code: string;
   name: string;
   discountAmount: number;
+  /** 'order' = off the goods; 'shipping' = free-shipping code. Older orders have none ('order'). */
+  kind?: 'order' | 'shipping';
+}
+
+export interface RejectedCoupon {
+  code: string;
+  reason: string;
 }
 
 export interface ValidateCouponsResponse {
   appliedCoupons: AppliedCoupon[];
+  rejectedCoupons: RejectedCoupon[];
+  /** Discount on the goods only. */
   totalDiscount: number;
+  /** Goods total after totalDiscount (shipping excluded). */
   finalTotal: number;
+  /** Shipping fee waived by a free-shipping code. */
+  shippingDiscount: number;
+  /** Fee the free-shipping code was priced against (null: no address yet). */
+  shippingFee: number | null;
 }

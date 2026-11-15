@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -8,12 +8,11 @@ import dynamic from 'next/dynamic';
 import {
   Box, Container, Typography, Grid, Card, CardContent,
   TextField, Button, Divider, Stack, Alert, CircularProgress,
-  Chip, Checkbox, FormControlLabel, Radio, RadioGroup,
+  Checkbox, FormControlLabel, Radio, RadioGroup,
 } from '@mui/material';
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
-import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -31,6 +30,7 @@ import type {
 import AddressPicker, { type OldAddressSelection } from '@/components/AddressPicker';
 import EInvoiceRequestFields from '@/components/einvoice-request/EInvoiceRequestFields';
 import BankTransferPayment from '@/components/bank-transfer/BankTransferPayment';
+import CouponSection from '@/components/checkout/CouponSection';
 import {
   EMPTY_EINVOICE_REQUEST, toEInvoiceRequestPayload, validateEInvoiceRequest,
   type EInvoiceRequestErrors,
@@ -71,9 +71,11 @@ export default function CheckoutPage() {
   const [placedPaymentMethod, setPlacedPaymentMethod] = useState<PaymentMethod>('COD');
 
   // ── Coupon state ──────────────────────────────────────────────────────────
+  // Codes the customer picked/typed; re-validated whenever they, the address or the cart change.
   const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
   const [validateResult, setValidateResult] = useState<ValidateCouponsResponse | null>(null);
   const [isValidating, setIsValidating] = useState(false);
+  const validateSeq = useRef(0);
 
   // ── VAT e-invoice request ─────────────────────────────────────────────────
   const [wantsEInvoice, setWantsEInvoice] = useState(false);
@@ -146,31 +148,23 @@ export default function CheckoutPage() {
       },
     });
 
-  // Toggle coupon selection; reset validate result when selection changes
-  function toggleCoupon(code: string) {
-    setValidateResult(null);
-    setSelectedCodes((prev) =>
-      prev.includes(code) ? prev.filter((c) => c !== code) : [...prev, code],
-    );
+  function addCoupon(code: string) {
+    if (selectedCodes.includes(code)) {
+      toast('Mã này đã được thêm');
+      return;
+    }
+    setSelectedCodes((prev) => [...prev, code]);
   }
 
-  async function handleApplyCoupons() {
-    if (!selectedCodes.length) return;
-    setIsValidating(true);
-    try {
-      const res = await api.post<ApiResponse<ValidateCouponsResponse>>('/promotions/validate', {
-        couponCodes: selectedCodes,
-        orderTotal: total(),
-      });
-      setValidateResult(res.data.data);
-    } catch {
-      toast.error('Không thể kiểm tra mã giảm giá');
-    } finally {
-      setIsValidating(false);
-    }
+  function removeCoupon(code: string) {
+    setSelectedCodes((prev) => prev.filter((c) => c !== code));
   }
 
   const onSubmit = async (data: ShippingForm) => {
+    if (isValidating) {
+      toast('Đang kiểm tra mã giảm giá, vui lòng đợi giây lát');
+      return;
+    }
     if (!acceptTerms) {
       setTermsError(true);
       toast.error('Vui lòng đồng ý với Điều khoản dịch vụ và Chính sách bảo mật');
@@ -246,6 +240,46 @@ export default function CheckoutPage() {
   // Same fee rule as the backend, so the total shown is the total charged (prices include VAT).
   const selectedCity = watch('city');
   const shippingFee = selectedCity ? computeShippingFee(selectedCity) : 0;
+  const cartTotal = total();
+
+  // Server-side check of the selected codes. The city matters for free-shipping codes (the server
+  // prices them against its own fee for that province); stale responses are dropped.
+  useEffect(() => {
+    const seq = ++validateSeq.current;
+    if (!selectedCodes.length) {
+      setValidateResult(null);
+      setIsValidating(false);
+      return;
+    }
+    setIsValidating(true);
+    const timer = setTimeout(async () => {
+      try {
+        const res = await api.post<ApiResponse<ValidateCouponsResponse>>('/promotions/validate', {
+          couponCodes: selectedCodes,
+          orderTotal: cartTotal,
+          ...(selectedCity ? { city: selectedCity } : {}),
+        });
+        if (seq === validateSeq.current) setValidateResult(res.data.data);
+      } catch {
+        if (seq !== validateSeq.current) return;
+        setValidateResult({
+          appliedCoupons: [],
+          rejectedCoupons: selectedCodes.map((code) => ({ code, reason: 'Không thể kiểm tra mã, vui lòng thử lại' })),
+          totalDiscount: 0,
+          finalTotal: cartTotal,
+          shippingDiscount: 0,
+          shippingFee: null,
+        });
+      } finally {
+        if (seq === validateSeq.current) setIsValidating(false);
+      }
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [selectedCodes, selectedCity, cartTotal]);
+
+  const goodsDiscount = validateResult?.totalDiscount ?? 0;
+  const shippingDiscount = selectedCity ? Math.min(validateResult?.shippingDiscount ?? 0, shippingFee) : 0;
+  const grandTotal = (validateResult ? validateResult.finalTotal : cartTotal) + shippingFee - shippingDiscount;
 
   if (!mounted) return null;
   if (!isAuthenticated) return (
@@ -394,91 +428,14 @@ export default function CheckoutPage() {
             )}
 
             {/* Section 3 — Mã giảm giá */}
-            {coupons.length > 0 && (
-              <Card variant="outlined" sx={{ borderRadius: 3, mt: 3 }}>
-                <CardContent sx={{ p: 3 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                    <LocalOfferOutlinedIcon sx={{ fontSize: 20, color: 'primary.main' }} />
-                    <Typography variant="h6" sx={{ fontWeight: 700 }}>Mã giảm giá</Typography>
-                  </Box>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Chọn mã bạn muốn áp dụng, sau đó nhấn <strong>Áp dụng</strong> để kiểm tra
-                  </Typography>
-
-                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
-                    {coupons.map((c) => {
-                      const selected = selectedCodes.includes(c.code);
-                      const wasApplied = validateResult?.appliedCoupons.some((a) => a.code === c.code);
-                      return (
-                        <Chip
-                          key={c.code}
-                          label={
-                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', py: 0.5 }}>
-                              <Typography variant="caption" sx={{ fontWeight: 700, fontFamily: 'monospace', lineHeight: 1.3, fontSize: '0.8rem' }}>
-                                {c.code}
-                              </Typography>
-                              <Typography variant="caption" sx={{ fontSize: '0.7rem', color: selected ? 'inherit' : 'text.secondary', lineHeight: 1.4 }}>
-                                {c.type === 'percentage' ? `-${c.value}%` : `-${c.value.toLocaleString('vi-VN')}₫`}
-                                {c.maxDiscountAmount > 0 && ` · Giảm tối đa ${(c.maxDiscountAmount / 1000).toFixed(0)}k`}
-                              </Typography>
-                              {c.minOrderValue > 0 && (
-                                <Typography variant="caption" sx={{ fontSize: '0.65rem', color: selected ? 'inherit' : 'text.disabled', lineHeight: 1.3 }}>
-                                  Đơn tối thiểu {c.minOrderValue.toLocaleString('vi-VN')}₫
-                                </Typography>
-                              )}
-                            </Box>
-                          }
-                          onClick={() => toggleCoupon(c.code)}
-                          color={wasApplied ? 'success' : selected ? 'primary' : 'default'}
-                          variant={selected ? 'filled' : 'outlined'}
-                          sx={{ height: 'auto', py: 0.75, cursor: 'pointer', borderRadius: '20px !important' }}
-                        />
-                      );
-                    })}
-                  </Box>
-
-                  {selectedCodes.length > 0 && (
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={handleApplyCoupons}
-                      disabled={isValidating}
-                      sx={{ borderRadius: 2, textTransform: 'none', fontWeight: 600, px: 3 }}
-                    >
-                      {isValidating
-                        ? <><CircularProgress size={14} sx={{ mr: 1 }} />Đang kiểm tra...</>
-                        : 'Áp dụng mã giảm giá'}
-                    </Button>
-                  )}
-
-                  {validateResult && (
-                    <Box sx={{ mt: 2, p: 2, bgcolor: validateResult.appliedCoupons.length > 0 ? 'success.50' : 'grey.50', borderRadius: 2, border: '1px solid', borderColor: validateResult.appliedCoupons.length > 0 ? 'success.200' : 'grey.200' }}>
-                      {validateResult.appliedCoupons.length > 0 ? (
-                        <Stack spacing={0.5}>
-                          {validateResult.appliedCoupons.map((a) => (
-                            <Box key={a.code} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
-                                🎉 {a.name}
-                              </Typography>
-                              <Typography variant="body2" color="success.main" sx={{ fontWeight: 700 }}>
-                                -{a.discountAmount.toLocaleString('vi-VN')}₫
-                              </Typography>
-                            </Box>
-                          ))}
-                          <Typography variant="caption" color="success.dark" sx={{ pt: 0.5, borderTop: '1px dashed', borderColor: 'success.200' }}>
-                            Tổng tiết kiệm: <strong>-{validateResult.totalDiscount.toLocaleString('vi-VN')}₫</strong>
-                          </Typography>
-                        </Stack>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">
-                          Không có mã nào áp dụng được cho đơn hàng này
-                        </Typography>
-                      )}
-                    </Box>
-                  )}
-                </CardContent>
-              </Card>
-            )}
+            <CouponSection
+              coupons={coupons}
+              selectedCodes={selectedCodes}
+              validateResult={validateResult}
+              isValidating={isValidating}
+              onAdd={addCoupon}
+              onRemove={removeCoupon}
+            />
 
             {/* Section 4 — Ghi chú đơn hàng */}
             <Card variant="outlined" sx={{ borderRadius: 3, mt: 3 }}>
@@ -568,13 +525,13 @@ export default function CheckoutPage() {
                 <Stack spacing={1} sx={{ mb: 2.5 }}>
                   <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Typography variant="body2" color="text.secondary">Tạm tính</Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{formatCurrency(total())}</Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 500 }}>{formatCurrency(cartTotal)}</Typography>
                   </Box>
-                  {validateResult && validateResult.totalDiscount > 0 && (
+                  {goodsDiscount > 0 && (
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Typography variant="body2" color="success.main">Giảm giá</Typography>
                       <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
-                        -{formatCurrency(validateResult.totalDiscount)}
+                        -{formatCurrency(goodsDiscount)}
                       </Typography>
                     </Box>
                   )}
@@ -586,6 +543,14 @@ export default function CheckoutPage() {
                       <Typography variant="body2" color="text.secondary">Chọn địa chỉ giao hàng</Typography>
                     )}
                   </Box>
+                  {shippingDiscount > 0 && (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2" color="success.main">Miễn phí vận chuyển</Typography>
+                      <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
+                        -{formatCurrency(shippingDiscount)}
+                      </Typography>
+                    </Box>
+                  )}
                 </Stack>
 
                 <Divider sx={{ mb: 2 }} />
@@ -593,7 +558,7 @@ export default function CheckoutPage() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
                   <Typography sx={{ fontWeight: 700 }}>Tổng cộng</Typography>
                   <Typography color="primary.main" variant="h6" sx={{ fontWeight: 700 }}>
-                    {formatCurrency((validateResult ? validateResult.finalTotal : total()) + shippingFee)}
+                    {formatCurrency(grandTotal)}
                   </Typography>
                 </Box>
 
@@ -624,7 +589,7 @@ export default function CheckoutPage() {
 
                 <Button
                   type="submit" fullWidth variant="contained" size="large"
-                  disabled={isSubmitting} sx={{ py: 1.5, fontWeight: 600 }}
+                  disabled={isSubmitting || isValidating} sx={{ py: 1.5, fontWeight: 600 }}
                 >
                   {isSubmitting
                     ? <CircularProgress size={22} color="inherit" />
