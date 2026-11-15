@@ -16,6 +16,7 @@ import InventoryOutlinedIcon from '@mui/icons-material/InventoryOutlined';
 import PlayCircleOutlineIcon from '@mui/icons-material/PlayCircleOutlined';
 import { useCartStore } from '@/lib/store/cart.store';
 import { formatCurrency } from '@/lib/utils';
+import { priceFor, priceRange } from '@/lib/variant-price';
 import QuantityStepper from '@/components/ui/QuantityStepper';
 import type { Product } from '@/types';
 import toast from 'react-hot-toast';
@@ -79,6 +80,10 @@ export function ProductDetailClient({ product }: { product: Product }) {
   const addItem = useCartStore((s) => s.addItem);
 
   const selectedColor = selectedColorIdx !== null ? colors[selectedColorIdx] : undefined;
+  // Giá theo phân loại: price of the current color/size choice (product price if not set).
+  const price = priceFor(product, selectedColor?.name, selectedSize ?? undefined);
+  const range = priceRange(product);
+  const hasPriceRange = range.min !== range.max;
   const thumbRefs = useRef<(HTMLElement | null)[]>([]);
 
   // Single media list for the gallery: video always first, then every default image,
@@ -108,7 +113,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
       productName: product.name,
       productImage: (selectedColor?.images[0] || product.images?.[0]) || '',
       quantity,
-      price: product.finalPrice,
+      price: price.finalPrice,
       slug: product.slug,
       ...(selectedColor ? { color: selectedColor.name } : {}),
       ...(selectedSize ? { size: selectedSize } : {}),
@@ -117,7 +122,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
   };
 
   const outOfStock = product.stock === 0;
-  const hasDiscount = product.discountPercent > 0;
+  const hasDiscount = product.discountPercent > 0 && price.sellingPrice > price.finalPrice;
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 4, md: 7 } }}>
@@ -184,10 +189,15 @@ export function ProductDetailClient({ product }: { product: Product }) {
           )}
 
           <Stack direction="row" spacing={2} sx={{ mb: 1, alignItems: 'baseline'  }}>
-            <Typography variant="h4" color="primary.main" sx={{ fontWeight: 700 }}>{formatCurrency(product.finalPrice)}</Typography>
-            {hasDiscount && <Typography variant="h6" color="text.disabled" sx={{ textDecoration: 'line-through' }}>{formatCurrency(product.sellingPrice)}</Typography>}
+            <Typography variant="h4" color="primary.main" sx={{ fontWeight: 700 }}>{formatCurrency(price.finalPrice)}</Typography>
+            {hasDiscount && <Typography variant="h6" color="text.disabled" sx={{ textDecoration: 'line-through' }}>{formatCurrency(price.sellingPrice)}</Typography>}
           </Stack>
-          {hasDiscount && <Typography variant="body2" color="success.main" sx={{ mb: 3, fontWeight: 600  }}>Tiết kiệm {product.discountPercent}% · {formatCurrency(product.sellingPrice - product.finalPrice)}</Typography>}
+          {hasPriceRange && (
+            <Typography variant="body2" color="text.secondary" sx={{ mb: hasDiscount ? 0.5 : 3 }}>
+              Giá theo phân loại: {formatCurrency(range.min)} – {formatCurrency(range.max)}
+            </Typography>
+          )}
+          {hasDiscount && <Typography variant="body2" color="success.main" sx={{ mb: 3, fontWeight: 600  }}>Tiết kiệm {product.discountPercent}% · {formatCurrency(price.sellingPrice - price.finalPrice)}</Typography>}
 
           <Stack direction="row" spacing={1.5} sx={{ mb: 4, alignItems: 'center'  }}>
             <Chip

@@ -45,6 +45,15 @@ export interface ProductSocial {
   link?: string;
 }
 
+/** Price of one color/size combination. */
+export interface ProductVariantPrice {
+  color?: string;
+  size?: string;
+  sellingPrice: number;
+  finalPrice: number;
+  sku?: string;
+}
+
 export interface Product {
   _id: string;
   name: string;
@@ -56,6 +65,8 @@ export interface Product {
   colors: ProductColor[];
   /** Selectable size labels. Empty = product has no size options. */
   sizes: string[];
+  /** Per color/size prices (giá theo phân loại). Missing/empty = every option sells at finalPrice. */
+  variants?: ProductVariantPrice[];
   /** Linked social/marketplace channels for this product. */
   socials: ProductSocial[];
   category: Category | string;

@@ -8,6 +8,7 @@ import {
 } from '@mui/material';
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
 import { formatCurrency } from '@/lib/utils';
+import { priceRange } from '@/lib/variant-price';
 import { useCartStore } from '@/lib/store/cart.store';
 import type { Product } from '@/types';
 import toast from 'react-hot-toast';
@@ -38,6 +39,9 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   const hasDiscount = product.discountPercent > 0;
+  // Products priced per variant show the full range (e.g. "120.000 ₫ – 250.000 ₫").
+  const range = priceRange(product);
+  const hasPriceRange = range.min !== range.max;
   const outOfStock = product.stock === 0;
 
   return (
@@ -92,9 +96,9 @@ export function ProductCard({ product }: ProductCardProps) {
           </Typography>
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Typography variant="body2" color="primary.main" sx={{ fontWeight: 700 }}>
-              {formatCurrency(product.finalPrice)}
+              {hasPriceRange ? `${formatCurrency(range.min)} – ${formatCurrency(range.max)}` : formatCurrency(product.finalPrice)}
             </Typography>
-            {hasDiscount && (
+            {hasDiscount && !hasPriceRange && (
               <Typography variant="caption" color="text.disabled" sx={{ textDecoration: 'line-through' }}>
                 {formatCurrency(product.sellingPrice)}
               </Typography>
