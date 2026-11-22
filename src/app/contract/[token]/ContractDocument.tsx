@@ -101,8 +101,33 @@ export interface PublicContract {
   unsignedPdfUrl?: string;
   partyBSignature?: PartyBSignature;
   partyASignature?: PartyASignature;
+  /** Phụ lục sửa đổi, bổ sung đã chốt / đã hủy (bản nháp không trả về) */
+  addenda?: PublicContractAddendum[];
+  /** Tổng giá trị phụ lục đã chốt */
+  addendaAmount?: number;
+  /** Tổng thanh toán = totalAmount (HĐ gốc) + addendaAmount */
+  grandTotalAmount?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface PublicContractAddendum {
+  _id: string;
+  addendumNo: number;
+  status: 'FINAL' | 'CANCELLED';
+  title: string;
+  content: string;
+  items: Omit<PublicContractItem, 'productId'>[];
+  amount: number;
+  paymentSchedule: PaymentInstallment[];
+  deliveryDate?: string;
+  signDate?: string;
+  finalizedAt?: string;
+  cancelledAt?: string;
+  cancelReason?: string;
+  hasPdf: boolean;
+  partyBSignature?: PartyBSignature;
+  partyASignature?: PartyASignature;
 }
 
 // ── Đọc số tiền thành chữ ─────────────────────────────────────────────────────

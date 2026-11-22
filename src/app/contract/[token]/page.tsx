@@ -1,8 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
-import axios from 'axios';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 import {
   Alert, Box, Button, Chip, CircularProgress, Container, Dialog, DialogActions,
@@ -16,9 +14,6 @@ import SendOutlinedIcon from '@mui/icons-material/SendOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
 import DownloadOutlinedIcon from '@mui/icons-material/DownloadOutlined';
-import UploadFileOutlinedIcon from '@mui/icons-material/UploadFileOutlined';
-import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
-import GestureOutlinedIcon from '@mui/icons-material/GestureOutlined';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import { formatCurrency } from '@/lib/utils';
 import ContractDocument, {
@@ -26,21 +21,11 @@ import ContractDocument, {
   type PublicContract,
 } from './ContractDocument';
 import JoyloveAdvanceDocument from './JoyloveAdvanceDocument';
-import SignatureCanvas from './SignatureCanvas';
+import DocumentSigningSection from './DocumentSigningSection';
+import ContractAddenda from './ContractAddenda';
 import PdfDocumentViewer from '@/components/pdf/PdfDocumentViewer';
 import ContractEInvoices, { type ContractEInvoice } from './ContractEInvoices';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-
-/**
- * Axios riêng (không dùng interceptor chung) — trang này xác thực bằng
- * mã bảo mật hợp đồng, không phụ thuộc phiên đăng nhập của user.
- */
-const contractApi = axios.create({
-  baseURL: API_URL,
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 15000,
-});
+import { API_URL, contractApi, downloadBlob, errMsg } from './contractApi';
 
 interface ContractMeta {
   contractNo: string;
@@ -65,212 +50,7 @@ const EMPTY_PARTY: ContractParty = {
   name: '', address: '', representative: '', position: '', phone: '', email: '', taxCode: '',
 };
 
-function errMsg(err: unknown, fallback: string): string {
-  const msg = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
-  return Array.isArray(msg) ? msg[0] : msg || fallback;
-}
 
-async function downloadBlob(
-  url: string,
-  filename: string,
-  headers: Record<string, string> | undefined,
-) {
-  const res = await contractApi.get(url, { headers, responseType: 'blob' });
-  const blobUrl = window.URL.createObjectURL(res.data as Blob);
-  const a = document.createElement('a');
-  a.href = blobUrl;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  window.URL.revokeObjectURL(blobUrl);
-}
-
-// ── Ký hợp đồng (Bên A) ───────────────────────────────────────────────────────
-
-function DocumentSigningSection({
-  token, contract, authHeaders, onSigned,
-}: {
-  token: string;
-  contract: PublicContract;
-  authHeaders: Record<string, string> | undefined;
-  onSigned: (c: PublicContract) => void;
-}) {
-  const [mode, setMode] = useState<'choose' | 'pki' | 'simple'>('choose');
-  const [uploadingPki, setUploadingPki] = useState(false);
-  const [submittingSimple, setSubmittingSimple] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
-  const partyA = contract.partyASignature;
-
-  const uploadPki = async (file: File) => {
-    setUploadingPki(true);
-    try {
-      const form = new FormData();
-      form.append('file', file);
-      const res = await contractApi.post(
-        `/contracts/public/${token}/document/party-a-signed`,
-        form,
-        { headers: { ...authHeaders, 'Content-Type': 'multipart/form-data' } },
-      );
-      onSigned(res.data.data);
-      toast.success('Đã xác thực chữ ký số của bạn');
-    } catch (err) {
-      toast.error(errMsg(err, 'Tải lên file đã ký thất bại'));
-    } finally {
-      setUploadingPki(false);
-    }
-  };
-
-  const submitSimple = async (canvasImageBase64: string, confirmedName: string) => {
-    setSubmittingSimple(true);
-    try {
-      const res = await contractApi.post(
-        `/contracts/public/${token}/document/party-a-simple-signature`,
-        { canvasImageBase64, confirmedName },
-        { headers: authHeaders },
-      );
-      onSigned(res.data.data);
-      toast.success('Đã ghi nhận xác nhận của bạn');
-    } catch (err) {
-      toast.error(errMsg(err, 'Xác nhận chữ ký thất bại'));
-    } finally {
-      setSubmittingSimple(false);
-    }
-  };
-
-  if (partyA?.status === 'VERIFIED') {
-    return (
-      <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, borderRadius: 4, border: '1px solid', borderColor: 'grey.200' }}>
-        <Typography sx={{ fontWeight: 700, mb: 1.5 }}>Chữ ký của bạn (Bên A)</Typography>
-        {partyA.mode === 'SIMPLE' ? (
-          <Stack spacing={1}>
-            <Alert severity="warning" sx={{ borderRadius: 3 }}>
-              Chữ ký điện tử đơn giản — không phải chữ ký số PKI.
-            </Alert>
-            <Typography variant="body2">
-              Xác nhận bởi <b>{partyA.simpleSignature?.confirmedName}</b>
-              {partyA.simpleSignature?.confirmedAt
-                ? ` lúc ${new Date(partyA.simpleSignature.confirmedAt).toLocaleString('vi-VN')}` : ''}
-            </Typography>
-            {partyA.simpleSignature?.canvasImageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={partyA.simpleSignature.canvasImageUrl}
-                alt="Chữ ký của bạn"
-                style={{ height: 60, border: '1px solid #e5e7eb', borderRadius: 8, background: '#fff' }}
-              />
-            )}
-          </Stack>
-        ) : (
-          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <VerifiedUserOutlinedIcon color="success" fontSize="small" />
-            <Typography variant="body2">
-              Đã ký bằng chữ ký số — {partyA.signerCertCN || 'đã xác thực'}
-            </Typography>
-          </Stack>
-        )}
-      </Paper>
-    );
-  }
-
-  return (
-    <Paper elevation={0} sx={{ p: { xs: 2, md: 3 }, borderRadius: 4, border: '1px solid', borderColor: 'grey.200' }}>
-      <Stack direction="row" spacing={1} sx={{ alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', mb: 0.5 }}>
-        <Typography sx={{ fontWeight: 700 }}>Ký hợp đồng</Typography>
-        <Link href="/contract/huong-dan-ky" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-          <Typography variant="body2" sx={{ color: 'primary.main', fontWeight: 600 }}>
-            Xem hướng dẫn ký →
-          </Typography>
-        </Link>
-      </Stack>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Cửa hàng đã ký hợp đồng này bằng chữ ký số. Bạn có thể ký xác nhận bằng chữ ký số của
-        mình (nếu có USB token), hoặc ký xác nhận đơn giản.
-      </Typography>
-
-      {mode === 'choose' && (
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-          <Button
-            variant="outlined"
-            startIcon={<VerifiedUserOutlinedIcon />}
-            onClick={() => setMode('pki')}
-            sx={{ textTransform: 'none', borderRadius: 3, flex: 1 }}
-          >
-            Tôi có chữ ký số (USB token)
-          </Button>
-          <Button
-            variant="outlined"
-            startIcon={<GestureOutlinedIcon />}
-            onClick={() => setMode('simple')}
-            sx={{ textTransform: 'none', borderRadius: 3, flex: 1 }}
-          >
-            Tôi không có — ký đơn giản
-          </Button>
-        </Stack>
-      )}
-
-      {mode === 'pki' && (
-        <Stack spacing={1.5}>
-          <Typography variant="body2" color="text.secondary">
-            1. Tải file PDF bên dưới về máy. 2. Ký bằng phần mềm ký số của bạn (đã cắm USB token).
-            3. Tải file đã ký lên đây.
-          </Typography>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <Button
-              variant="outlined"
-              startIcon={<DownloadOutlinedIcon />}
-              onClick={() => downloadBlob(
-                `/contracts/public/${token}/document/to-sign`,
-                `hop-dong-${contract.contractNo.replace(/\//g, '-')}-can-ky.pdf`,
-                authHeaders,
-              )}
-              sx={{ textTransform: 'none', borderRadius: 3 }}
-            >
-              Tải file cần ký
-            </Button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/pdf"
-              hidden
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) uploadPki(file);
-                e.target.value = '';
-              }}
-            />
-            <Button
-              variant="contained"
-              startIcon={<UploadFileOutlinedIcon />}
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploadingPki}
-              sx={{ textTransform: 'none', borderRadius: 3, fontWeight: 600 }}
-            >
-              {uploadingPki ? 'Đang tải lên & xác thực...' : 'Tải lên file đã ký'}
-            </Button>
-          </Stack>
-          <Button size="small" onClick={() => setMode('choose')} sx={{ textTransform: 'none', alignSelf: 'flex-start' }}>
-            ← Quay lại
-          </Button>
-        </Stack>
-      )}
-
-      {mode === 'simple' && (
-        <Stack spacing={1.5}>
-          <SignatureCanvas
-            defaultName={contract.partyA?.representative || contract.partyA?.name}
-            submitting={submittingSimple}
-            onSubmit={submitSimple}
-          />
-          <Button size="small" onClick={() => setMode('choose')} sx={{ textTransform: 'none', alignSelf: 'flex-start' }}>
-            ← Quay lại
-          </Button>
-        </Stack>
-      )}
-    </Paper>
-  );
-}
 
 export default function ContractAccessPage({ params }: { params: { token: string } }) {
   const token = params.token;
@@ -684,8 +464,10 @@ export default function ContractAccessPage({ params }: { params: { token: string
         {/* Ký hợp đồng — chỉ khi Bên B đã ký số hợp lệ */}
         {['FINAL', 'SUCCESS'].includes(contract.status) && contract.partyBSignature?.status === 'VERIFIED' && (
           <DocumentSigningSection
-            token={token}
-            contract={contract}
+            basePath={`/contracts/public/${token}`}
+            partyASignature={contract.partyASignature}
+            downloadFileName={`hop-dong-${contract.contractNo.replace(/\//g, '-')}-can-ky.pdf`}
+            defaultSignerName={contract.partyA?.representative || contract.partyA?.name}
             authHeaders={authHeaders}
             onSigned={applyContract}
           />
@@ -721,12 +503,22 @@ export default function ContractAccessPage({ params }: { params: { token: string
               </Stack>
             ))}
             <Stack direction="row" sx={{ justifyContent: 'space-between', pt: 0.5 }}>
-              <Typography sx={{ fontWeight: 700 }}>Tổng giá trị</Typography>
+              <Typography sx={{ fontWeight: 700 }}>
+                {(contract.addendaAmount ?? 0) > 0 ? 'Giá trị hợp đồng ban đầu' : 'Tổng giá trị'}
+              </Typography>
               <Typography sx={{ fontWeight: 800, color: '#2563EB' }}>{formatCurrency(contract.totalAmount)}</Typography>
             </Stack>
           </Stack>
         </Paper>
         )}
+
+        {/* Phụ lục hợp đồng (mua thêm / gia công thêm sau khi đã chốt) */}
+        <ContractAddenda
+          token={token}
+          contract={contract}
+          authHeaders={authHeaders}
+          onSigned={applyContract}
+        />
 
         {/* Form Bên A (chỉ khi NEW) */}
         {isNew && (
