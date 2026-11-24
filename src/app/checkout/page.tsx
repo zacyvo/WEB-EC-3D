@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -198,8 +198,9 @@ export default function CheckoutPage() {
         },
         ...(data.customerNote?.trim() ? { customerNote: data.customerNote.trim() } : {}),
         // Pass the validated applied coupon codes so backend can re-verify + track usage
+        // (deduped: a code bundling free shipping is applied twice — goods + shipping).
         ...(validateResult?.appliedCoupons.length
-          ? { couponCodes: validateResult.appliedCoupons.map((c) => c.code) }
+          ? { couponCodes: [...new Set(validateResult.appliedCoupons.map((c) => c.code))] }
           : {}),
         ...(wantsEInvoice ? { einvoiceRequest: toEInvoiceRequestPayload(einvoice) } : {}),
         paymentMethod: effectivePaymentMethod,
@@ -259,6 +260,11 @@ export default function CheckoutPage() {
   const selectedCity = watch('city');
   const shippingFee = selectedCity ? computeShippingFee(selectedCity) : 0;
   const cartTotal = total();
+  // Memoized on the store's items array so the coupon check only re-runs when the cart changes.
+  const cartLines = useMemo(
+    () => items.map((i) => ({ productId: i.productId, quantity: i.quantity, subtotal: i.price * i.quantity })),
+    [items],
+  );
 
   // Server-side check of the selected codes. The city matters for free-shipping codes (the server
   // prices them against its own fee for that province); stale responses are dropped.
@@ -276,6 +282,9 @@ export default function CheckoutPage() {
           couponCodes: selectedCodes,
           orderTotal: cartTotal,
           ...(selectedCity ? { city: selectedCity } : {}),
+          // Program conditions: product/category scope, item count, payment method.
+          items: cartLines,
+          paymentMethod: effectivePaymentMethod,
         });
         if (seq === validateSeq.current) setValidateResult(res.data.data);
       } catch {
@@ -293,7 +302,7 @@ export default function CheckoutPage() {
       }
     }, 250);
     return () => clearTimeout(timer);
-  }, [selectedCodes, selectedCity, cartTotal, isAuthenticated]);
+  }, [selectedCodes, selectedCity, cartTotal, isAuthenticated, cartLines, effectivePaymentMethod]);
 
   const goodsDiscount = validateResult?.totalDiscount ?? 0;
   const shippingDiscount = selectedCity ? Math.min(validateResult?.shippingDiscount ?? 0, shippingFee) : 0;

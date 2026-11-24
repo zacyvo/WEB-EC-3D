@@ -35,7 +35,18 @@ export default function CouponSection({ coupons, selectedCodes, validateResult, 
     setInput('');
   }
 
-  const appliedByCode = new Map((validateResult?.appliedCoupons ?? []).map((a) => [a.code, a]));
+  // A goods code bundling free shipping comes back twice (kind 'order' + 'shipping'): show one row.
+  const appliedByCode = new Map<string, { name: string; discountAmount: number; goods: boolean; shipping: boolean }>();
+  for (const a of validateResult?.appliedCoupons ?? []) {
+    const prev = appliedByCode.get(a.code);
+    const isShip = a.kind === 'shipping';
+    appliedByCode.set(a.code, {
+      name: a.name,
+      discountAmount: (prev?.discountAmount ?? 0) + a.discountAmount,
+      goods: (prev?.goods ?? false) || !isShip,
+      shipping: (prev?.shipping ?? false) || isShip,
+    });
+  }
   const rejectedByCode = new Map((validateResult?.rejectedCoupons ?? []).map((r) => [r.code, r]));
   const totalSaved = (validateResult?.totalDiscount ?? 0) + (validateResult?.shippingDiscount ?? 0);
 
@@ -86,7 +97,7 @@ export default function CouponSection({ coupons, selectedCodes, validateResult, 
                 return (
                   <Chip
                     key={c.code}
-                    icon={c.type === 'free_shipping' ? <LocalShippingOutlinedIcon /> : undefined}
+                    icon={c.type === 'free_shipping' || c.includeFreeShipping ? <LocalShippingOutlinedIcon /> : undefined}
                     label={
                       <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', py: 0.5 }}>
                         <Typography variant="caption" sx={{ fontWeight: 700, fontFamily: 'monospace', lineHeight: 1.3, fontSize: '0.8rem' }}>
@@ -95,9 +106,12 @@ export default function CouponSection({ coupons, selectedCodes, validateResult, 
                         <Typography variant="caption" sx={{ fontSize: '0.7rem', color: selected ? 'inherit' : 'text.secondary', lineHeight: 1.4 }}>
                           {describeCoupon(c)}
                         </Typography>
-                        {c.minOrderValue > 0 && (
-                          <Typography variant="caption" sx={{ fontSize: '0.65rem', color: selected ? 'inherit' : 'text.disabled', lineHeight: 1.3 }}>
-                            Đơn tối thiểu {c.minOrderValue.toLocaleString('vi-VN')}₫
+                        {(c.minOrderValue > 0 || !!c.conditionTexts?.length) && (
+                          <Typography variant="caption" sx={{ fontSize: '0.65rem', color: selected ? 'inherit' : 'text.disabled', lineHeight: 1.3, whiteSpace: 'normal', maxWidth: 260 }}>
+                            {[
+                              ...(c.minOrderValue > 0 ? [`Đơn tối thiểu ${c.minOrderValue.toLocaleString('vi-VN')}₫`] : []),
+                              ...(c.conditionTexts ?? []),
+                            ].join(' · ')}
                           </Typography>
                         )}
                       </Box>
@@ -119,7 +133,8 @@ export default function CouponSection({ coupons, selectedCodes, validateResult, 
               const applied = appliedByCode.get(code);
               const rejected = rejectedByCode.get(code);
               const pending = !applied && !rejected;
-              const isShipping = applied?.kind === 'shipping';
+              const isShipping = !!applied?.shipping && !applied.goods;
+              const bundlesShipping = !!applied?.shipping && applied.goods;
               return (
                 <Box
                   key={code}
@@ -146,7 +161,11 @@ export default function CouponSection({ coupons, selectedCodes, validateResult, 
                         ? 'Đang kiểm tra...'
                         : applied
                           // Skip the suffix when the program name already says it ("Miễn phí vận chuyển").
-                          ? `${applied.name}${isShipping && !/vận chuyển|ship/i.test(applied.name) ? ' — miễn phí vận chuyển' : ''}`
+                          ? `${applied.name}${
+                              (isShipping || bundlesShipping) && !/vận chuyển|ship/i.test(applied.name)
+                                ? bundlesShipping ? ' — kèm miễn phí vận chuyển' : ' — miễn phí vận chuyển'
+                                : ''
+                            }`
                           : rejected!.reason}
                     </Typography>
                   </Box>

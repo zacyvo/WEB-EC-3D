@@ -387,6 +387,11 @@ export interface Coupon {
   minOrderValue: number;
   maxDiscountAmount: number;
   perUserUsageLimit: number;
+  /** percentage / fixed code that also waives the shipping fee. */
+  includeFreeShipping?: boolean;
+  freeShippingMaxAmount?: number;
+  /** Rules of the program ("Đơn hàng đầu tiên", "Thứ 6, Thứ 7"…). */
+  conditionTexts?: string[];
   startDate: string;
   endDate: string;
 }
