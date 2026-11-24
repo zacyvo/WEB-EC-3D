@@ -7,6 +7,8 @@ export const STORE = {
   website: 'https://www.luxe-glow.vn/',
   taxId: '079197022908',
   zalo: 'https://zalo.me/0909064680',
+  /** Zalo Official Account (trang OA chính thức của shop). */
+  zaloOa: 'https://zalo.me/3847812349808249397',
   facebook: 'https://www.facebook.com/share/1HraFSNqjd/?mibextid=wwXIfr',
   instagram: '',
   shopee: 'https://vn.shp.ee/MoBMsiLT',

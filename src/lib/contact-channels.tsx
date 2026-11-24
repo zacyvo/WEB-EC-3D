@@ -58,6 +58,18 @@ export const CONTACT_CHANNELS = [
     status: !!STORE.zalo
   },
   {
+    id: 'zalo-oa',
+    label: 'Zalo OA',
+    value: 'Luxe Glow Official',
+    desc: 'Quan tâm OA để nhận ưu đãi & tin mới',
+    href: STORE.zaloOa,
+    Icon: ZaloIcon,
+    color: '#0068FF',
+    bg: '#EAF3FF',
+    cta: 'Quan tâm OA',
+    status: !!STORE.zaloOa
+  },
+  {
     id: 'email',
     label: 'Email',
     value: STORE.email,
