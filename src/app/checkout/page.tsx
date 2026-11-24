@@ -123,10 +123,15 @@ export default function CheckoutPage() {
   const bankTransferAvailable = !!bankAvailability?.enabled;
   const effectivePaymentMethod: PaymentMethod = bankTransferAvailable ? paymentMethod : 'COD';
   const accountTypes = bankAvailability?.accountTypes ?? [];
+  // An e-invoice is issued by the Hộ kinh doanh, so such an order is paid into that account
+  // (the server enforces the same rule).
+  const einvoiceForcesBusiness = wantsEInvoice && accountTypes.includes('BUSINESS');
   // The chosen account if the shop currently offers it, else the shop's default (none = server decides).
-  const effectiveAccountType: PaymentAccountType | undefined = accountTypes.includes(paymentAccountType)
-    ? paymentAccountType
-    : bankAvailability?.defaultAccountType ?? undefined;
+  const effectiveAccountType: PaymentAccountType | undefined = einvoiceForcesBusiness
+    ? 'BUSINESS'
+    : accountTypes.includes(paymentAccountType)
+      ? paymentAccountType
+      : bankAvailability?.defaultAccountType ?? undefined;
 
   // Load available coupons for this user
   const { data: coupons = [] } = useQuery<Coupon[]>({
@@ -471,6 +476,7 @@ export default function CheckoutPage() {
                           <FormControlLabel
                             key={t}
                             value={t}
+                            disabled={einvoiceForcesBusiness && t !== 'BUSINESS'}
                             control={<Radio size="small" />}
                             label={
                               <Typography variant="body2">
@@ -483,6 +489,12 @@ export default function CheckoutPage() {
                           />
                         ))}
                       </RadioGroup>
+                      {einvoiceForcesBusiness && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                          Đơn có yêu cầu xuất hoá đơn điện tử sẽ chuyển khoản vào tài khoản Hộ kinh doanh Luxe Glow
+                          (đơn vị xuất hoá đơn).
+                        </Typography>
+                      )}
                     </Box>
                   )}
                   {paymentMethod === 'BANK_TRANSFER' && (
@@ -554,6 +566,12 @@ export default function CheckoutPage() {
                       }}
                       errors={einvoiceErrors}
                     />
+                    {effectivePaymentMethod === 'BANK_TRANSFER' && einvoiceForcesBusiness && (
+                      <Alert severity="info" sx={{ mt: 1.5, borderRadius: 2 }}>
+                        Khi yêu cầu hoá đơn, bạn chuyển khoản vào <strong>tài khoản Hộ kinh doanh Luxe Glow</strong> — mã QR
+                        sau khi đặt hàng sẽ dùng tài khoản này.
+                      </Alert>
+                    )}
                   </Box>
                 )}
               </CardContent>

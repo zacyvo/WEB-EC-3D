@@ -45,6 +45,8 @@ export default function EInvoiceRequestCard({ order }: { order: Order }) {
     onSuccess: (updated) => {
       queryClient.setQueryData(['order', order._id], updated);
       queryClient.invalidateQueries({ queryKey: ['orders'] });
+      // An unpaid bank transfer may have moved to the Hộ kinh doanh account → refresh the QR.
+      queryClient.invalidateQueries({ queryKey: ['order-payment', order._id] });
       toast.success('Đã gửi yêu cầu xuất hoá đơn. Shop sẽ xác nhận sớm.');
       setOpen(false);
     },
