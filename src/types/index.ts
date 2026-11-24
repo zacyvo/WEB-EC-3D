@@ -215,6 +215,11 @@ export interface OrderPayment {
 }
 
 /** GET /orders/:id/payment — what the payment section renders. */
+export interface PaymentAccountQr extends BankAccountInfo {
+  qrPayload: string | null;
+  qrError?: string;
+}
+
 export interface PaymentInstructions {
   orderId: string;
   orderCode: string;
@@ -225,7 +230,11 @@ export interface PaymentInstructions {
   amount: number;
   currency: string;
   reference: string;
+  /** Primary account (default tab; after "Tôi đã chuyển khoản", the one the customer chose). */
   bank: BankAccountInfo;
+  /** One QR per receiving account (personal, Hộ kinh doanh), generated together — one tab each.
+   * Absent from an older backend → only `bank` / `qrPayload`. */
+  accounts?: PaymentAccountQr[];
   payable: boolean;
   /** VietQR payload to render; null when nothing is left to pay or it couldn't be built. */
   qrPayload: string | null;

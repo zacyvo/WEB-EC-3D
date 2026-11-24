@@ -5,7 +5,7 @@ import Link from 'next/link';
 import QRCode from 'qrcode';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Skeleton, Stack, Typography,
+  Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Divider, Skeleton, Stack, Tab, Tabs, Typography,
 } from '@mui/material';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -15,8 +15,20 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { orderAccessHeaders, orderApi, orderLinkPath } from '@/lib/order-public-api';
 import { formatCurrency, formatDate } from '@/lib/utils';
-import type { ApiResponse, PaymentInstructions } from '@/types';
+import type { ApiResponse, PaymentAccountQr, PaymentAccountType, PaymentInstructions } from '@/types';
 import { PAYMENT_ACCOUNT_SHORT_LABEL } from '@/lib/bank-transfer';
+
+const TAB_LABEL: Record<PaymentAccountType, string> = {
+  PERSONAL: 'Tài khoản cá nhân',
+  BUSINESS: 'Tài khoản Hộ kinh doanh',
+};
+
+/** Accounts to show as tabs (an older backend only sends the primary one). */
+function accountsOf(p: PaymentInstructions): PaymentAccountQr[] {
+  return p.accounts?.length ? p.accounts : [{ ...p.bank, qrPayload: p.qrPayload, qrError: p.qrError }];
+}
+
+const accountKey = (a: PaymentAccountQr) => `${a.bankBin}:${a.accountNumber}`;
 
 const REPORTED_MESSAGE =
   'Luxe Glow đã nhận được yêu cầu xác nhận thanh toán. Chúng tôi sẽ kiểm tra và cập nhật trạng thái đơn hàng.';
@@ -78,8 +90,10 @@ function Row({ label, value, strong, mono }: { label: string; value: string; str
 }
 
 /**
- * "Thanh toán đơn hàng" for a VietQR bank-transfer order: QR (amount + transfer description
- * pre-filled), bank details with copy buttons, QR download and the "Tôi đã chuyển khoản" claim.
+ * "Thanh toán đơn hàng" for a VietQR bank-transfer order: one tab + QR per receiving account
+ * (personal / Hộ kinh doanh, all generated at once; amount + transfer description pre-filled),
+ * bank details with copy buttons, QR download and the "Tôi đã chuyển khoản" claim (which tells the
+ * shop the account of the selected tab).
  * Everything comes from GET /orders/:id/payment — the amount is never computed here. Without login
  * (guest checkout / "Link xem đơn") pass `publicAccess`: it then goes through
  * /orders/public/:token/payment with the link's session.
@@ -101,12 +115,16 @@ export default function BankTransferPayment({
     publicAccess
       ? (await orderApi.get<ApiResponse<PaymentInstructions>>(`/orders/public/${publicAccess.token}/payment`, orderAccessHeaders(publicAccess.jwt))).data.data
       : (await api.get<ApiResponse<PaymentInstructions>>(`/orders/${orderId}/payment`)).data.data;
-  const postReport = async () =>
-    publicAccess
-      ? (await orderApi.post<ApiResponse<PaymentInstructions>>(`/orders/public/${publicAccess.token}/payment/report`, {}, orderAccessHeaders(publicAccess.jwt))).data.data
-      : (await api.post<ApiResponse<PaymentInstructions>>(`/orders/${orderId}/payment/report`, {})).data.data;
-  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
-  const [qrRenderFailed, setQrRenderFailed] = useState(false);
+  const postReport = async (accountType?: PaymentAccountType) => {
+    const body = accountType ? { accountType } : {};
+    return publicAccess
+      ? (await orderApi.post<ApiResponse<PaymentInstructions>>(`/orders/public/${publicAccess.token}/payment/report`, body, orderAccessHeaders(publicAccess.jwt))).data.data
+      : (await api.post<ApiResponse<PaymentInstructions>>(`/orders/${orderId}/payment/report`, body)).data.data;
+  };
+  // Rendered QR images per account (all generated at once), and accounts whose QR failed to render.
+  const [qrImages, setQrImages] = useState<Record<string, string>>({});
+  const [qrFailed, setQrFailed] = useState<Record<string, boolean>>({});
+  const [tab, setTab] = useState(0);
 
   const { data: payment, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey,
@@ -116,16 +134,31 @@ export default function BankTransferPayment({
       q.state.data?.payable && q.state.data.verificationStatus === 'AWAITING_CONFIRMATION' ? 30_000 : false,
   });
 
+  const accounts = payment ? accountsOf(payment) : [];
+  const payloadsKey = accounts.map((a) => `${accountKey(a)}=${a.qrPayload ?? ''}`).join('|');
   useEffect(() => {
-    setQrDataUrl(null);
-    setQrRenderFailed(false);
-    if (!payment?.qrPayload) return;
+    setQrImages({});
+    setQrFailed({});
     let cancelled = false;
-    QRCode.toDataURL(payment.qrPayload, { margin: 2, width: 720, errorCorrectionLevel: 'M' })
-      .then((url) => { if (!cancelled) setQrDataUrl(url); })
-      .catch(() => { if (!cancelled) setQrRenderFailed(true); });
+    for (const acc of accounts) {
+      if (!acc.qrPayload) continue;
+      const key = accountKey(acc);
+      QRCode.toDataURL(acc.qrPayload, { margin: 2, width: 720, errorCorrectionLevel: 'M' })
+        .then((url) => { if (!cancelled) setQrImages((m) => ({ ...m, [key]: url })); })
+        .catch(() => { if (!cancelled) setQrFailed((m) => ({ ...m, [key]: true })); });
+    }
     return () => { cancelled = true; };
-  }, [payment?.qrPayload]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [payloadsKey]);
+
+  // Open on the primary account: personal by default, or the one the customer reported paying into.
+  const primaryKey = payment ? `${payment.bank.bankBin}:${payment.bank.accountNumber}` : '';
+  useEffect(() => {
+    if (!payment) return;
+    const i = accountsOf(payment).findIndex((a) => accountKey(a) === primaryKey);
+    setTab(i >= 0 ? i : 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [primaryKey, payloadsKey]);
 
   const seenRefreshKey = useRef(refreshKey);
   useEffect(() => {
@@ -163,15 +196,18 @@ export default function BankTransferPayment({
     else toast.error(`Không sao chép được — vui lòng ghi lại ${what}`);
   };
 
+  const selected: PaymentAccountQr | undefined = accounts[Math.min(tab, accounts.length - 1)];
+  const qrDataUrl = selected ? qrImages[accountKey(selected)] ?? null : null;
+
   const downloadQr = () => {
-    if (!qrDataUrl || !payment) {
+    if (!qrDataUrl || !payment || !selected) {
       toast.error('Không tải được mã QR');
       return;
     }
     try {
       const a = document.createElement('a');
       a.href = qrDataUrl;
-      a.download = `luxe-glow-${payment.reference}.png`;
+      a.download = `luxe-glow-${payment.reference}${selected.accountType ? `-${selected.accountType.toLowerCase()}` : ''}.png`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -184,7 +220,7 @@ export default function BankTransferPayment({
     return <Skeleton variant="rounded" height={420} sx={{ borderRadius: 3, mb: 2 }} />;
   }
 
-  if (isError || !payment) {
+  if (isError || !payment || !selected) {
     return (
       <Alert
         severity="error"
@@ -198,7 +234,10 @@ export default function BankTransferPayment({
 
   const chip = statusChip(payment);
   const awaiting = payment.verificationStatus === 'AWAITING_CONFIRMATION';
-  const qrUnavailable = payment.payable && (!payment.qrPayload || qrRenderFailed);
+  const qrUnavailable = payment.payable && (!selected.qrPayload || !!qrFailed[accountKey(selected)]);
+  const showTabs = accounts.length > 1;
+  const reportedLabel =
+    awaiting && showTabs && payment.bank.accountType ? ` — đã chuyển vào ${TAB_LABEL[payment.bank.accountType]}` : '';
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, mb: 2, borderColor: payment.payable ? 'primary.light' : undefined }}>
@@ -237,14 +276,29 @@ export default function BankTransferPayment({
         {payment.payable && (
           <>
             <Typography variant="body2" sx={{ mb: 2 }}>
-              Vui lòng quét mã QR bằng ứng dụng ngân hàng để thanh toán. Số tiền và nội dung chuyển khoản đã được điền sẵn.
+              {showTabs
+                ? 'Chọn tài khoản muốn chuyển, rồi quét mã QR bằng ứng dụng ngân hàng. Số tiền và nội dung chuyển khoản đã được điền sẵn.'
+                : 'Vui lòng quét mã QR bằng ứng dụng ngân hàng để thanh toán. Số tiền và nội dung chuyển khoản đã được điền sẵn.'}
             </Typography>
+
+            {showTabs && (
+              <Tabs
+                value={Math.min(tab, accounts.length - 1)}
+                onChange={(_, v: number) => setTab(v)}
+                variant="fullWidth"
+                sx={{ mb: 2.5, borderBottom: 1, borderColor: 'divider', '& .MuiTab-root': { textTransform: 'none', fontWeight: 600 } }}
+              >
+                {accounts.map((a, i) => (
+                  <Tab key={accountKey(a)} label={a.accountType ? TAB_LABEL[a.accountType] : `Tài khoản ${i + 1}`} />
+                ))}
+              </Tabs>
+            )}
 
             <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, gap: 3, alignItems: { xs: 'stretch', sm: 'flex-start' } }}>
               <Box sx={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
                 {qrUnavailable ? (
                   <Alert severity="warning" sx={{ borderRadius: 2, width: { xs: '100%', sm: 240 } }}>
-                    {payment.qrError || 'Không hiển thị được mã QR'} — vui lòng chuyển khoản thủ công theo thông tin bên cạnh, ghi đúng nội dung chuyển khoản.
+                    {selected.qrError || 'Không hiển thị được mã QR'} — vui lòng chuyển khoản thủ công theo thông tin bên cạnh, ghi đúng nội dung chuyển khoản.
                   </Alert>
                 ) : qrDataUrl ? (
                   <Box
@@ -265,16 +319,18 @@ export default function BankTransferPayment({
                 <Row label="Mã đơn hàng" value={payment.orderCode} mono />
                 <Row label="Số tiền" value={formatCurrency(payment.amount)} strong />
                 <Divider />
-                {payment.bank.accountType && <Row label="Loại tài khoản" value={PAYMENT_ACCOUNT_SHORT_LABEL[payment.bank.accountType]} />}
-                <Row label="Ngân hàng" value={payment.bank.bankName} />
-                <Row label="Chủ tài khoản" value={payment.bank.accountName} />
-                <Row label="Số tài khoản" value={payment.bank.accountNumber} mono />
+                {!showTabs && selected.accountType && (
+                  <Row label="Loại tài khoản" value={PAYMENT_ACCOUNT_SHORT_LABEL[selected.accountType]} />
+                )}
+                <Row label="Ngân hàng" value={selected.bankName} />
+                <Row label="Chủ tài khoản" value={selected.accountName} />
+                <Row label="Số tài khoản" value={selected.accountNumber} mono />
                 <Row label="Nội dung chuyển khoản" value={payment.reference} mono />
               </Stack>
             </Box>
 
             <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 2.5, '& .MuiButton-root': { whiteSpace: 'nowrap', px: 1 } }}>
-              <Button size="small" variant="outlined" startIcon={<ContentCopyIcon fontSize="small" />} onClick={() => copy(payment.bank.accountNumber, 'số tài khoản')}>
+              <Button size="small" variant="outlined" startIcon={<ContentCopyIcon fontSize="small" />} onClick={() => copy(selected.accountNumber, 'số tài khoản')}>
                 Sao chép số tài khoản
               </Button>
               <Button size="small" variant="outlined" startIcon={<ContentCopyIcon fontSize="small" />} onClick={() => copy(String(payment.amount), 'số tiền')}>
@@ -290,14 +346,14 @@ export default function BankTransferPayment({
 
             <Alert severity={awaiting ? 'success' : 'info'} sx={{ borderRadius: 2, mt: 2.5 }}>
               {awaiting
-                ? <>{REPORTED_MESSAGE}{payment.customerReportedAt ? ` (gửi lúc ${formatDate(payment.customerReportedAt)})` : ''}</>
+                ? <>{REPORTED_MESSAGE}{payment.customerReportedAt ? ` (gửi lúc ${formatDate(payment.customerReportedAt)}${reportedLabel})` : ''}</>
                 : 'Đơn hàng sẽ được xác nhận sau khi Luxe Glow kiểm tra và nhận được thanh toán.'}
             </Alert>
 
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 2.5 }}>
               <Button
                 variant="contained" size="large" fullWidth
-                onClick={() => report.mutate()}
+                onClick={() => report.mutate(showTabs ? selected.accountType : undefined)}
                 disabled={awaiting || report.isPending}
                 sx={{ borderRadius: 980, fontWeight: 600 }}
               >

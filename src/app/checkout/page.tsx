@@ -22,11 +22,11 @@ import { useCartStore } from '@/lib/store/cart.store';
 import { useAuthStore } from '@/lib/store/auth.store';
 import { formatCurrency } from '@/lib/utils';
 import { computeShippingFee } from '@/lib/shipping-fee';
-import { PAYMENT_ACCOUNT_LABEL, useBankTransferAvailability } from '@/lib/bank-transfer';
+import { useBankTransferAvailability } from '@/lib/bank-transfer';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import type {
-  ApiResponse, Order, User, Coupon, ValidateCouponsResponse, EInvoiceRequestInput, PaymentMethod, PaymentAccountType,
+  ApiResponse, Order, User, Coupon, ValidateCouponsResponse, EInvoiceRequestInput, PaymentMethod,
 } from '@/types';
 import AddressPicker, { type OldAddressSelection } from '@/components/AddressPicker';
 import EInvoiceRequestFields from '@/components/einvoice-request/EInvoiceRequestFields';
@@ -75,8 +75,6 @@ export default function CheckoutPage() {
   const [oldAddress, setOldAddress] = useState<OldAddressSelection | undefined>(undefined);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
   const [placedPaymentMethod, setPlacedPaymentMethod] = useState<PaymentMethod>('COD');
-  // Receiving account for bank transfer — personal by default, Hộ kinh doanh on request.
-  const [paymentAccountType, setPaymentAccountType] = useState<PaymentAccountType>('PERSONAL');
   // "Mua không cần đăng nhập": the placed order's link + security code, shown once.
   const [guestResult, setGuestResult] = useState<GuestCheckoutResult | null>(null);
 
@@ -122,16 +120,8 @@ export default function CheckoutPage() {
   const { data: bankAvailability } = useBankTransferAvailability();
   const bankTransferAvailable = !!bankAvailability?.enabled;
   const effectivePaymentMethod: PaymentMethod = bankTransferAvailable ? paymentMethod : 'COD';
-  const accountTypes = bankAvailability?.accountTypes ?? [];
-  // An e-invoice is issued by the Hộ kinh doanh, so such an order is paid into that account
-  // (the server enforces the same rule).
-  const einvoiceForcesBusiness = wantsEInvoice && accountTypes.includes('BUSINESS');
-  // The chosen account if the shop currently offers it, else the shop's default (none = server decides).
-  const effectiveAccountType: PaymentAccountType | undefined = einvoiceForcesBusiness
-    ? 'BUSINESS'
-    : accountTypes.includes(paymentAccountType)
-      ? paymentAccountType
-      : bankAvailability?.defaultAccountType ?? undefined;
+  // An e-invoice is issued by the Hộ kinh doanh → such an order only gets that account's QR.
+  const einvoicePaysBusiness = wantsEInvoice && !!bankAvailability?.accountTypes.includes('BUSINESS');
 
   // Load available coupons for this user
   const { data: coupons = [] } = useQuery<Coupon[]>({
@@ -213,9 +203,6 @@ export default function CheckoutPage() {
           : {}),
         ...(wantsEInvoice ? { einvoiceRequest: toEInvoiceRequestPayload(einvoice) } : {}),
         paymentMethod: effectivePaymentMethod,
-        ...(effectivePaymentMethod === 'BANK_TRANSFER' && effectiveAccountType
-          ? { paymentAccountType: effectiveAccountType }
-          : {}),
         acceptTerms: true,
       };
       if (!isAuthenticated) {
@@ -465,38 +452,6 @@ export default function CheckoutPage() {
                       sx={{ alignItems: 'flex-start', mt: 0.5, '& .MuiRadio-root': { pt: 0.5 } }}
                     />
                   </RadioGroup>
-                  {paymentMethod === 'BANK_TRANSFER' && accountTypes.length > 1 && (
-                    <Box sx={{ mt: 2, ml: { xs: 0, sm: 4 }, p: 2, borderRadius: 2, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider' }}>
-                      <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>Tài khoản nhận tiền</Typography>
-                      <RadioGroup
-                        value={effectiveAccountType ?? ''}
-                        onChange={(e) => setPaymentAccountType(e.target.value as PaymentAccountType)}
-                      >
-                        {accountTypes.map((t) => (
-                          <FormControlLabel
-                            key={t}
-                            value={t}
-                            disabled={einvoiceForcesBusiness && t !== 'BUSINESS'}
-                            control={<Radio size="small" />}
-                            label={
-                              <Typography variant="body2">
-                                {PAYMENT_ACCOUNT_LABEL[t]}
-                                {t === bankAvailability?.defaultAccountType && (
-                                  <Typography component="span" variant="caption" color="text.secondary"> (mặc định)</Typography>
-                                )}
-                              </Typography>
-                            }
-                          />
-                        ))}
-                      </RadioGroup>
-                      {einvoiceForcesBusiness && (
-                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                          Đơn có yêu cầu xuất hoá đơn điện tử sẽ chuyển khoản vào tài khoản Hộ kinh doanh Luxe Glow
-                          (đơn vị xuất hoá đơn).
-                        </Typography>
-                      )}
-                    </Box>
-                  )}
                   {paymentMethod === 'BANK_TRANSFER' && (
                     <Alert severity="info" sx={{ mt: 2, borderRadius: 2 }}>
                       Mã QR thanh toán sẽ hiển thị ngay sau khi bạn bấm <strong>Đặt hàng &amp; lấy mã QR</strong> — số tiền
@@ -566,7 +521,7 @@ export default function CheckoutPage() {
                       }}
                       errors={einvoiceErrors}
                     />
-                    {effectivePaymentMethod === 'BANK_TRANSFER' && einvoiceForcesBusiness && (
+                    {effectivePaymentMethod === 'BANK_TRANSFER' && einvoicePaysBusiness && (
                       <Alert severity="info" sx={{ mt: 1.5, borderRadius: 2 }}>
                         Khi yêu cầu hoá đơn, bạn chuyển khoản vào <strong>tài khoản Hộ kinh doanh Luxe Glow</strong> — mã QR
                         sau khi đặt hàng sẽ dùng tài khoản này.
