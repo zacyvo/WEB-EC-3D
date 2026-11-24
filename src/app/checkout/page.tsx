@@ -31,6 +31,11 @@ import AddressPicker, { type OldAddressSelection } from '@/components/AddressPic
 import EInvoiceRequestFields from '@/components/einvoice-request/EInvoiceRequestFields';
 import BankTransferPayment from '@/components/bank-transfer/BankTransferPayment';
 import CouponSection from '@/components/checkout/CouponSection';
+import GuestOrderSuccess from '@/components/checkout/GuestOrderSuccess';
+import { loginHref } from '@/lib/auth-redirect';
+import {
+  orderApi, rememberDeviceOrder, saveOrderSession, type GuestCheckoutResult,
+} from '@/lib/order-public-api';
 import {
   EMPTY_EINVOICE_REQUEST, toEInvoiceRequestPayload, validateEInvoiceRequest,
   type EInvoiceRequestErrors,
@@ -69,6 +74,8 @@ export default function CheckoutPage() {
   const [oldAddress, setOldAddress] = useState<OldAddressSelection | undefined>(undefined);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
   const [placedPaymentMethod, setPlacedPaymentMethod] = useState<PaymentMethod>('COD');
+  // "Mua không cần đăng nhập": the placed order's link + security code, shown once.
+  const [guestResult, setGuestResult] = useState<GuestCheckoutResult | null>(null);
 
   // ── Coupon state ──────────────────────────────────────────────────────────
   // Codes the customer picked/typed; re-validated whenever they, the address or the cart change.
@@ -90,14 +97,10 @@ export default function CheckoutPage() {
 
   useEffect(() => { setMounted(true); }, []);
 
+  // Not logged in → checkout as a guest ("user tạm" by recipient phone, followed via the order link).
   useEffect(() => {
-    if (!mounted) return;
-    if (!isAuthenticated) router.replace('/auth/login?redirect=/checkout');
-  }, [mounted, isAuthenticated, router]);
-
-  useEffect(() => {
-    if (mounted && isAuthenticated && items.length === 0 && !success) router.replace('/cart');
-  }, [mounted, isAuthenticated, items.length, success, router]);
+    if (mounted && items.length === 0 && !success) router.replace('/cart');
+  }, [mounted, items.length, success, router]);
 
   // Load all location data from local static file (cached after first load)
   const { data: locationData } = useQuery<LocationData>({
@@ -205,6 +208,24 @@ export default function CheckoutPage() {
         paymentMethod: effectivePaymentMethod,
         acceptTerms: true,
       };
+      if (!isAuthenticated) {
+        const { couponCodes: _ignored, ...guestPayload } = payload as typeof payload & { couponCodes?: string[] };
+        const gRes = await orderApi.post<ApiResponse<GuestCheckoutResult>>('/orders/guest-checkout', guestPayload);
+        const result = gRes.data.data;
+        saveOrderSession(result.publicAccess.token, result.publicAccess.accessJwt);
+        rememberDeviceOrder({
+          token: result.publicAccess.token,
+          orderCode: result.order.orderCode,
+          total: result.order.total,
+          createdAt: result.order.createdAt,
+        });
+        clearCart();
+        setGuestResult(result);
+        setSuccess(true);
+        window.scrollTo({ top: 0 });
+        return;
+      }
+
       const res = await api.post<ApiResponse<Order>>('/orders', payload);
       const newOrder = res.data.data;
 
@@ -246,7 +267,7 @@ export default function CheckoutPage() {
   // prices them against its own fee for that province); stale responses are dropped.
   useEffect(() => {
     const seq = ++validateSeq.current;
-    if (!selectedCodes.length) {
+    if (!selectedCodes.length || !isAuthenticated) {
       setValidateResult(null);
       setIsValidating(false);
       return;
@@ -275,18 +296,15 @@ export default function CheckoutPage() {
       }
     }, 250);
     return () => clearTimeout(timer);
-  }, [selectedCodes, selectedCity, cartTotal]);
+  }, [selectedCodes, selectedCity, cartTotal, isAuthenticated]);
 
   const goodsDiscount = validateResult?.totalDiscount ?? 0;
   const shippingDiscount = selectedCity ? Math.min(validateResult?.shippingDiscount ?? 0, shippingFee) : 0;
   const grandTotal = (validateResult ? validateResult.finalTotal : cartTotal) + shippingFee - shippingDiscount;
 
   if (!mounted) return null;
-  if (!isAuthenticated) return (
-    <Box sx={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <CircularProgress />
-    </Box>
-  );
+
+  if (success && guestResult) return <GuestOrderSuccess result={guestResult} />;
 
   // ── Success screen ────────────────────────────────────────────────────────
   if (success && orderId && placedPaymentMethod === 'BANK_TRANSFER') {
@@ -328,7 +346,22 @@ export default function CheckoutPage() {
         Quay lại giỏ hàng
       </Button>
 
-      <Typography variant="h4" sx={{ mb: 4, fontWeight: 700 }}>Thanh toán</Typography>
+      <Typography variant="h4" sx={{ mb: isAuthenticated ? 4 : 2, fontWeight: 700 }}>Thanh toán</Typography>
+
+      {!isAuthenticated && (
+        <Alert
+          severity="info"
+          sx={{ mb: 3, borderRadius: 3 }}
+          action={
+            <Button component={Link} href={loginHref('/checkout')} color="inherit" size="small" sx={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+              Đăng nhập
+            </Button>
+          }
+        >
+          Bạn có thể đặt hàng <b>không cần đăng nhập</b>. Sau khi đặt, bạn nhận link xem đơn + mã bảo mật để theo dõi
+          đơn bằng số điện thoại nhận hàng. Đăng nhập để dùng mã giảm giá và lưu lịch sử đơn hàng.
+        </Alert>
+      )}
 
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid container spacing={4}>
@@ -340,6 +373,11 @@ export default function CheckoutPage() {
             <Card variant="outlined" sx={{ borderRadius: 3, mb: 3 }}>
               <CardContent sx={{ p: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: 700, mb: 2.5 }}>Thông tin người nhận</Typography>
+                {!isAuthenticated && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: -1.5, mb: 2 }}>
+                    Số điện thoại này dùng để xem đơn hàng sau khi đặt.
+                  </Typography>
+                )}
                 <Stack spacing={2.5}>
                   <TextField
                     label="Họ và tên *" fullWidth size="small"
@@ -427,15 +465,27 @@ export default function CheckoutPage() {
               </Card>
             )}
 
-            {/* Section 3 — Mã giảm giá */}
-            <CouponSection
-              coupons={coupons}
-              selectedCodes={selectedCodes}
-              validateResult={validateResult}
-              isValidating={isValidating}
-              onAdd={addCoupon}
-              onRemove={removeCoupon}
-            />
+            {/* Section 3 — Mã giảm giá (cần tài khoản: giới hạn lượt dùng tính theo khách) */}
+            {isAuthenticated ? (
+              <CouponSection
+                coupons={coupons}
+                selectedCodes={selectedCodes}
+                validateResult={validateResult}
+                isValidating={isValidating}
+                onAdd={addCoupon}
+                onRemove={removeCoupon}
+              />
+            ) : (
+              <Card variant="outlined" sx={{ borderRadius: 3, mt: 3 }}>
+                <CardContent sx={{ p: 3, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2, flexWrap: 'wrap' }}>
+                  <Box>
+                    <Typography variant="h6" sx={{ fontWeight: 700 }}>Mã giảm giá</Typography>
+                    <Typography variant="body2" color="text.secondary">Đăng nhập để sử dụng mã giảm giá / miễn phí vận chuyển.</Typography>
+                  </Box>
+                  <Button component={Link} href={loginHref('/checkout')} variant="outlined" sx={{ borderRadius: 980 }}>Đăng nhập</Button>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Section 4 — Ghi chú đơn hàng */}
             <Card variant="outlined" sx={{ borderRadius: 3, mt: 3 }}>

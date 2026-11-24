@@ -189,6 +189,9 @@ export default function ProfilePage() {
             <Button component={Link} href="/auth/register" variant="outlined" sx={{ borderRadius: 980, px: 3 }}>Đăng ký</Button>
             <Button component={Link} href="/auth/login?redirect=/profile" variant="contained" sx={{ borderRadius: 980, px: 3 }}>Đăng nhập</Button>
           </Stack>
+          <Button component={Link} href="/order-lookup" startIcon={<ReceiptLongOutlinedIcon />} sx={{ mt: 2, textTransform: 'none', fontWeight: 600 }}>
+            Đã đặt hàng không cần đăng nhập? Tra cứu đơn hàng
+          </Button>
         </Card>
       ) : (
         <>

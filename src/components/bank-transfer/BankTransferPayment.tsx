@@ -13,6 +13,7 @@ import CheckCircleOutlinedIcon from '@mui/icons-material/CheckCircleOutlined';
 import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlined';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
+import { orderAccessHeaders, orderApi, orderLinkPath } from '@/lib/order-public-api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { ApiResponse, PaymentInstructions } from '@/types';
 
@@ -78,24 +79,37 @@ function Row({ label, value, strong, mono }: { label: string; value: string; str
 /**
  * "Thanh toán đơn hàng" for a VietQR bank-transfer order: QR (amount + transfer description
  * pre-filled), bank details with copy buttons, QR download and the "Tôi đã chuyển khoản" claim.
- * Everything comes from GET /orders/:id/payment — the amount is never computed here.
+ * Everything comes from GET /orders/:id/payment — the amount is never computed here. Without login
+ * (guest checkout / "Link xem đơn") pass `publicAccess`: it then goes through
+ * /orders/public/:token/payment with the link's session.
  */
 export default function BankTransferPayment({
-  orderId, showOrderLink = false, refreshKey,
+  orderId, showOrderLink = false, refreshKey, publicAccess,
 }: {
+  /** Order id — or, with `publicAccess`, any stable key of the order (its link token). */
   orderId: string;
   showOrderLink?: boolean;
   /** Changes when the order changes elsewhere on the page (cancelled, e-invoice request rejected…) → reload. */
   refreshKey?: string;
+  publicAccess?: { token: string; jwt: string };
 }) {
   const queryClient = useQueryClient();
   const queryKey = ['order-payment', orderId];
+  const orderHref = publicAccess ? orderLinkPath(publicAccess.token) : `/orders/${orderId}`;
+  const fetchPayment = async () =>
+    publicAccess
+      ? (await orderApi.get<ApiResponse<PaymentInstructions>>(`/orders/public/${publicAccess.token}/payment`, orderAccessHeaders(publicAccess.jwt))).data.data
+      : (await api.get<ApiResponse<PaymentInstructions>>(`/orders/${orderId}/payment`)).data.data;
+  const postReport = async () =>
+    publicAccess
+      ? (await orderApi.post<ApiResponse<PaymentInstructions>>(`/orders/public/${publicAccess.token}/payment/report`, {}, orderAccessHeaders(publicAccess.jwt))).data.data
+      : (await api.post<ApiResponse<PaymentInstructions>>(`/orders/${orderId}/payment/report`, {})).data.data;
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const [qrRenderFailed, setQrRenderFailed] = useState(false);
 
   const { data: payment, isLoading, isError, refetch, isFetching } = useQuery({
     queryKey,
-    queryFn: async () => (await api.get<ApiResponse<PaymentInstructions>>(`/orders/${orderId}/payment`)).data.data,
+    queryFn: fetchPayment,
     // While the shop is checking the transfer, pick up its confirmation without a reload.
     refetchInterval: (q) =>
       q.state.data?.payable && q.state.data.verificationStatus === 'AWAITING_CONFIRMATION' ? 30_000 : false,
@@ -130,7 +144,7 @@ export default function BankTransferPayment({
   }, [payment?.paymentStatus, orderId, queryClient]);
 
   const report = useMutation({
-    mutationFn: async () => (await api.post<ApiResponse<PaymentInstructions>>(`/orders/${orderId}/payment/report`, {})).data.data,
+    mutationFn: postReport,
     onSuccess: (updated) => {
       queryClient.setQueryData(queryKey, updated);
       queryClient.invalidateQueries({ queryKey: ['order', orderId] });
@@ -288,7 +302,7 @@ export default function BankTransferPayment({
                 {report.isPending ? <CircularProgress size={22} color="inherit" /> : awaiting ? 'Đã gửi yêu cầu xác nhận' : 'Tôi đã chuyển khoản'}
               </Button>
               {showOrderLink && (
-                <Button component={Link} href={`/orders/${orderId}`} variant="outlined" size="large" fullWidth sx={{ borderRadius: 980, fontWeight: 600 }}>
+                <Button component={Link} href={orderHref} variant="outlined" size="large" fullWidth sx={{ borderRadius: 980, fontWeight: 600 }}>
                   Xem đơn hàng
                 </Button>
               )}
@@ -301,7 +315,7 @@ export default function BankTransferPayment({
             <Row label="Số tiền" value={formatCurrency(payment.amount)} />
             <Row label="Nội dung chuyển khoản" value={payment.reference} mono />
             {showOrderLink && (
-              <Button component={Link} href={`/orders/${orderId}`} variant="outlined" sx={{ mt: 1, borderRadius: 980, fontWeight: 600 }}>
+              <Button component={Link} href={orderHref} variant="outlined" sx={{ mt: 1, borderRadius: 980, fontWeight: 600 }}>
                 Xem đơn hàng
               </Button>
             )}

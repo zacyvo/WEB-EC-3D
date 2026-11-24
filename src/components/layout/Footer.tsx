@@ -6,6 +6,7 @@ const PRODUCTS = ['Đèn Bàn', 'Đèn Trần', 'Đèn Tường', 'Đèn Ngủ',
 const SUPPORT = [
   { label: 'Hướng dẫn sử dụng', href: '/guide' },
   { label: 'Hướng dẫn mua hàng', href: '/order-guide' },
+  { label: 'Tra cứu đơn hàng', href: '/order-lookup' },
   { label: 'Hợp tác sản xuất', href: '/partnership' },
   { label: 'Câu hỏi thường gặp', href: '/faq' },
   { label: 'Liên hệ', href: '/contact' },

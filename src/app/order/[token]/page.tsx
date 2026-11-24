@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import axios from 'axios';
 import toast from 'react-hot-toast';
 import {
   Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Container, Divider, Paper,
@@ -13,19 +12,11 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import RefreshOutlinedIcon from '@mui/icons-material/RefreshOutlined';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import { formatCurrency, formatDate, ORDER_STATUS_MAP } from '@/lib/utils';
-import type { OrderStatus } from '@/types';
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
-
-/**
- * Axios riêng (không dùng interceptor chung) — trang này xác thực bằng SĐT + mã bảo mật của
- * đơn hàng ("Link xem đơn" do shop gửi), không phụ thuộc phiên đăng nhập của user.
- */
-const orderApi = axios.create({
-  baseURL: API_URL,
-  headers: { 'Content-Type': 'application/json' },
-  timeout: 15000,
-});
+import type { OrderStatus, PaymentMethod } from '@/types';
+import BankTransferPayment from '@/components/bank-transfer/BankTransferPayment';
+import {
+  clearOrderSession, errMsg, forgetDeviceOrder, loadOrderSession, orderAccessHeaders, orderApi, saveOrderSession,
+} from '@/lib/order-public-api';
 
 interface OrderMeta {
   orderCode: string;
@@ -36,6 +27,7 @@ interface OrderMeta {
 interface PublicOrder {
   orderCode: string;
   status: OrderStatus;
+  paymentMethod?: PaymentMethod;
   items: {
     productName: string;
     productImage: string;
@@ -85,11 +77,6 @@ const PROGRESS: { status: OrderStatus; label: string }[] = [
   { status: 'DELIVERED', label: 'Đã giao' },
 ];
 
-function errMsg(err: unknown, fallback: string): string {
-  const msg = (err as { response?: { data?: { message?: string | string[] } } })?.response?.data?.message;
-  return Array.isArray(msg) ? msg[0] : msg || fallback;
-}
-
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
@@ -101,7 +88,6 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 
 export default function PublicOrderPage({ params }: { params: { token: string } }) {
   const { token } = params;
-  const storageKey = `order-access:${token}`;
 
   const [mounted, setMounted] = useState(false);
   const [loadingMeta, setLoadingMeta] = useState(true);
@@ -111,14 +97,17 @@ export default function PublicOrderPage({ params }: { params: { token: string } 
   const [order, setOrder] = useState<PublicOrder | null>(null);
   const [phone, setPhone] = useState('');
   const [code, setCode] = useState('');
+  // "Quên mã bảo mật" → unlock with phone + delivery street instead.
+  const [forgotCode, setForgotCode] = useState(false);
+  const [street, setStreet] = useState('');
   const [verifying, setVerifying] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const clearSession = useCallback(() => {
-    try { sessionStorage.removeItem(storageKey); } catch { /* storage unavailable */ }
+    clearOrderSession(token);
     setJwt(null);
     setOrder(null);
-  }, [storageKey]);
+  }, [token]);
 
   // ── Load meta + phiên đã lưu (trong tab hiện tại) ──
   useEffect(() => {
@@ -130,41 +119,45 @@ export default function PublicOrderPage({ params }: { params: { token: string } 
         if (cancelled) return;
         setMeta(res.data.data);
 
-        let savedJwt: string | null = null;
-        try { savedJwt = sessionStorage.getItem(storageKey); } catch { /* storage unavailable */ }
+        const savedJwt = loadOrderSession(token);
         if (savedJwt) {
           try {
-            const oRes = await orderApi.get(`/orders/public/${token}`, { headers: { 'X-Order-Access': savedJwt } });
+            const oRes = await orderApi.get(`/orders/public/${token}`, orderAccessHeaders(savedJwt));
             if (cancelled) return;
             setJwt(savedJwt);
             setOrder(oRes.data.data);
           } catch {
-            try { sessionStorage.removeItem(storageKey); } catch { /* storage unavailable */ }
+            clearOrderSession(token);
           }
         }
       } catch (err) {
-        if (!cancelled) setMetaError(errMsg(err, 'Liên kết không hợp lệ hoặc đã hết hiệu lực'));
+        if (cancelled) return;
+        setMetaError(errMsg(err, 'Liên kết không hợp lệ hoặc đã hết hiệu lực'));
+        // A re-issued / removed link: drop it from "Đơn đã đặt trên thiết bị này".
+        if ((err as { response?: { status?: number } })?.response?.status === 404) forgetDeviceOrder(token);
       } finally {
         if (!cancelled) setLoadingMeta(false);
       }
     })();
     return () => { cancelled = true; };
-  }, [token, storageKey]);
+  }, [token]);
 
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone.trim() || !code.trim()) return;
+    const secret = forgotCode ? street.trim() : code.trim();
+    if (!phone.trim() || !secret) return;
     setVerifying(true);
     try {
       const res = await orderApi.post(`/orders/public/${token}/verify`, {
         phone: phone.trim(),
-        securityCode: code.trim(),
+        ...(forgotCode ? { street: secret } : { securityCode: secret }),
       });
       const { accessJwt, order: o } = res.data.data;
-      try { sessionStorage.setItem(storageKey, accessJwt); } catch { /* storage unavailable */ }
+      saveOrderSession(token, accessJwt);
       setJwt(accessJwt);
       setOrder(o);
       setCode('');
+      setStreet('');
     } catch (err) {
       toast.error(errMsg(err, 'Xác thực thất bại'));
     } finally {
@@ -176,7 +169,7 @@ export default function PublicOrderPage({ params }: { params: { token: string } 
     if (!jwt) return;
     setRefreshing(true);
     try {
-      const res = await orderApi.get(`/orders/public/${token}`, { headers: { 'X-Order-Access': jwt } });
+      const res = await orderApi.get(`/orders/public/${token}`, orderAccessHeaders(jwt));
       setOrder(res.data.data);
       toast.success('Đã cập nhật đơn hàng');
     } catch (err) {
@@ -223,7 +216,11 @@ export default function PublicOrderPage({ params }: { params: { token: string } 
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>Luxe Glow</Typography>
             </Box>
             <Alert severity="info" sx={{ borderRadius: 3, width: '100%', textAlign: 'left' }}>
-              Nhập số điện thoại <b>{meta.maskedPhone}</b> và mã bảo mật 8 ký tự do shop gửi để xem đơn hàng.
+              {forgotCode ? (
+                <>Nhập số điện thoại <b>{meta.maskedPhone}</b> và <b>địa chỉ nhận hàng</b> (số nhà, tên đường) đúng như lúc đặt hàng.</>
+              ) : (
+                <>Nhập số điện thoại <b>{meta.maskedPhone}</b> và mã bảo mật 8 ký tự (hiển thị khi đặt hàng hoặc do shop gửi) để xem đơn hàng.</>
+              )}{' '}
               Không cần đăng nhập.
             </Alert>
 
@@ -238,28 +235,48 @@ export default function PublicOrderPage({ params }: { params: { token: string } 
                   autoComplete="tel"
                   slotProps={{ htmlInput: { inputMode: 'tel' } }}
                 />
-                <TextField
-                  label="Mã bảo mật (8 ký tự)"
-                  value={code}
-                  onChange={(e) => setCode(e.target.value.toUpperCase())}
-                  placeholder="VD: A2B3C4D5"
-                  fullWidth
-                  autoComplete="one-time-code"
-                  slotProps={{ htmlInput: { maxLength: 8, style: { letterSpacing: 4, textTransform: 'uppercase', fontFamily: 'monospace' } } }}
-                />
+                {forgotCode ? (
+                  <TextField
+                    label="Số nhà, tên đường nhận hàng"
+                    value={street}
+                    onChange={(e) => setStreet(e.target.value)}
+                    placeholder="VD: 123 Nguyễn Huệ"
+                    fullWidth
+                    autoComplete="street-address"
+                    helperText="Không phân biệt hoa thường, dấu và dấu câu"
+                  />
+                ) : (
+                  <TextField
+                    label="Mã bảo mật (8 ký tự)"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                    placeholder="VD: A2B3C4D5"
+                    fullWidth
+                    autoComplete="one-time-code"
+                    slotProps={{ htmlInput: { maxLength: 8, style: { letterSpacing: 4, textTransform: 'uppercase', fontFamily: 'monospace' } } }}
+                  />
+                )}
                 <Button
                   type="submit"
                   variant="contained"
                   size="large"
-                  disabled={verifying || !phone.trim() || !code.trim()}
+                  disabled={verifying || !phone.trim() || !(forgotCode ? street.trim() : code.trim())}
                   sx={{ borderRadius: 980, fontWeight: 600, textTransform: 'none' }}
                 >
                   {verifying ? 'Đang xác thực...' : 'Xem đơn hàng'}
                 </Button>
               </Stack>
             </Box>
+            <Button
+              variant="text"
+              size="small"
+              onClick={() => setForgotCode((v) => !v)}
+              sx={{ textTransform: 'none', fontWeight: 600 }}
+            >
+              {forgotCode ? 'Dùng mã bảo mật' : 'Quên mã bảo mật? Xem bằng địa chỉ nhận hàng'}
+            </Button>
             <Typography variant="caption" color="text.secondary">
-              Nhập sai 5 lần liên tiếp, đơn sẽ tạm khoá 15 phút. Không nhận được mã? Liên hệ shop để được gửi lại.
+              Nhập sai 5 lần liên tiếp, đơn sẽ tạm khoá 15 phút. Cần hỗ trợ? Liên hệ shop qua Zalo / Fanpage.
             </Typography>
           </Stack>
         </Paper>
@@ -360,6 +377,11 @@ export default function PublicOrderPage({ params }: { params: { token: string } 
           </Stack>
         </CardContent>
       </Card>
+
+      {/* Chuyển khoản VietQR (đơn đặt không cần đăng nhập) */}
+      {order.paymentMethod === 'BANK_TRANSFER' && (
+        <BankTransferPayment orderId={token} publicAccess={{ token, jwt }} refreshKey={order.updatedAt} />
+      )}
 
       {/* Giao hàng */}
       <Card variant="outlined" sx={{ borderRadius: 3, mb: 2 }}>

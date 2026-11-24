@@ -6,6 +6,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import {
   AppBar, Toolbar, Container, Box, IconButton, Badge,
   Typography, Button, Avatar, Menu, MenuItem, Divider, alpha,
+  Tooltip,
 } from '@mui/material';
 import ShoppingBagOutlinedIcon from '@mui/icons-material/ShoppingBagOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutlined';
@@ -90,9 +91,16 @@ export function Navbar() {
                 </Menu>
               </>
             ) : (
+              <>
+              <Tooltip title="Tra cứu đơn hàng">
+                <IconButton component={Link} href="/order-lookup" aria-label="Tra cứu đơn hàng" sx={{ color: 'text.primary' }}>
+                  <ReceiptLongIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
               <Suspense fallback={<LoginButton href={loginHref(pathname)} />}>
                 <LoginButtonWithQuery pathname={pathname} />
               </Suspense>
+              </>
             )}
           </Box>
         </Toolbar>

@@ -12,22 +12,15 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useCartStore } from '@/lib/store/cart.store';
 import { formatCurrency } from '@/lib/utils';
 import { SHIPPING_FEE_HCM, SHIPPING_FEE_OTHER } from '@/lib/shipping-fee';
-import { useAuthStore } from '@/lib/store/auth.store';
 import QuantityStepper from '@/components/ui/QuantityStepper';
 import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, total } = useCartStore();
-  const { isAuthenticated } = useAuthStore();
   const router = useRouter();
 
+  // Logged in or not: checkout also works as a guest (followed through the order link).
   const handleCheckout = () => {
-    if (!isAuthenticated) {
-      toast.error('Vui lòng đăng nhập để tiếp tục');
-      router.push('/auth/login?redirect=/checkout');
-      return;
-    }
     router.push('/checkout');
   };
 
