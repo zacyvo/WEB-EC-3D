@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Alert, Box, Button, Card, CardContent, Chip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
   Divider, FormControlLabel, Radio, RadioGroup, Stack, TextField, Typography,
@@ -12,6 +12,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { ApiResponse, Order, OrderAdjustment, OrderAdjustmentSnapshot } from '@/types';
+import { useBankTransferAvailability } from '@/lib/bank-transfer';
 import AdjustmentExtraPayment from './AdjustmentExtraPayment';
 
 function errMsg(err: unknown, fallback: string): string {
@@ -76,12 +77,8 @@ export default function OrderAdjustmentCard({ order }: { order: Order }) {
   const [rejectReason, setRejectReason] = useState('');
 
   const isOpen = a?.status === 'PROPOSED' && order.status !== 'CANCELLED';
-  const { data: bankAvailable } = useQuery({
-    queryKey: ['bank-transfer-availability'],
-    queryFn: async () => (await api.get<ApiResponse<{ enabled: boolean }>>('/payments/bank-transfer/availability')).data.data.enabled,
-    enabled: isOpen && (a?.balance ?? 0) > 0,
-    staleTime: 60_000,
-  });
+  const { data: bankAvailability } = useBankTransferAvailability(isOpen && (a?.balance ?? 0) > 0);
+  const bankAvailable = bankAvailability?.enabled;
 
   const onDone = (updated: Order, message: string) => {
     queryClient.setQueryData(['order', order._id], updated);

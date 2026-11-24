@@ -22,10 +22,11 @@ import { useCartStore } from '@/lib/store/cart.store';
 import { useAuthStore } from '@/lib/store/auth.store';
 import { formatCurrency } from '@/lib/utils';
 import { computeShippingFee } from '@/lib/shipping-fee';
+import { PAYMENT_ACCOUNT_LABEL, useBankTransferAvailability } from '@/lib/bank-transfer';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import type {
-  ApiResponse, Order, User, Coupon, ValidateCouponsResponse, EInvoiceRequestInput, PaymentMethod,
+  ApiResponse, Order, User, Coupon, ValidateCouponsResponse, EInvoiceRequestInput, PaymentMethod, PaymentAccountType,
 } from '@/types';
 import AddressPicker, { type OldAddressSelection } from '@/components/AddressPicker';
 import EInvoiceRequestFields from '@/components/einvoice-request/EInvoiceRequestFields';
@@ -74,6 +75,8 @@ export default function CheckoutPage() {
   const [oldAddress, setOldAddress] = useState<OldAddressSelection | undefined>(undefined);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('COD');
   const [placedPaymentMethod, setPlacedPaymentMethod] = useState<PaymentMethod>('COD');
+  // Receiving account for bank transfer — personal by default, Hộ kinh doanh on request.
+  const [paymentAccountType, setPaymentAccountType] = useState<PaymentAccountType>('PERSONAL');
   // "Mua không cần đăng nhập": the placed order's link + security code, shown once.
   const [guestResult, setGuestResult] = useState<GuestCheckoutResult | null>(null);
 
@@ -116,15 +119,14 @@ export default function CheckoutPage() {
   const provinces: Province[] = locationData?.provinces ?? [];
 
   // Bank transfer is offered only while the shop's receiving account is configured.
-  const { data: bankTransferAvailable = false } = useQuery<boolean>({
-    queryKey: ['bank-transfer-availability'],
-    queryFn: async () => {
-      const res = await api.get<ApiResponse<{ enabled: boolean }>>('/payments/bank-transfer/availability');
-      return res.data.data.enabled;
-    },
-    staleTime: 60_000,
-  });
+  const { data: bankAvailability } = useBankTransferAvailability();
+  const bankTransferAvailable = !!bankAvailability?.enabled;
   const effectivePaymentMethod: PaymentMethod = bankTransferAvailable ? paymentMethod : 'COD';
+  const accountTypes = bankAvailability?.accountTypes ?? [];
+  // The chosen account if the shop currently offers it, else the shop's default (none = server decides).
+  const effectiveAccountType: PaymentAccountType | undefined = accountTypes.includes(paymentAccountType)
+    ? paymentAccountType
+    : bankAvailability?.defaultAccountType ?? undefined;
 
   // Load available coupons for this user
   const { data: coupons = [] } = useQuery<Coupon[]>({
@@ -206,6 +208,9 @@ export default function CheckoutPage() {
           : {}),
         ...(wantsEInvoice ? { einvoiceRequest: toEInvoiceRequestPayload(einvoice) } : {}),
         paymentMethod: effectivePaymentMethod,
+        ...(effectivePaymentMethod === 'BANK_TRANSFER' && effectiveAccountType
+          ? { paymentAccountType: effectiveAccountType }
+          : {}),
         acceptTerms: true,
       };
       if (!isAuthenticated) {
@@ -455,6 +460,31 @@ export default function CheckoutPage() {
                       sx={{ alignItems: 'flex-start', mt: 0.5, '& .MuiRadio-root': { pt: 0.5 } }}
                     />
                   </RadioGroup>
+                  {paymentMethod === 'BANK_TRANSFER' && accountTypes.length > 1 && (
+                    <Box sx={{ mt: 2, ml: { xs: 0, sm: 4 }, p: 2, borderRadius: 2, bgcolor: 'grey.50', border: '1px solid', borderColor: 'divider' }}>
+                      <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>Tài khoản nhận tiền</Typography>
+                      <RadioGroup
+                        value={effectiveAccountType ?? ''}
+                        onChange={(e) => setPaymentAccountType(e.target.value as PaymentAccountType)}
+                      >
+                        {accountTypes.map((t) => (
+                          <FormControlLabel
+                            key={t}
+                            value={t}
+                            control={<Radio size="small" />}
+                            label={
+                              <Typography variant="body2">
+                                {PAYMENT_ACCOUNT_LABEL[t]}
+                                {t === bankAvailability?.defaultAccountType && (
+                                  <Typography component="span" variant="caption" color="text.secondary"> (mặc định)</Typography>
+                                )}
+                              </Typography>
+                            }
+                          />
+                        ))}
+                      </RadioGroup>
+                    </Box>
+                  )}
                   {paymentMethod === 'BANK_TRANSFER' && (
                     <Alert severity="info" sx={{ mt: 2, borderRadius: 2 }}>
                       Mã QR thanh toán sẽ hiển thị ngay sau khi bạn bấm <strong>Đặt hàng &amp; lấy mã QR</strong> — số tiền

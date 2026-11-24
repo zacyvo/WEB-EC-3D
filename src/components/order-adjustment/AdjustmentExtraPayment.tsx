@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { AdjustmentPaymentInstructions, ApiResponse } from '@/types';
+import { PAYMENT_ACCOUNT_SHORT_LABEL } from '@/lib/bank-transfer';
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -117,6 +118,7 @@ export default function AdjustmentExtraPayment({ orderId, refreshKey }: { orderI
         <Stack spacing={1.25} sx={{ flex: 1, minWidth: 0 }}>
           <Row label="Số tiền" value={formatCurrency(p.amount)} strong />
           <Divider />
+          {p.bank.accountType && <Row label="Loại tài khoản" value={PAYMENT_ACCOUNT_SHORT_LABEL[p.bank.accountType]} />}
           <Row label="Ngân hàng" value={p.bank.bankName} />
           <Row label="Chủ tài khoản" value={p.bank.accountName} />
           <Row label="Số tài khoản" value={p.bank.accountNumber} mono />

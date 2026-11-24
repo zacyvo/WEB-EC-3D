@@ -16,6 +16,7 @@ import api from '@/lib/api';
 import { orderAccessHeaders, orderApi, orderLinkPath } from '@/lib/order-public-api';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import type { ApiResponse, PaymentInstructions } from '@/types';
+import { PAYMENT_ACCOUNT_SHORT_LABEL } from '@/lib/bank-transfer';
 
 const REPORTED_MESSAGE =
   'Luxe Glow đã nhận được yêu cầu xác nhận thanh toán. Chúng tôi sẽ kiểm tra và cập nhật trạng thái đơn hàng.';
@@ -264,6 +265,7 @@ export default function BankTransferPayment({
                 <Row label="Mã đơn hàng" value={payment.orderCode} mono />
                 <Row label="Số tiền" value={formatCurrency(payment.amount)} strong />
                 <Divider />
+                {payment.bank.accountType && <Row label="Loại tài khoản" value={PAYMENT_ACCOUNT_SHORT_LABEL[payment.bank.accountType]} />}
                 <Row label="Ngân hàng" value={payment.bank.bankName} />
                 <Row label="Chủ tài khoản" value={payment.bank.accountName} />
                 <Row label="Số tài khoản" value={payment.bank.accountNumber} mono />

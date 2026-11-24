@@ -184,11 +184,23 @@ export type PaymentStatus = 'PENDING_PAYMENT' | 'PAID' | 'REFUNDED';
 /** The customer's own "Tôi đã chuyển khoản" claim — never proof of payment. */
 export type PaymentVerificationStatus = 'NOT_REPORTED' | 'AWAITING_CONFIRMATION' | 'CONFIRMED';
 
+/** Receiving account chosen at checkout — PERSONAL (default) or BUSINESS (Hộ kinh doanh). */
+export type PaymentAccountType = 'PERSONAL' | 'BUSINESS';
+
 export interface BankAccountInfo {
   bankBin: string;
   bankName: string;
   accountNumber: string;
   accountName: string;
+  /** Absent on orders placed before the choice existed (they went to the Hộ kinh doanh account). */
+  accountType?: PaymentAccountType;
+}
+
+/** GET /payments/bank-transfer/availability — no account details. */
+export interface BankTransferAvailability {
+  enabled: boolean;
+  accountTypes: PaymentAccountType[];
+  defaultAccountType: PaymentAccountType | null;
 }
 
 export interface OrderPayment {
@@ -440,7 +452,7 @@ export interface AdjustmentPaymentInstructions {
   adjustmentNumber: number;
   amount: number;
   reference: string;
-  bank: { bankBin: string; bankName: string; accountNumber: string; accountName: string };
+  bank: BankAccountInfo;
   status: 'PENDING' | 'AWAITING_CONFIRMATION' | 'COMPLETED';
   payable: boolean;
   qrPayload: string | null;
